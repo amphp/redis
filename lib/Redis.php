@@ -93,7 +93,7 @@ class Redis {
 				$this->writeWatcher = $this->reactor->onWritable($this->socket, [$this, "onWrite"], false);
 				$this->state = self::STATE_READY;
 
-				if($this->config->hasPassword()) {
+				if ($this->config->hasPassword()) {
 					$this->send(["auth", $this->config->getPassword()]);
 					$this->futures[] = $f = new Future;
 					wait($f);
