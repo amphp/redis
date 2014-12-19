@@ -2,7 +2,6 @@
 
 namespace Amphp\Redis;
 
-use Amp\Future;
 use Amp\Reactor;
 use Amp\Success;
 use Nbsock\Connector;
@@ -279,6 +278,41 @@ class Redis {
 		$this->send(array_merge([$method], $args));
 
 		$this->futures[] = $future = new Future;
+		return $future;
+	}
+
+	public function hashSetAll($hash, array $data) {
+		$array = ["hmset", $hash];
+
+		foreach($data as $key => $value) {
+			$array[] = $key;
+			$array[] = $value;
+		}
+
+		$this->send($array);
+
+		$this->futures[] = $future = new Future;
+		return $future;
+	}
+
+	public function hashGetAll($hash) {
+		$this->send(["hgetall", $hash]);
+
+		$this->futures[] = $future = new Future(function($response) {
+			if($response === null) {
+				return null;
+			}
+
+			$size = sizeof($response);
+			$result = [];
+
+			for($i = 0; $i < $size; $i += 2) {
+				$result[$response[$i]] = $response[$i+1];
+			}
+
+			return (object) $result;
+		});
+
 		return $future;
 	}
 
