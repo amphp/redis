@@ -16,6 +16,9 @@ class Redis {
 	const STATE_READY = 1;
 	const STATE_CLOSED = 2;
 
+	const MODE_DEFAULT = 0;
+	const MODE_SUBSCRIBE = 1;
+
 	/**
 	 * @var Reactor
 	 */
@@ -37,6 +40,11 @@ class Redis {
 	private $state;
 
 	/**
+	 * @var int
+	 */
+	private $mode;
+
+	/**
 	 * @var resource
 	 */
 	private $socket;
@@ -52,11 +60,20 @@ class Redis {
 	 */
 	private $futures = [];
 
+	/**
+	 * @var callable
+	 */
+	private $subscribeCallback;
+
 	public function __construct (ConnectionConfig $config) {
 		$this->reactor = getReactor();
 		$this->connector = new Connector;
 		$this->config = $config;
 		$this->state = self::STATE_INIT;
+		$this->mode = self::MODE_DEFAULT;
+		$this->outputBufferLength = 0;
+		$this->outputBuffer = "";
+
 		wait($this->connect());
 	}
 
@@ -75,6 +92,13 @@ class Redis {
 				$this->readWatcher = $this->reactor->onReadable($this->socket, [$this, "onRead"]);
 				$this->writeWatcher = $this->reactor->onWritable($this->socket, [$this, "onWrite"], false);
 				$this->state = self::STATE_READY;
+
+				if($this->config->hasPassword()) {
+					$this->send(["auth", $this->config->getPassword()]);
+					$this->futures[] = $f = new Future;
+					wait($f);
+				}
+
 				$future->succeed($this);
 			}
 		});
@@ -83,42 +107,61 @@ class Redis {
 	}
 
 	public function onRead () {
-		$future = array_shift($this->futures);
+		$error = null;
 
 		try {
 			$response = $this->readLine();
-			$future->succeed($response);
 		} catch (\Exception $e) {
-			$this->closeSocket();
-			$future->fail($e);
-		}
-	}
-
-	public function onWrite (Reactor $reactor, $watcherId, $socket) {
-		if ($this->outputBufferLength === 0) {
-			$reactor->disable($watcherId);
-			$this->watcherEnabled = false;
+			$error = $e;
 		}
 
-		$bytes = @fwrite($socket, $this->outputBuffer);
-		$this->outputBufferLength -= $bytes;
+		if (sizeof($this->futures) > 0) {
+			$future = array_shift($this->futures);
 
-		if ($this->outputBufferLength > 0) {
-			if ($bytes === 0) {
-				// TODO: Recover
+			if (isset($error)) {
+				$future->fail($error);
 			} else {
-				$this->outputBuffer = substr($this->outputBuffer, $bytes);
+				$future->succeed($response);
+			}
+		} else if (isset($response)) {
+			if ($this->mode = self::MODE_SUBSCRIBE) {
+				if ($response[0] === "message") {
+					call_user_func($this->subscribeCallback, $response[1], $response[2]);
+				}
 			}
 		}
 	}
 
+	public function onWrite (Reactor $reactor, $watcherId) {
+		if ($this->outputBufferLength === 0) {
+			$reactor->disable($watcherId);
+			$this->watcherEnabled = false;
+
+			return;
+		}
+
+		$bytes = @fwrite($this->socket, $this->outputBuffer);
+		$this->outputBufferLength -= $bytes;
+
+		if ($bytes === 0) {
+			// TODO: Recover
+			print "TODO: RECOVER\n";
+		} else {
+			$this->outputBuffer = substr($this->outputBuffer, $bytes);
+		}
+	}
+
 	private function readLine () {
-		$bytes = @fgets($this->socket);
+		$bytes = fgets($this->socket);
 
 		if ($bytes != "") {
 			return $this->parseRESP($bytes);
 		} else {
-			throw new \Exception("Connection gone");
+			if (!is_resource($this->socket) || @feof($this->socket)) {
+				throw new \Exception("Connection gone");
+			}
+
+			return null;
 		}
 	}
 
@@ -204,6 +247,7 @@ class Redis {
 
 	private function closeSocket () {
 		$this->state = self::STATE_CLOSED;
+
 		$this->reactor->cancel($this->readWatcher);
 		$this->reactor->cancel($this->writeWatcher);
 
@@ -212,39 +256,37 @@ class Redis {
 		}
 	}
 
-	public function query ($query) {
-		$future = new Future;
-		$cmd = $query . "\r\n";
-
-		$this->outputBuffer .= $cmd;
-		$this->outputBufferLength += strlen($cmd);
-		$this->reactor->enable($this->writeWatcher);
-		$this->watcherEnabled = true;
-
-		$this->futures[] = $future;
-		return $future;
-	}
-
-	public function __call ($method, $args) {
-		$future = new Future;
-
-		$array = array_merge([$method], $args);
-
+	private function send ($entries) {
 		$str = "";
 
-		foreach ($array as $entry) {
+		foreach ($entries as $entry) {
 			$str .= sprintf("$%d\r\n%s\r\n", strlen($entry), $entry);
 		}
 
-		$cmd = sprintf("*%d\r\n%s", sizeof($array), $str);
+		$cmd = sprintf("*%d\r\n%s", sizeof($entries), $str);
 
 		$this->outputBuffer .= $cmd;
 		$this->outputBufferLength += strlen($cmd);
 		$this->reactor->enable($this->writeWatcher);
 		$this->watcherEnabled = true;
+	}
 
-		$this->futures[] = $future;
+	public function __call ($method, $args) {
+		if ($this->mode !== self::MODE_DEFAULT) {
+			throw new \Exception("object currently in publish or subscribe mode");
+		}
+
+		$this->send(array_merge([$method], $args));
+
+		$this->futures[] = $future = new Future;
 		return $future;
+	}
+
+	public function subscribe ($channel, $callback) {
+		$this->send(["subscribe", $channel]);
+
+		$this->mode = self::MODE_SUBSCRIBE;
+		$this->subscribeCallback = $callback;
 	}
 
 	public function __destruct () {
