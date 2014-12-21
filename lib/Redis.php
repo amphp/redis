@@ -88,8 +88,8 @@ class Redis {
 				$future->fail($error);
 			} else {
 				$this->socket = $socket;
-				$this->readWatcher = $this->reactor->onReadable($this->socket, [$this, "onRead"]);
-				$this->writeWatcher = $this->reactor->onWritable($this->socket, [$this, "onWrite"], false);
+				$this->readWatcher = $this->reactor->onReadable($this->socket, function() { $this->onRead(); });
+				$this->writeWatcher = $this->reactor->onWritable($this->socket, function(Reactor $reactor, $watcherId) { $this->onWrite($reactor, $watcherId); }, false);
 				$this->state = self::STATE_READY;
 
 				if ($this->config->hasPassword()) {
@@ -105,7 +105,7 @@ class Redis {
 		return $future;
 	}
 
-	public function onRead () {
+	private function onRead () {
 		$error = null;
 
 		try {
@@ -131,7 +131,7 @@ class Redis {
 		}
 	}
 
-	public function onWrite (Reactor $reactor, $watcherId) {
+	private function onWrite (Reactor $reactor, $watcherId) {
 		if ($this->outputBufferLength === 0) {
 			$reactor->disable($watcherId);
 			$this->watcherEnabled = false;
@@ -176,7 +176,7 @@ class Redis {
 		return $this->config;
 	}
 
-	public function parseRESP ($input) {
+	private function parseRESP ($input) {
 		$type = $input[0];
 		$pending = substr($input, 1, -2);
 
