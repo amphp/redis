@@ -1,5 +1,15 @@
 <?php
 
+/*
+ * TODO:
+ *
+ * keys:
+ *  - migrate
+ *  - object
+ *  - sort
+ *  - scan
+ */
+
 namespace Amphp\Redis;
 
 use Amp\Reactor;
@@ -88,8 +98,12 @@ class Redis {
 				$future->fail($error);
 			} else {
 				$this->socket = $socket;
-				$this->readWatcher = $this->reactor->onReadable($this->socket, function() { $this->onRead(); });
-				$this->writeWatcher = $this->reactor->onWritable($this->socket, function(Reactor $reactor, $watcherId) { $this->onWrite($reactor, $watcherId); }, false);
+				$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
+					$this->onRead();
+				});
+				$this->writeWatcher = $this->reactor->onWritable($this->socket, function (Reactor $reactor, $watcherId) {
+					$this->onWrite($reactor, $watcherId);
+				}, false);
 				$this->state = self::STATE_READY;
 
 				if ($this->config->hasPassword()) {
@@ -134,12 +148,10 @@ class Redis {
 	private function onWrite (Reactor $reactor, $watcherId) {
 		if ($this->outputBufferLength === 0) {
 			$reactor->disable($watcherId);
-			$this->watcherEnabled = false;
-
 			return;
 		}
 
-		$bytes = @fwrite($this->socket, $this->outputBuffer);
+		$bytes = fwrite($this->socket, $this->outputBuffer);
 		$this->outputBufferLength -= $bytes;
 
 		if ($bytes === 0) {
@@ -255,19 +267,23 @@ class Redis {
 		}
 	}
 
-	private function send ($entries) {
-		$str = "";
+	private function send ($strings, callable $callback = null) {
+		$payload = "";
 
-		foreach ($entries as $entry) {
-			$str .= sprintf("$%d\r\n%s\r\n", strlen($entry), $entry);
+		foreach ($strings as $string) {
+			$payload .= sprintf("$%d\r\n%s\r\n", strlen($string), $string);
 		}
 
-		$cmd = sprintf("*%d\r\n%s", sizeof($entries), $str);
+		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
 
-		$this->outputBuffer .= $cmd;
-		$this->outputBufferLength += strlen($cmd);
+		$this->outputBuffer .= $payload;
+		$this->outputBufferLength += strlen($payload);
 		$this->reactor->enable($this->writeWatcher);
 		$this->watcherEnabled = true;
+
+		$future = new Future($callback);
+		$this->futures[] = $future;
+		return $future;
 	}
 
 	public function __call ($method, $args) {
@@ -281,39 +297,174 @@ class Redis {
 		return $future;
 	}
 
-	public function hashSetAll($hash, array $data) {
-		$array = ["hmset", $hash];
+	/**
+	 * @param string $keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function del(...$keys) {
+		return $this->send(array_merge(["del"], $keys));
+	}
 
-		foreach($data as $key => $value) {
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield string
+	 */
+	public function dump($key) {
+		return $this->send(["dump", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield bool
+	 */
+	public function exists($key) {
+		return $this->send(["exists", $key], function($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $seconds
+	 * @param bool $inMillis
+	 * @return Future
+	 * @yield bool
+	 */
+	public function expire($key, $seconds, $inMillis = false) {
+		$cmd = $inMillis ? "pexpire" : "expire";
+		return $this->send([$cmd, $key, $seconds], function($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $timestamp
+	 * @param bool $inMillis
+	 * @return Future
+	 * @yield bool
+	 */
+	public function expireat($key, $timestamp, $inMillis = false) {
+		$cmd = $inMillis ? "pexpireat" : "expireat";
+		return $this->send([$cmd, $key, $timestamp], function($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $pattern
+	 * @return Future
+	 * @yield array
+	 */
+	public function keys($pattern) {
+		return $this->send(["keys", $pattern]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $db
+	 * @return Future
+	 * @yield bool
+	 */
+	public function move($key, $db) {
+		return $this->send(["move", $key, $db], function($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield bool
+	 */
+	public function persist($key) {
+		return $this->send(["persist", $key], function($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function randomkey() {
+		return $this->send(["randomkey"]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $replacement
+	 * @param bool $existingOnly
+	 * @return Future
+	 * @yield bool
+	 */
+	public function rename($key, $replacement, $existingOnly = false) {
+		$cmd = $existingOnly ? "renamenx" : "rename";
+		return $this->send([$cmd, $key, $replacement], function($response) use($existingOnly) {
+			return $existingOnly || (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $serializedValue
+	 * @param int $ttlMillis
+	 * @return Future
+	 * @yield string
+	 */
+	public function restore($key, $serializedValue, $ttlMillis = 0) {
+		return $this->send(["restore", $key, $ttlMillis, $serializedValue]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param bool $millis
+	 * @return Future
+	 * @yield int
+	 */
+	public function ttl($key, $millis = false) {
+		$cmd = $millis ? "pttl" : "ttl";
+		return $this->send([$cmd, $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield string
+	 */
+	public function type($key) {
+		return $this->send(["type", $key]);
+	}
+
+	public function hmset ($key, array $data) {
+		$array = ["hmset", $key];
+
+		foreach ($data as $key => $value) {
 			$array[] = $key;
 			$array[] = $value;
 		}
 
-		$this->send($array);
-
-		$this->futures[] = $future = new Future;
-		return $future;
+		return $this->send($array);
 	}
 
-	public function hashGetAll($hash) {
-		$this->send(["hgetall", $hash]);
-
-		$this->futures[] = $future = new Future(function($response) {
-			if($response === null) {
+	public function hgetall ($key) {
+		return $this->send(["hgetall", $key], function ($response) {
+			if ($response === null) {
 				return null;
 			}
 
 			$size = sizeof($response);
 			$result = [];
 
-			for($i = 0; $i < $size; $i += 2) {
-				$result[$response[$i]] = $response[$i+1];
+			for ($i = 0; $i < $size; $i += 2) {
+				$result[$response[$i]] = $response[$i + 1];
 			}
 
 			return (object) $result;
 		});
-
-		return $future;
 	}
 
 	public function subscribe ($channel, $callback) {
