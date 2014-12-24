@@ -276,24 +276,14 @@ class Redis {
 
 		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
 
+		$future = new Future($callback);
+		$this->futures[] = $future;
+
 		$this->outputBuffer .= $payload;
 		$this->outputBufferLength += strlen($payload);
 		$this->reactor->enable($this->writeWatcher);
 		$this->watcherEnabled = true;
 
-		$future = new Future($callback);
-		$this->futures[] = $future;
-		return $future;
-	}
-
-	public function __call ($method, $args) {
-		if ($this->mode !== self::MODE_DEFAULT) {
-			throw new \Exception("object currently in publish or subscribe mode");
-		}
-
-		$this->send(array_merge([$method], $args));
-
-		$this->futures[] = $future = new Future;
 		return $future;
 	}
 
@@ -437,6 +427,44 @@ class Redis {
 	 */
 	public function type($key) {
 		return $this->send(["type", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @return Future
+	 * @yield int
+	 */
+	public function append ($key, $value) {
+		return $this->send(["append", $key, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int|null $start
+	 * @param int|null $end
+	 * @return Future
+	 */
+	public function bitcount ($key, $start = null, $end = null) {
+		$cmd = ["bitcount", $key];
+
+		if(isset($start, $end)) {
+			$cmd[] = $start;
+			$cmd[] = $end;
+		}
+
+		return $this->send($cmd);
+	}
+
+	/**
+	 * @param string $op
+	 * @param string $destination
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function bitop ($op, $destination, ...$keys) {
+		return $this->send(array_combine(["bitop", $op, $destination], $keys));
 	}
 
 	public function hmset ($key, array $data) {
