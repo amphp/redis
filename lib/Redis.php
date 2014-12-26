@@ -268,6 +268,10 @@ class Redis {
 	}
 
 	private function send ($strings, callable $callback = null) {
+                if (!$this->isAlive()) {
+                        throw new Exception("Redis is not ready. You either forgot to connect() or already close()'ed the connection");
+                }
+
 		$payload = "";
 
 		foreach ($strings as $string) {
