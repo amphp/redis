@@ -273,7 +273,7 @@ class Redis {
 		}
 	}
 
-	private function send ($strings, callable $callback = null) {
+	private function send ($strings, callable $responseCallback = null) {
 		$payload = "";
 
 		foreach ($strings as $string) {
@@ -282,7 +282,7 @@ class Redis {
 
 		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
 
-		$future = new Future($callback);
+		$future = new Future($responseCallback);
 		$this->futures[] = $future;
 
 		$this->outputBuffer .= $payload;
