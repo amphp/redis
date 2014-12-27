@@ -5,8 +5,8 @@ namespace Amphp\Redis;
 class Future extends \Amp\Future {
 	private $callback;
 
-	public function __construct($callback = null) {
-		$this->callback = $callback;
+	public function __construct(callable $successCallback = null) {
+		$this->callback = $successCallback;
 	}
 
 	public function succeed($result = null) {
