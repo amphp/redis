@@ -6,11 +6,11 @@ use function Amp\run;
 use function Amp\wait;
 
 class BasicTest extends \PHPUnit_Framework_TestCase {
-	function setUp () {
-		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid`;
+	static function setUpBeforeClass () {
+		print `redis-server --daemonize yes --port 25325 --timeout 1 --pidfile /tmp/amp-redis.pid`;
 	}
 
-	function tearDown () {
+	static function tearDownAfterClass () {
 		$pid = @file_get_contents("/tmp/amp-redis.pid");
 		@unlink("/tmp/amp-redis.pid");
 
@@ -19,7 +19,10 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 		}
 	}
 
-	function testConnect () {
+	/**
+	 * @test
+	 */
+	function connect () {
 		$config = new ConnectionConfig("127.0.0.1", 25325, null);
 		$response = null;
 
@@ -34,14 +37,18 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals("PONG", $response);
 	}
 
-	function testTimeout () {
+	/**
+	 * @test
+	 * @medium
+	 */
+	function timeout () {
 		$config = new ConnectionConfig("127.0.0.1", 25325, null);
 		$response = null;
 
 		$callable = function() use ($config, &$response) {
 			$redis = new Redis($config);
 			$response = (yield $redis->echotest("1"));
-			yield "pause" => 5000;
+			yield "pause" => 8000;
 			$response = (yield $redis->echotest("2"));
 			$redis->close();
 		};

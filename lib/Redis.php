@@ -82,24 +82,15 @@ class Redis {
 		$this->outputBuffer = "";
 		$this->inputBufferLength = 0;
 		$this->inputBuffer = "";
-		$this->connect();
 	}
 
 	public function connect () {
-		if($this->connectFuture) {
+		if($this->connectFuture || $this->readWatcher) {
 			return;
 		}
-
-		if($this->connectAttempts++ > 3) {
-			return;
-		}
-
-		print "\nconnect\n";
 
 		$this->connectFuture = $this->connector->connect("tcp://" . $this->config->getHost() . ":" . $this->config->getPort());
 		$this->connectFuture->when(function ($error, $socket) {
-			@fwrite($socket, "ping\r\n");
-
 			if (!is_resource($socket) || @feof($socket)) {
 				throw new \Exception("Connection could not be initialised!");
 			}
@@ -108,13 +99,10 @@ class Redis {
 				throw $error;
 			}
 
-			$this->futures[] = new Future;
-
 			$this->socket = $socket;
 
 			if ($this->config->hasPassword()) {
 				$this->send(["auth", $this->config->getPassword()]);
-				$this->futures[] = new Future;
 			}
 
 			$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
@@ -134,6 +122,12 @@ class Redis {
 
 		try {
 			$response = $this->readLine();
+
+			if($response == null) {
+				return;
+			} else {
+				$response = $response[0];
+			}
 		} catch (\Exception $e) {
 			$error = $e;
 		}
@@ -160,16 +154,18 @@ class Redis {
 		}
 
 		$bytes = fwrite($this->socket, $this->outputBuffer);
-		$this->outputBufferLength -= $bytes;
 
 		if ($bytes === 0) {
 			$this->reactor->cancel($this->readWatcher);
 			$this->reactor->cancel($this->writeWatcher);
-			print "couldn't write, reconnect\n";
+
+			$this->readWatcher = null;
+			$this->writeWatcher = null;
+
 			$this->connect();
 		} else {
-			print "wrote: " . substr($this->outputBuffer, 0, $bytes) . "\n";
 			$this->outputBuffer = substr($this->outputBuffer, $bytes);
+			$this->outputBufferLength -= $bytes;
 		}
 	}
 
@@ -177,15 +173,18 @@ class Redis {
 		$bytes = fgets($this->socket);
 
 		if ($bytes !== false) {
-			return $this->parseRESP($bytes);
+			return [$this->parseRESP($bytes)];
 		} else {
-			if (!is_resource($this->socket)) {
+			if (!is_resource($this->socket) || @feof($this->socket)) {
 				$this->reactor->cancel($this->readWatcher);
 				$this->reactor->cancel($this->writeWatcher);
-				print "socket gone, reconnect\n";
-				$this->connect();
+
+				$this->readWatcher = null;
+				$this->writeWatcher = null;
 			}
 		}
+
+		return null;
 	}
 
 	public function close () {
@@ -268,12 +267,17 @@ class Redis {
 		$this->reactor->cancel($this->readWatcher);
 		$this->reactor->cancel($this->writeWatcher);
 
+		$this->readWatcher = null;
+		$this->writeWatcher = null;
+
 		if (is_resource($this->socket)) {
 			fclose($this->socket);
 		}
 	}
 
-	private function send ($strings, callable $responseCallback = null) {
+	private function send (array $strings, callable $responseCallback = null) {
+		$this->connect();
+
 		$payload = "";
 
 		foreach ($strings as $string) {
