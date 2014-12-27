@@ -17,6 +17,7 @@
 		"issues": "https://github.com/kelunik/amp-redis"
 	},
 	"require": {
+                "php": "~5.6",
 		"amphp/amp": "~0.15",
 		"rdlowrey/nbsock": "~0.5"
 	},
