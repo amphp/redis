@@ -20,7 +20,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	function testConnect () {
-		$config = new ConnectionConfig(REDIS_HOST, REDIS_PORT, REDIS_PASSWORD);
+		$config = new ConnectionConfig("127.0.0.1", 25325, null);
 		$response = null;
 
 		$callable = function() use ($config, &$response) {
@@ -35,7 +35,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	}
 
 	function testTimeout () {
-		$config = new ConnectionConfig(REDIS_HOST, REDIS_PORT, REDIS_PASSWORD);
+		$config = new ConnectionConfig("127.0.0.1", 25325, null);
 		$response = null;
 
 		$callable = function() use ($config, &$response) {
