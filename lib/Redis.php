@@ -56,8 +56,6 @@ class Redis {
 	private $inputBuffer;
 	private $inputBufferLength;
 
-	private $connectAttempts;
-
 	/**
 	 * @var Future
 	 */
@@ -91,12 +89,12 @@ class Redis {
 
 		$this->connectFuture = $this->connector->connect("tcp://" . $this->config->getHost() . ":" . $this->config->getPort());
 		$this->connectFuture->when(function ($error, $socket) {
-			if (!is_resource($socket) || @feof($socket)) {
-				throw new \Exception("Connection could not be initialised!");
-			}
-
 			if ($error) {
 				throw $error;
+			}
+
+			if (!is_resource($socket) || @feof($socket)) {
+				throw new \Exception("Connection could not be initialised!");
 			}
 
 			$this->socket = $socket;
