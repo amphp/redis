@@ -20,6 +20,9 @@
 		"amphp/amp": "~0.15",
 		"rdlowrey/nbsock": "~0.5"
 	},
+	"require-dev": {
+		"phpunit/phpunit": "~4.4.0"
+	},
 	"minimum-stability": "dev",
 	"autoload": {
 		"psr-4": {

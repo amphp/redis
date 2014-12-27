@@ -12,8 +12,8 @@
 
 namespace Amphp\Redis;
 
+use Amp\Future;
 use Amp\Reactor;
-use Amp\Success;
 use Nbsock\Connector;
 use function Amp\cancel;
 use function Amp\getReactor;
@@ -21,10 +21,6 @@ use function Amp\onReadable;
 use function Amp\wait;
 
 class Redis {
-	const STATE_INIT = 0;
-	const STATE_READY = 1;
-	const STATE_CLOSED = 2;
-
 	const MODE_DEFAULT = 0;
 	const MODE_SUBSCRIBE = 1;
 
@@ -46,11 +42,6 @@ class Redis {
 	/**
 	 * @var int
 	 */
-	private $state;
-
-	/**
-	 * @var int
-	 */
 	private $mode;
 
 	/**
@@ -60,9 +51,17 @@ class Redis {
 
 	private $readWatcher;
 	private $writeWatcher;
-	private $watcherEnabled;
 	private $outputBuffer;
 	private $outputBufferLength;
+	private $inputBuffer;
+	private $inputBufferLength;
+
+	private $connectAttempts;
+
+	/**
+	 * @var Future
+	 */
+	private $connectFuture;
 
 	/**
 	 * @var Future[]
@@ -78,45 +77,56 @@ class Redis {
 		$this->reactor = getReactor();
 		$this->connector = new Connector;
 		$this->config = $config;
-		$this->state = self::STATE_INIT;
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
-
-		wait($this->connect());
+		$this->inputBufferLength = 0;
+		$this->inputBuffer = "";
+		$this->connect();
 	}
 
 	public function connect () {
-		if ($this->isAlive()) {
-			return new Success($this);
+		if($this->connectFuture) {
+			return;
 		}
 
-		$future = new Future;
+		if($this->connectAttempts++ > 3) {
+			return;
+		}
 
-		$this->connector->connect("tcp://" . $this->config->getHost() . ":" . $this->config->getPort())->when(function ($error, $socket) use ($future) {
-			if ($error) {
-				$future->fail($error);
-			} else {
-				$this->socket = $socket;
-				$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
-					$this->onRead();
-				});
-				$this->writeWatcher = $this->reactor->onWritable($this->socket, function (Reactor $reactor, $watcherId) {
-					$this->onWrite($reactor, $watcherId);
-				}, false);
-				$this->state = self::STATE_READY;
+		print "\nconnect\n";
 
-				if ($this->config->hasPassword()) {
-					$this->send(["auth", $this->config->getPassword()]);
-					$this->futures[] = $f = new Future;
-					wait($f);
-				}
+		$this->connectFuture = $this->connector->connect("tcp://" . $this->config->getHost() . ":" . $this->config->getPort());
+		$this->connectFuture->when(function ($error, $socket) {
+			@fwrite($socket, "ping\r\n");
 
-				$future->succeed($this);
+			if (!is_resource($socket) || @feof($socket)) {
+				throw new \Exception("Connection could not be initialised!");
 			}
-		});
 
-		return $future;
+			if ($error) {
+				throw $error;
+			}
+
+			$this->futures[] = new Future;
+
+			$this->socket = $socket;
+
+			if ($this->config->hasPassword()) {
+				$this->send(["auth", $this->config->getPassword()]);
+				$this->futures[] = new Future;
+			}
+
+			$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
+				$this->onRead();
+			});
+
+			$this->writeWatcher = $this->reactor->onWritable($this->socket, function (Reactor $reactor, $watcherId) {
+				$this->onWrite($reactor, $watcherId);
+			}, !empty($this->outputBuffer));
+
+			$this->connectFuture = null;
+		});
 	}
 
 	private function onRead () {
@@ -137,10 +147,8 @@ class Redis {
 				$future->succeed($response);
 			}
 		} else if (isset($response)) {
-			if ($this->mode = self::MODE_SUBSCRIBE) {
-				if ($response[0] === "message") {
-					call_user_func($this->subscribeCallback, $response[1], $response[2]);
-				}
+			if ($response[0] === "message") {
+				call_user_func($this->subscribeCallback, $response[1], $response[2]);
 			}
 		}
 	}
@@ -155,9 +163,12 @@ class Redis {
 		$this->outputBufferLength -= $bytes;
 
 		if ($bytes === 0) {
-			// TODO: Recover
-			print "TODO: RECOVER\n";
+			$this->reactor->cancel($this->readWatcher);
+			$this->reactor->cancel($this->writeWatcher);
+			print "couldn't write, reconnect\n";
+			$this->connect();
 		} else {
+			print "wrote: " . substr($this->outputBuffer, 0, $bytes) . "\n";
 			$this->outputBuffer = substr($this->outputBuffer, $bytes);
 		}
 	}
@@ -165,23 +176,20 @@ class Redis {
 	private function readLine () {
 		$bytes = fgets($this->socket);
 
-		if ($bytes != "") {
+		if ($bytes !== false) {
 			return $this->parseRESP($bytes);
 		} else {
-			if (!is_resource($this->socket) || @feof($this->socket)) {
-				throw new \Exception("Connection gone");
+			if (!is_resource($this->socket)) {
+				$this->reactor->cancel($this->readWatcher);
+				$this->reactor->cancel($this->writeWatcher);
+				print "socket gone, reconnect\n";
+				$this->connect();
 			}
-
-			return null;
 		}
 	}
 
 	public function close () {
 		$this->closeSocket();
-	}
-
-	public function isAlive () {
-		return $this->state === self::STATE_READY;
 	}
 
 	public function getConfig () {
@@ -257,8 +265,6 @@ class Redis {
 	}
 
 	private function closeSocket () {
-		$this->state = self::STATE_CLOSED;
-
 		$this->reactor->cancel($this->readWatcher);
 		$this->reactor->cancel($this->writeWatcher);
 
@@ -281,8 +287,10 @@ class Redis {
 
 		$this->outputBuffer .= $payload;
 		$this->outputBufferLength += strlen($payload);
-		$this->reactor->enable($this->writeWatcher);
-		$this->watcherEnabled = true;
+
+		if($this->writeWatcher) {
+			$this->reactor->enable($this->writeWatcher);
+		}
 
 		return $future;
 	}
@@ -292,7 +300,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function del(...$keys) {
+	public function del (...$keys) {
 		return $this->send(array_merge(["del"], $keys));
 	}
 
@@ -301,7 +309,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function dump($key) {
+	public function dump ($key) {
 		return $this->send(["dump", $key]);
 	}
 
@@ -310,8 +318,8 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function exists($key) {
-		return $this->send(["exists", $key], function($response) {
+	public function exists ($key) {
+		return $this->send(["exists", $key], function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -323,9 +331,9 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function expire($key, $seconds, $inMillis = false) {
+	public function expire ($key, $seconds, $inMillis = false) {
 		$cmd = $inMillis ? "pexpire" : "expire";
-		return $this->send([$cmd, $key, $seconds], function($response) {
+		return $this->send([$cmd, $key, $seconds], function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -337,9 +345,9 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function expireat($key, $timestamp, $inMillis = false) {
+	public function expireat ($key, $timestamp, $inMillis = false) {
 		$cmd = $inMillis ? "pexpireat" : "expireat";
-		return $this->send([$cmd, $key, $timestamp], function($response) {
+		return $this->send([$cmd, $key, $timestamp], function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -349,7 +357,7 @@ class Redis {
 	 * @return Future
 	 * @yield array
 	 */
-	public function keys($pattern) {
+	public function keys ($pattern) {
 		return $this->send(["keys", $pattern]);
 	}
 
@@ -359,8 +367,8 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function move($key, $db) {
-		return $this->send(["move", $key, $db], function($response) {
+	public function move ($key, $db) {
+		return $this->send(["move", $key, $db], function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -370,8 +378,8 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function persist($key) {
-		return $this->send(["persist", $key], function($response) {
+	public function persist ($key) {
+		return $this->send(["persist", $key], function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -380,7 +388,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function randomkey() {
+	public function randomkey () {
 		return $this->send(["randomkey"]);
 	}
 
@@ -391,9 +399,9 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function rename($key, $replacement, $existingOnly = false) {
+	public function rename ($key, $replacement, $existingOnly = false) {
 		$cmd = $existingOnly ? "renamenx" : "rename";
-		return $this->send([$cmd, $key, $replacement], function($response) use($existingOnly) {
+		return $this->send([$cmd, $key, $replacement], function ($response) use ($existingOnly) {
 			return $existingOnly || (bool) $response;
 		});
 	}
@@ -405,7 +413,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function restore($key, $serializedValue, $ttlMillis = 0) {
+	public function restore ($key, $serializedValue, $ttlMillis = 0) {
 		return $this->send(["restore", $key, $ttlMillis, $serializedValue]);
 	}
 
@@ -415,7 +423,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function ttl($key, $millis = false) {
+	public function ttl ($key, $millis = false) {
 		$cmd = $millis ? "pttl" : "ttl";
 		return $this->send([$cmd, $key]);
 	}
@@ -425,7 +433,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function type($key) {
+	public function type ($key) {
 		return $this->send(["type", $key]);
 	}
 
@@ -448,7 +456,7 @@ class Redis {
 	public function bitcount ($key, $start = null, $end = null) {
 		$cmd = ["bitcount", $key];
 
-		if(isset($start, $end)) {
+		if (isset($start, $end)) {
 			$cmd[] = $start;
 			$cmd[] = $end;
 		}
@@ -493,6 +501,23 @@ class Redis {
 
 			return (object) $result;
 		});
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function ping () {
+		return $this->send(["ping"]);
+	}
+
+	/**
+	 * @param string $text
+	 * @return Future
+	 * @yield string
+	 */
+	public function echotest ($text) {
+		return $this->send(["echo", $text]);
 	}
 
 	public function subscribe ($channel, $callback) {
