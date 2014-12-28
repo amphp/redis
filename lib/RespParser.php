@@ -73,34 +73,26 @@ class RespParser {
 	private function onRespParsed ($type, $payload) {
 		if ($this->arrayResponse !== null) {
 			$arr = &$this->arrayResponse;
-			$stack = [$arr];
 
 			for ($level = 1; $level < sizeof($this->arrayStack); $level++) {
-				end($arr);
-				$arr = &$arr[key($arr)];
-				$stack[] = $arr;
+				$arr = &$arr[sizeof($arr) - 1];
 			}
 
-			$size = sizeof($arr);
+			$this->arrayStack[sizeof($this->arrayStack) - 1]--;
 
 			if ($type === Resp::TYPE_ARRAY) {
 				if ($payload >= 0) {
 					$this->arrayStack[] = $payload;
 					$arr[] = [];
-					$size = 0;
 				} else {
 					$arr[] = null;
-					$size++;
 				}
 			} else {
 				$arr[] = $payload;
-				$size++;
 			}
 
-			while ($size === end($this->arrayStack)) {
+			while (end($this->arrayStack) === 0) {
 				array_pop($this->arrayStack);
-				array_pop($stack);
-				$size = sizeof(end($stack));
 			}
 
 			if (sizeof($this->arrayStack) === 0) {
