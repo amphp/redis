@@ -7,27 +7,24 @@ class RespParser {
 
 	private $responseCallback;
 	private $buffer;
-	private $bufferLength;
 	private $arrayResponse;
-	private $arrayLengths;
+	private $arrayStack;
 
 	public function __construct (callable $responseCallback) {
 		$this->responseCallback = $responseCallback;
 		$this->buffer = "";
-		$this->bufferLength = 0;
 		$this->arrayResponse = null;
-		$this->arrayLengths = [];
+		$this->arrayStack = [];
 	}
 
 	public function append ($str) {
 		$this->buffer .= $str;
-		$this->bufferLength += strlen($str);
 
 		while ($this->tryParse()) ;
 	}
 
 	private function tryParse () {
-		if ($this->bufferLength === 0) {
+		if (strlen($this->buffer) === 0) {
 			return false;
 		}
 
@@ -40,58 +37,59 @@ class RespParser {
 
 		switch ($type) {
 			case Resp::TYPE_SIMPLE_STRING:
-				$this->onResponse($type, substr($this->buffer, 1, $pos - 1));
+				$this->onRespParsed($type, substr($this->buffer, 1, $pos - 1));
 				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
 			case Resp::TYPE_ERROR:
-				$this->onResponse($type, substr($this->buffer, 1, $pos - 1));
+				$this->onRespParsed($type, new RedisException(substr($this->buffer, 1, $pos - 1)));
 				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
 			case Resp::TYPE_INTEGER:
-				$this->onResponse($type, (int) substr($this->buffer, 1, $pos - 1));
+				$this->onRespParsed($type, (int) substr($this->buffer, 1, $pos - 1));
 				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
 			case Resp::TYPE_BULK_STRING:
 				$length = (int) substr($this->buffer, 1, $pos);
 
-				if ($this->bufferLength < $pos + $length + 4) {
+				if (strlen($this->buffer) < $pos + $length + 4) {
 					return false;
 				}
 
-				$this->onResponse($type, substr($this->buffer, $pos + 2, $length));
+				$this->onRespParsed($type, substr($this->buffer, $pos + 2, $length));
 				$this->buffer = substr($this->buffer, $pos + $length + 4);
 				return true;
 
 			case Resp::TYPE_ARRAY:
-				$this->onResponse($type, (int) substr($this->buffer, 1, $pos - 1));
+				$this->onRespParsed($type, (int) substr($this->buffer, 1, $pos - 1));
 				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
 			default:
-				return false; // throw exception?
+				throw new RedisException (
+					sprintf("unknown resp data type: %s", $type)
+				);
 		}
 	}
 
-	private function onResponse ($type, $payload) {
-		if($this->arrayResponse !== null) {
+	private function onRespParsed ($type, $payload) {
+		if ($this->arrayResponse !== null) {
 			$arr = &$this->arrayResponse;
-			$level = 1;
+			$stack = [$arr];
 
-			while($level++ < sizeof($this->arrayLengths)) {
+			for ($level = 1; $level < sizeof($this->arrayStack); $level++) {
 				end($arr);
 				$arr = &$arr[key($arr)];
+				$stack[] = $arr;
 			}
-		}
 
-		if(isset($arr)) {
 			$size = sizeof($arr);
 
-			if($type === Resp::TYPE_ARRAY) {
-				if($payload >= 0) {
-					$this->arrayLengths[] = $payload;
+			if ($type === Resp::TYPE_ARRAY) {
+				if ($payload >= 0) {
+					$this->arrayStack[] = $payload;
 					$arr[] = [];
 					$size = 0;
 				} else {
@@ -103,39 +101,27 @@ class RespParser {
 				$size++;
 			}
 
-			while($size === end($this->arrayLengths)) {
-				array_pop($this->arrayLengths);
-
-				$a = &$this->arrayResponse;
-				$level = 1;
-
-				while($level++ < sizeof($this->arrayLengths)) {
-					end($a);
-					$a = &$a[key($a)];
-				}
-
-				$size = sizeof($a);
+			while ($size === end($this->arrayStack)) {
+				array_pop($this->arrayStack);
+				array_pop($stack);
+				$size = sizeof(end($stack));
 			}
 
-			if(sizeof($this->arrayLengths) === 0) {
-				$this->on($this->arrayResponse);
+			if (sizeof($this->arrayStack) === 0) {
+				call_user_func($this->responseCallback, $this->arrayResponse);
 				$this->arrayResponse = null;
 			}
-		} else if($type === Resp::TYPE_ARRAY) {
-			if($payload > 0) {
-				$this->arrayLengths[] = $payload;
+		} else if ($type === Resp::TYPE_ARRAY) {
+			if ($payload > 0) {
+				$this->arrayStack[] = $payload;
 				$this->arrayResponse = [];
-			} else if($payload === 0) {
-				$this->on([]);
+			} else if ($payload === 0) {
+				call_user_func($this->responseCallback, []);
 			} else {
-				$this->on(null);
+				call_user_func($this->responseCallback, null);
 			}
 		} else {
-			$this->on($payload);
+			call_user_func($this->responseCallback, $payload);
 		}
-	}
-
-	private function on($payload) {
-		call_user_func($this->responseCallback, $payload);
 	}
 }

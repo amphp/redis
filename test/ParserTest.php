@@ -45,6 +45,19 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
 	 */
+	function error () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("-ERR something went wrong :(\r\n");
+
+		$this->assertInstanceOf("Amphp\\Redis\\RedisException", $result);
+	}
+
+	/**
+	 * @test
+	 */
 	function arrayNull () {
 		$result = null;
 		$parser = new RespParser(function($resp) use (&$result) {
@@ -105,5 +118,32 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 		$parser->append("*3\r\n*1\r\n+foo\r\n:42\r\n*2\r\n+bar\r\n$3\r\nbaz\r\n");
 
 		$this->assertEquals([["foo"], 42, ["bar", "baz"]], $result);
+	}
+
+	/**
+	 * @test
+	 */
+	function pipeline () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("+foo\r\n+bar\r\n");
+
+		$this->assertEquals("bar", $result);
+	}
+
+	/**
+	 * @test
+	 */
+	function latency () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("+foo\r");
+		$this->assertEquals(null, $result);
+		$parser->append("\n");
+		$this->assertEquals("foo", $result);
 	}
 }

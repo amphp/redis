@@ -53,8 +53,11 @@ class Redis {
 	private $writeWatcher;
 	private $outputBuffer;
 	private $outputBufferLength;
-	private $inputBuffer;
-	private $inputBufferLength;
+
+	/**
+	 * @ver RespParser
+	 */
+	private $parser;
 
 	/**
 	 * @var Future
@@ -78,8 +81,9 @@ class Redis {
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
-		$this->inputBufferLength = 0;
-		$this->inputBuffer = "";
+		$this->parser = new RespParser(function($result) {
+			$this->onResponse($result);
+		});
 	}
 
 	public function connect () {
@@ -116,30 +120,34 @@ class Redis {
 	}
 
 	private function onRead () {
-		$error = null;
+		$read = fread($this->socket, 8192);
 
-		try {
-			$response = $this->readLine();
-
-			if($response == null) {
-				return;
-			} else {
-				$response = $response[0];
-			}
-		} catch (\Exception $e) {
-			$error = $e;
+		if($read !== false) {
+			$this->parser->append($read);
 		}
 
+		else if (!is_resource($this->socket) || @feof($this->socket)) {
+			$this->reactor->cancel($this->readWatcher);
+			$this->reactor->cancel($this->writeWatcher);
+
+			$this->readWatcher = null;
+			$this->writeWatcher = null;
+		}
+	}
+
+	private function onResponse($result) {
 		if (sizeof($this->futures) > 0) {
 			$future = array_shift($this->futures);
 
-			if (isset($error)) {
-				$future->fail($error);
+			if ($result instanceof RedisException) {
+				$future->fail($result);
 			} else {
-				$future->succeed($response);
+				$future->succeed($result);
 			}
-		} else if (isset($response)) {
-			if ($response[0] === "message") {
+		}
+
+		else if (isset($response)) {
+			if (is_array($result) && sizeof($result) === 3 && $result[0] === "message") {
 				call_user_func($this->subscribeCallback, $response[1], $response[2]);
 			}
 		}
@@ -167,98 +175,12 @@ class Redis {
 		}
 	}
 
-	private function readLine () {
-		$bytes = fgets($this->socket);
-
-		if ($bytes !== false) {
-			return [$this->parseRESP($bytes)];
-		} else {
-			if (!is_resource($this->socket) || @feof($this->socket)) {
-				$this->reactor->cancel($this->readWatcher);
-				$this->reactor->cancel($this->writeWatcher);
-
-				$this->readWatcher = null;
-				$this->writeWatcher = null;
-			}
-		}
-
-		return null;
-	}
-
 	public function close () {
 		$this->closeSocket();
 	}
 
 	public function getConfig () {
 		return $this->config;
-	}
-
-	private function parseRESP ($input) {
-		$type = $input[0];
-		$pending = substr($input, 1, -2);
-
-		switch ($type) {
-			case "+":
-				goto parse_simple_string;
-			case "-":
-				goto parse_error;
-			case ":":
-				goto parse_integer;
-			case "$":
-				goto parse_bulk_string;
-			case "*":
-				goto parse_array;
-			default:
-				throw new \Exception("unknown RESP type: " . $type);
-		}
-
-		parse_simple_string: {
-			return $pending;
-		}
-
-		parse_bulk_string: {
-			if ($pending === "-1") {
-				return null;
-			}
-
-			$length = intval($pending);
-
-			if ($length > 0) {
-				$response = stream_get_contents($this->socket, $length);
-			} else {
-				$response = "";
-			}
-
-			// CRLF
-			fread($this->socket, 2);
-
-			return $response;
-		}
-
-		parse_error: {
-			$message = explode(" ", $pending, 2)[1];
-			throw new \Exception($message);
-		}
-
-		parse_array: {
-			$size = intval($pending);
-
-			if ($size === -1) {
-				return null;
-			}
-
-			$response = [];
-
-			for ($i = 0; $i < $size; $i++) {
-				$response[] = $this->readLine();
-			}
-
-			return $response;
-		}
-
-		parse_integer: {
-			return intval($pending);
-		}
 	}
 
 	private function closeSocket () {
