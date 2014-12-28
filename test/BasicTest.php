@@ -7,7 +7,7 @@ use function Amp\wait;
 
 class BasicTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
-		print `redis-server --daemonize yes --port 25325 --timeout 1 --pidfile /tmp/amp-redis.pid`;
+		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid`;
 	}
 
 	static function tearDownAfterClass () {
@@ -16,6 +16,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 
 		if(!empty($pid)) {
 			print `kill $pid`;
+			sleep(3);
 		}
 	}
 
@@ -61,8 +62,6 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 * @medium
 	 */
 	function timeout () {
-		$this->markTestSkipped("known to fail");
-
 		$config = new ConnectionConfig("127.0.0.1", 25325, null);
 		$response = null;
 

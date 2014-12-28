@@ -104,7 +104,10 @@ class Redis {
 			$this->socket = $socket;
 
 			if ($this->config->hasPassword()) {
-				$this->send(["auth", $this->config->getPassword()]);
+				$pass = $this->config->getPassword();
+				array_unshift($this->futures, new Future);
+				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($pass) . "\r\n" . $pass . "\r\n" . $this->outputBuffer;
+				$this->outputBufferLength = strlen($this->outputBuffer);
 			}
 
 			$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
@@ -122,7 +125,7 @@ class Redis {
 	private function onRead () {
 		$read = fread($this->socket, 8192);
 
-		if($read !== false) {
+		if($read) {
 			$this->parser->append($read);
 		}
 
@@ -168,7 +171,7 @@ class Redis {
 			$this->readWatcher = null;
 			$this->writeWatcher = null;
 
-			$this->connect();
+			throw new RedisException("connection gone");
 		} else {
 			$this->outputBuffer = substr($this->outputBuffer, $bytes);
 			$this->outputBufferLength -= $bytes;
