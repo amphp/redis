@@ -46,6 +46,7 @@ class RespParser {
 				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
+			case Resp::TYPE_ARRAY:
 			case Resp::TYPE_INTEGER:
 				$this->onRespParsed($type, (int) substr($this->buffer, 1, $pos - 1));
 				$this->buffer = substr($this->buffer, $pos + 2);
@@ -60,11 +61,6 @@ class RespParser {
 
 				$this->onRespParsed($type, substr($this->buffer, $pos + 2, $length));
 				$this->buffer = substr($this->buffer, $pos + $length + 4);
-				return true;
-
-			case Resp::TYPE_ARRAY:
-				$this->onRespParsed($type, (int) substr($this->buffer, 1, $pos - 1));
-				$this->buffer = substr($this->buffer, $pos + 2);
 				return true;
 
 			default:
