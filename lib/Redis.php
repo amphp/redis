@@ -414,10 +414,10 @@ class Redis {
 
 		if($start != null) {
 			$payload[] = $start;
-		}
 
-		if($start != null) {
-			$payload[] = $start;
+			if($end != null) {
+				$payload[] = $end;
+			}
 		}
 
 		return $this->send($payload);
@@ -464,7 +464,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function getrange($key, $start = 0, $end = -1) {
-		return $this->send(["getrange", $key]);
+		return $this->send(["getrange", $key, $start, $end]);
 	}
 
 	/**
