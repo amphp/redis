@@ -402,6 +402,207 @@ class Redis {
 		return $this->send(array_combine(["bitop", $op, $destination], $keys));
 	}
 
+	/**
+	 * @param string $key
+	 * @param int $bit
+	 * @param int $start
+	 * @param int $end
+	 * @return Future
+	 * @yield int
+	 */
+	public function bitpos ($key, $bit, $start = null, $end = null) {
+		$payload = ["bitpos", $key, $bit];
+
+		if($start != null) {
+			$payload[] = $start;
+		}
+
+		if($start != null) {
+			$payload[] = $start;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $decrement
+	 * @return Future
+	 * @yield int
+	 */
+	public function decr($key, $decrement = 1) {
+		if($decrement === 1) {
+			return $this->send(["decr", $key]);
+		} else {
+			return $this->send(["decrby", $key, $decrement]);
+		}
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield string
+	 */
+	public function get($key) {
+		return $this->send(["get", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $offset
+	 * @return Future
+	 * @yield int
+	 */
+	public function getbit($key, $offset) {
+		return $this->send(["getbit", $key, $offset]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $start
+	 * @param int $end
+	 * @return Future
+	 * @yield string
+	 */
+	public function getrange($key, $start = 0, $end = -1) {
+		return $this->send(["getrange", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @return Future
+	 * @yield string
+	 */
+	public function getset($key, $value) {
+		return $this->send(["getset", $key, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $increment
+	 * @return Future
+	 * @yield int
+	 */
+	public function incr($key, $increment = 1) {
+		if($increment === 1) {
+			return $this->send(["incr", $key]);
+		} else {
+			return $this->send(["incrby", $key, $increment]);
+		}
+	}
+
+	/**
+	 * @param string $key
+	 * @param float $increment
+	 * @return Future
+	 * @yield string
+	 */
+	public function incrbyfloat($key, $increment) {
+		return $this->send(["incrbyfloat", $key, $increment]);
+	}
+
+	/**
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield array
+	 */
+	public function mget(...$keys) {
+		return $this->send(array_combine(["mget"], $keys));
+	}
+
+	/**
+	 * @param array $data
+	 * @param bool $onlyIfNoneExists
+	 * @return Future
+	 * @yield bool
+	 */
+	public function mset(array $data, $onlyIfNoneExists = false) {
+		$payload = [$onlyIfNoneExists ? "msetnx" : "mset"];
+
+		foreach($data as $key => $value) {
+			$payload[] = $key;
+			$payload[] = $value;
+		}
+
+		return $this->send($payload, function ($response) use ($onlyIfNoneExists) {
+			return !$onlyIfNoneExists || (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @param int $expire
+	 * @param bool $useMillis
+	 * @param string $existOption
+	 * @return Future
+	 * @yield bool
+	 */
+	public function set($key, $value, $expire = 0, $useMillis = false, $existOption = null) {
+		$payload = ["set", $key, $value];
+
+		if($expire !== 0) {
+			$payload[] = $useMillis ? "PX" : "EX";
+			$payload[] = $expire;
+		}
+
+		return $this->send($payload, function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @return Future
+	 * @yield bool
+	 */
+	public function setnx($key, $value) {
+		return $this->set($key, $value, 0, false, "NX");
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @return Future
+	 * @yield bool
+	 */
+	public function setxx($key, $value) {
+		return $this->set($key, $value, 0, false, "XX");
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $offset
+	 * @param bool $value
+	 * @return Future
+	 * @yield int
+	 */
+	public function setbit($key, $offset, $value) {
+		return $this->send(["setbit", $key, $offset, (int) $value]);
+	}
+
+	/**
+	 * @param $key
+	 * @param $offset
+	 * @param $value
+	 * @return Future
+	 * @yield int
+	 */
+	public function setrange($key, $offset, $value) {
+		return $this->send(["setrange", $key, $offset, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function strlen($key) {
+		return $this->send(["strlen", $key]);
+	}
+
 	public function hmset ($key, array $data) {
 		$array = ["hmset", $key];
 
@@ -446,6 +647,8 @@ class Redis {
 	public function echotest ($text) {
 		return $this->send(["echo", $text]);
 	}
+
+
 
 	public function subscribe ($channel, $callback) {
 		$this->send(["subscribe", $channel]);
