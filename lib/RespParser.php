@@ -6,15 +6,14 @@ class RespParser {
 	const CRLF = "\r\n";
 
 	private $responseCallback;
-	private $buffer;
-	private $arrayResponse;
+	private $buffer = "";
+	private $currentResponse = null;
 	private $arrayStack;
+	private $currentSize;
+	private $arraySizes;
 
 	public function __construct (callable $responseCallback) {
 		$this->responseCallback = $responseCallback;
-		$this->buffer = "";
-		$this->arrayResponse = null;
-		$this->arrayStack = [];
 	}
 
 	public function append ($str) {
@@ -71,44 +70,52 @@ class RespParser {
 	}
 
 	private function onRespParsed ($type, $payload) {
-		if ($this->arrayResponse !== null) {
-			$arr = &$this->arrayResponse;
-
-			for ($level = 1; $level < sizeof($this->arrayStack); $level++) {
-				$arr = &$arr[sizeof($arr) - 1];
-			}
-
-			$this->arrayStack[sizeof($this->arrayStack) - 1]--;
-
+		// extend array response
+		if ($this->currentResponse !== null) {
 			if ($type === Resp::TYPE_ARRAY) {
 				if ($payload >= 0) {
-					$this->arrayStack[] = $payload;
-					$arr[] = [];
+					$this->arraySizes[] = $this->currentSize;
+					$this->arrayStack[] = &$this->currentResponse;
+					$this->currentSize = $payload + 1;
+					$this->currentResponse[] = [];
+					$this->currentResponse = &$this->currentResponse[sizeof($this->currentResponse) - 1];
 				} else {
-					$arr[] = null;
+					$this->currentResponse[] = null;
 				}
 			} else {
-				$arr[] = $payload;
+				$this->currentResponse[] = $payload;
 			}
 
-			while (end($this->arrayStack) === 0) {
-				array_pop($this->arrayStack);
-			}
+			while (--$this->currentSize === 0) {
+				if(sizeof($this->arrayStack) === 0) {
+					call_user_func($this->responseCallback, $this->currentResponse);
+					$this->currentResponse = null;
+					return;
+				}
 
-			if (sizeof($this->arrayStack) === 0) {
-				call_user_func($this->responseCallback, $this->arrayResponse);
-				$this->arrayResponse = null;
+				// index doesn't start at 0 :(
+				end($this->arrayStack);
+				$key = key($this->arrayStack);
+				$this->currentResponse = &$this->arrayStack[$key];
+				$this->currentSize = array_pop($this->arraySizes);
+				unset($this->arrayStack[$key]);
 			}
-		} else if ($type === Resp::TYPE_ARRAY) {
+		}
+
+		// start new array response
+		else if ($type === Resp::TYPE_ARRAY) {
 			if ($payload > 0) {
-				$this->arrayStack[] = $payload;
-				$this->arrayResponse = [];
+				$this->currentSize = $payload;
+				$this->arrayStack = $this->arraySizes = $this->currentResponse = [];
 			} else if ($payload === 0) {
 				call_user_func($this->responseCallback, []);
 			} else {
 				call_user_func($this->responseCallback, null);
 			}
-		} else {
+		}
+
+		// single data type response
+		else {
 			call_user_func($this->responseCallback, $payload);
 		}
 	}
