@@ -16,6 +16,7 @@
 namespace Amphp\Redis;
 
 use Amp\Reactor;
+use Doctrine\Instantiator\Exception\UnexpectedValueException;
 use Nbsock\Connector;
 use function Amp\cancel;
 use function Amp\getReactor;
@@ -760,11 +761,153 @@ class Redis {
 
 	/**
 	 * @param string $key
+	 * @param string $index
+	 * @return Future
+	 * @yield string
+	 */
+	public function lindex($key, $index) {
+		return $this->send(["lindex", $key, $index]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $relativePosition
+	 * @param string $pivot
+	 * @param string $value
+	 * @return Future
+	 * @yield int
+	 */
+	public function linsert($key, $relativePosition, $pivot, $value) {
+		$relativePosition = strtolower($relativePosition);
+
+		if($relativePosition !== "before" && $relativePosition !== "after") {
+			throw new UnexpectedValueException(
+				sprintf("relativePosition should be 'before' or 'after', was '%s'", $relativePosition)
+			);
+		}
+
+		return $this->send(["linsert", $relativePosition, $pivot, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function llen($key) {
+		return $this->send(["llen", $key]);
+	}
+
+	/**
+	 * @param string $keys
+	 * @return Future
+	 * @yield string
+	 */
+	public function lpop(...$keys) {
+		return $this->send(array_combine(["lpop"], $keys));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$values
+	 * @return Future
+	 * @yield int
+	 */
+	public function lpush($key, ...$values) {
+		return $this->send(array_combine(["lpush", $key], $values));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$values
+	 * @return Future
+	 * @yield int
+	 */
+	public function lpushx($key, ...$values) {
+		return $this->send(array_combine(["lpushx", $key], $values));
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $start
+	 * @param int $end
 	 * @return Future
 	 * @yield array
 	 */
-	public function hvals($key) {
-		return $this->send(["hvals", $key]);
+	public function lrange($key, $start = 0, $end = -1) {
+		return $this->send(["lrange", $key, $start, $end]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @param int $count
+	 * @return Future
+	 * @yield int
+	 */
+	public function lrem($key, $value, $count = 0) {
+		return $this->send(["lrem", $key, $count, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $index
+	 * @param string $value
+	 * @return Future
+	 * @yield string
+	 */
+	public function lset($key, $index, $value) {
+		return $this->send(["lset", $key, $index, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $start
+	 * @param int $stop
+	 * @return Future
+	 * @yield string
+	 */
+	public function ltrim($key, $start = 0, $stop = -1) {
+		return $this->send(["ltrim", $key, $start, $stop]);
+	}
+
+	/**
+	 * @param string $keys
+	 * @return Future
+	 * @yield string
+	 */
+	public function rpop(...$keys) {
+		return $this->send(array_combine(["rpop"], $keys));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 * @return Future
+	 * @yield string
+	 */
+	public function rpoplpush($key, $value) {
+		return $this->send(["rpoplpush", $key, $value]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$values
+	 * @return Future
+	 * @yield int
+	 */
+	public function rpush($key, ...$values) {
+		return $this->send(array_combine(["rpush", $key], $values));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$values
+	 * @return Future
+	 * @yield int
+	 */
+	public function rpushx($key, ...$values) {
+		return $this->send(array_combine(["rpushx", $key], $values));
 	}
 
 	/**
@@ -783,8 +926,6 @@ class Redis {
 	public function echotest ($text) {
 		return $this->send(["echo", $text]);
 	}
-
-
 
 	public function subscribe ($channel, $callback) {
 		$this->send(["subscribe", $channel]);
