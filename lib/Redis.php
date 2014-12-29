@@ -881,13 +881,13 @@ class Redis {
 	}
 
 	/**
-	 * @param string $key
-	 * @param string $value
+	 * @param string $source
+	 * @param string $destination
 	 * @return Future
 	 * @yield string
 	 */
-	public function rpoplpush($key, $value) {
-		return $this->send(["rpoplpush", $key, $value]);
+	public function rpoplpush($source, $destination) {
+		return $this->send(["rpoplpush", $source, $destination]);
 	}
 
 	/**
