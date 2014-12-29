@@ -12,7 +12,6 @@
 
 namespace Amphp\Redis;
 
-use Amp\Future;
 use Amp\Reactor;
 use Nbsock\Connector;
 use function Amp\cancel;
