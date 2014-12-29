@@ -8,6 +8,9 @@
  *  - object
  *  - sort
  *  - scan
+ *
+ * hashes:
+ *  - hscan
  */
 
 namespace Amphp\Redis;
@@ -495,10 +498,12 @@ class Redis {
 	 * @param string $key
 	 * @param float $increment
 	 * @return Future
-	 * @yield string
+	 * @yield float
 	 */
 	public function incrbyfloat($key, $increment) {
-		return $this->send(["incrbyfloat", $key, $increment]);
+		return $this->send(["incrbyfloat", $key, $increment], function ($response) {
+			return (float) $response;
+		});
 	}
 
 	/**
@@ -602,17 +607,43 @@ class Redis {
 		return $this->send(["strlen", $key]);
 	}
 
-	public function hmset ($key, array $data) {
-		$array = ["hmset", $key];
-
-		foreach ($data as $key => $value) {
-			$array[] = $key;
-			$array[] = $value;
-		}
-
-		return $this->send($array);
+	/**
+	 * @param string $key
+	 * @param string ...$fields
+	 * @return Future
+	 * @yield int
+	 */
+	public function hdel($key, ...$fields) {
+		return $this->send(array_combine(["hdel", $key], $fields));
 	}
 
+	/**
+	 * @param string $key
+	 * @param string $field
+	 * @return Future
+	 * @yield bool
+	 */
+	public function hexists($key, $field) {
+		return $this->send(["hexists", $key, $field], function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $field
+	 * @return Future
+	 * @yield string
+	 */
+	public function hget($key, $field) {
+		return $this->send(["hget", $key, $field]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield array
+	 */
 	public function hgetall ($key) {
 		return $this->send(["hgetall", $key], function ($response) {
 			if ($response === null) {
@@ -626,8 +657,114 @@ class Redis {
 				$result[$response[$i]] = $response[$i + 1];
 			}
 
-			return (object) $result;
+			return $result;
 		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $field
+	 * @param int $increment
+	 * @return Future
+	 * @yield int
+	 */
+	public function hincrby($key, $field, $increment = 1) {
+		return $this->send(["hincrby", $key, $field, $increment]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $field
+	 * @param float $increment
+	 * @return Future
+	 * @yield float
+	 */
+	public function hincrbyfloat($key, $field, $increment) {
+		return $this->send(["hincrbyfloat", $key, $field, $increment], function ($response) {
+			return (float) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield array
+	 */
+	public function hkeys($key) {
+		return $this->send(["hkeys", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function hlen($key) {
+		return $this->send(["hlen", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$fields
+	 * @return Future
+	 * @yield array
+	 */
+	public function hmget ($key, ...$fields) {
+		return $this->send(array_combine(["hmget", $key], $fields), function ($response) {
+			if ($response === null) {
+				return null;
+			}
+
+			$size = sizeof($response);
+			$result = [];
+
+			for ($i = 0; $i < $size; $i += 2) {
+				$result[$response[$i]] = $response[$i + 1];
+			}
+
+			return $result;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param array $data
+	 * @return Future
+	 * @yield string
+	 */
+	public function hmset ($key, array $data) {
+		$array = ["hmset", $key];
+
+		foreach ($data as $key => $value) {
+			$array[] = $key;
+			$array[] = $value;
+		}
+
+		return $this->send($array);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $field
+	 * @param string $value
+	 * @param bool $notExistingOnly
+	 * @return Future
+	 * @yield bool
+	 */
+	public function hset($key, $field, $value, $notExistingOnly = false) {
+		$cmd = $notExistingOnly ? "hsetnx" : "hset";
+		return $this->send([$cmd, $key, $field, $value], function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield array
+	 */
+	public function hvals($key) {
+		return $this->send(["hvals", $key]);
 	}
 
 	/**
