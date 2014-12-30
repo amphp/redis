@@ -16,7 +16,6 @@
 namespace Amphp\Redis;
 
 use Amp\Reactor;
-use Doctrine\Instantiator\Exception\UnexpectedValueException;
 use Nbsock\Connector;
 use function Amp\cancel;
 use function Amp\getReactor;
