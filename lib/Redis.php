@@ -780,12 +780,12 @@ class Redis {
 		$relativePosition = strtolower($relativePosition);
 
 		if($relativePosition !== "before" && $relativePosition !== "after") {
-			throw new UnexpectedValueException(
+			throw new \UnexpectedValueException(
 				sprintf("relativePosition should be 'before' or 'after', was '%s'", $relativePosition)
 			);
 		}
 
-		return $this->send(["linsert", $relativePosition, $pivot, $value]);
+		return $this->send(["linsert", $key, $relativePosition, $pivot, $value]);
 	}
 
 	/**
