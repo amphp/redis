@@ -24,7 +24,7 @@ use function Amp\wait;
 
 class Redis {
 	const MODE_DEFAULT = 0;
-	const MODE_SUBSCRIBE = 1;
+	const MODE_PUBSUB = 1;
 
 	/**
 	 * @var Reactor
@@ -72,9 +72,14 @@ class Redis {
 	private $futures = [];
 
 	/**
-	 * @var callable
+	 * @var callable[]
 	 */
-	private $subscribeCallback;
+	private $callbacks;
+
+	/**
+	 * @var callable[]
+	 */
+	private $patternCallbacks;
 
 	public function __construct (ConnectionConfig $config) {
 		$this->reactor = getReactor();
@@ -83,13 +88,13 @@ class Redis {
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
-		$this->parser = new RespParser(function($result) {
+		$this->parser = new RespParser(function ($result) {
 			$this->onResponse($result);
 		});
 	}
 
 	public function connect () {
-		if($this->connectFuture || $this->readWatcher) {
+		if ($this->connectFuture || $this->readWatcher) {
 			return;
 		}
 
@@ -127,11 +132,9 @@ class Redis {
 	private function onRead () {
 		$read = fread($this->socket, 8192);
 
-		if($read) {
+		if ($read !== false && $read !== "") {
 			$this->parser->append($read);
-		}
-
-		else if (!is_resource($this->socket) || @feof($this->socket)) {
+		} else if (!is_resource($this->socket) || @feof($this->socket)) {
 			$this->reactor->cancel($this->readWatcher);
 			$this->reactor->cancel($this->writeWatcher);
 
@@ -140,8 +143,8 @@ class Redis {
 		}
 	}
 
-	private function onResponse($result) {
-		if (sizeof($this->futures) > 0) {
+	private function onResponse ($result) {
+		if ($this->mode === self::MODE_DEFAULT) {
 			$future = array_shift($this->futures);
 
 			if ($result instanceof RedisException) {
@@ -149,11 +152,25 @@ class Redis {
 			} else {
 				$future->succeed($result);
 			}
-		}
+		} else {
+			switch ($result[0]) {
+				case "message":
+					call_user_func($this->callbacks[$result[1]], $result[2]);
+					break;
+				case "unsubscribe":
+					if ($result[2] === 0) {
+						$this->mode = self::MODE_DEFAULT;
+					}
 
-		else if (isset($response)) {
-			if (is_array($result) && sizeof($result) === 3 && $result[0] === "message") {
-				call_user_func($this->subscribeCallback, $response[1], $response[2]);
+					unset($this->callbacks[$result[1]]);
+					break;
+				case "punsubscribe":
+					if ($result[2] === 0) {
+						$this->mode = self::MODE_DEFAULT;
+					}
+
+					unset($this->patternCallbacks[$result[1]]);
+					break;
 			}
 		}
 	}
@@ -200,7 +217,7 @@ class Redis {
 		}
 	}
 
-	private function send (array $strings, callable $responseCallback = null) {
+	private function send (array $strings, callable $responseCallback = null, $addFuture = true) {
 		$this->connect();
 
 		$payload = "";
@@ -211,13 +228,17 @@ class Redis {
 
 		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
 
-		$future = new Future($responseCallback);
-		$this->futures[] = $future;
+		if ($addFuture) {
+			$future = new Future($responseCallback);
+			$this->futures[] = $future;
+		} else {
+			$future = null;
+		}
 
 		$this->outputBuffer .= $payload;
 		$this->outputBufferLength += strlen($payload);
 
-		if($this->writeWatcher) {
+		if ($this->writeWatcher) {
 			$this->reactor->enable($this->writeWatcher);
 		}
 
@@ -415,10 +436,10 @@ class Redis {
 	public function bitpos ($key, $bit, $start = null, $end = null) {
 		$payload = ["bitpos", $key, $bit];
 
-		if($start != null) {
+		if ($start != null) {
 			$payload[] = $start;
 
-			if($end != null) {
+			if ($end != null) {
 				$payload[] = $end;
 			}
 		}
@@ -432,8 +453,8 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function decr($key, $decrement = 1) {
-		if($decrement === 1) {
+	public function decr ($key, $decrement = 1) {
+		if ($decrement === 1) {
 			return $this->send(["decr", $key]);
 		} else {
 			return $this->send(["decrby", $key, $decrement]);
@@ -445,7 +466,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function get($key) {
+	public function get ($key) {
 		return $this->send(["get", $key]);
 	}
 
@@ -455,7 +476,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function getbit($key, $offset) {
+	public function getbit ($key, $offset) {
 		return $this->send(["getbit", $key, $offset]);
 	}
 
@@ -466,7 +487,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function getrange($key, $start = 0, $end = -1) {
+	public function getrange ($key, $start = 0, $end = -1) {
 		return $this->send(["getrange", $key, $start, $end]);
 	}
 
@@ -476,7 +497,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function getset($key, $value) {
+	public function getset ($key, $value) {
 		return $this->send(["getset", $key, $value]);
 	}
 
@@ -486,8 +507,8 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function incr($key, $increment = 1) {
-		if($increment === 1) {
+	public function incr ($key, $increment = 1) {
+		if ($increment === 1) {
 			return $this->send(["incr", $key]);
 		} else {
 			return $this->send(["incrby", $key, $increment]);
@@ -500,7 +521,7 @@ class Redis {
 	 * @return Future
 	 * @yield float
 	 */
-	public function incrbyfloat($key, $increment) {
+	public function incrbyfloat ($key, $increment) {
 		return $this->send(["incrbyfloat", $key, $increment], function ($response) {
 			return (float) $response;
 		});
@@ -511,7 +532,7 @@ class Redis {
 	 * @return Future
 	 * @yield array
 	 */
-	public function mget(...$keys) {
+	public function mget (...$keys) {
 		return $this->send(array_combine(["mget"], $keys));
 	}
 
@@ -521,10 +542,10 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function mset(array $data, $onlyIfNoneExists = false) {
+	public function mset (array $data, $onlyIfNoneExists = false) {
 		$payload = [$onlyIfNoneExists ? "msetnx" : "mset"];
 
-		foreach($data as $key => $value) {
+		foreach ($data as $key => $value) {
 			$payload[] = $key;
 			$payload[] = $value;
 		}
@@ -543,12 +564,16 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function set($key, $value, $expire = 0, $useMillis = false, $existOption = null) {
+	public function set ($key, $value, $expire = 0, $useMillis = false, $existOption = null) {
 		$payload = ["set", $key, $value];
 
-		if($expire !== 0) {
+		if ($expire !== 0) {
 			$payload[] = $useMillis ? "PX" : "EX";
 			$payload[] = $expire;
+		}
+
+		if ($existOption !== null) {
+			$payload[] = $existOption;
 		}
 
 		return $this->send($payload, function ($response) {
@@ -562,7 +587,7 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function setnx($key, $value) {
+	public function setnx ($key, $value) {
 		return $this->set($key, $value, 0, false, "NX");
 	}
 
@@ -572,7 +597,7 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function setxx($key, $value) {
+	public function setxx ($key, $value) {
 		return $this->set($key, $value, 0, false, "XX");
 	}
 
@@ -583,7 +608,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function setbit($key, $offset, $value) {
+	public function setbit ($key, $offset, $value) {
 		return $this->send(["setbit", $key, $offset, (int) $value]);
 	}
 
@@ -594,7 +619,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function setrange($key, $offset, $value) {
+	public function setrange ($key, $offset, $value) {
 		return $this->send(["setrange", $key, $offset, $value]);
 	}
 
@@ -603,7 +628,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function strlen($key) {
+	public function strlen ($key) {
 		return $this->send(["strlen", $key]);
 	}
 
@@ -613,7 +638,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function hdel($key, ...$fields) {
+	public function hdel ($key, ...$fields) {
 		return $this->send(array_combine(["hdel", $key], $fields));
 	}
 
@@ -623,7 +648,7 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function hexists($key, $field) {
+	public function hexists ($key, $field) {
 		return $this->send(["hexists", $key, $field], function ($response) {
 			return (bool) $response;
 		});
@@ -635,7 +660,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function hget($key, $field) {
+	public function hget ($key, $field) {
 		return $this->send(["hget", $key, $field]);
 	}
 
@@ -668,7 +693,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function hincrby($key, $field, $increment = 1) {
+	public function hincrby ($key, $field, $increment = 1) {
 		return $this->send(["hincrby", $key, $field, $increment]);
 	}
 
@@ -679,7 +704,7 @@ class Redis {
 	 * @return Future
 	 * @yield float
 	 */
-	public function hincrbyfloat($key, $field, $increment) {
+	public function hincrbyfloat ($key, $field, $increment) {
 		return $this->send(["hincrbyfloat", $key, $field, $increment], function ($response) {
 			return (float) $response;
 		});
@@ -690,7 +715,7 @@ class Redis {
 	 * @return Future
 	 * @yield array
 	 */
-	public function hkeys($key) {
+	public function hkeys ($key) {
 		return $this->send(["hkeys", $key]);
 	}
 
@@ -699,7 +724,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function hlen($key) {
+	public function hlen ($key) {
 		return $this->send(["hlen", $key]);
 	}
 
@@ -751,7 +776,7 @@ class Redis {
 	 * @return Future
 	 * @yield bool
 	 */
-	public function hset($key, $field, $value, $notExistingOnly = false) {
+	public function hset ($key, $field, $value, $notExistingOnly = false) {
 		$cmd = $notExistingOnly ? "hsetnx" : "hset";
 		return $this->send([$cmd, $key, $field, $value], function ($response) {
 			return (bool) $response;
@@ -764,7 +789,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function lindex($key, $index) {
+	public function lindex ($key, $index) {
 		return $this->send(["lindex", $key, $index]);
 	}
 
@@ -776,12 +801,12 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function linsert($key, $relativePosition, $pivot, $value) {
+	public function linsert ($key, $relativePosition, $pivot, $value) {
 		$relativePosition = strtolower($relativePosition);
 
-		if($relativePosition !== "before" && $relativePosition !== "after") {
+		if ($relativePosition !== "before" && $relativePosition !== "after") {
 			throw new \UnexpectedValueException(
-				sprintf("relativePosition should be 'before' or 'after', was '%s'", $relativePosition)
+				sprintf("relativePosition must be 'before' or 'after', was '%s'", $relativePosition)
 			);
 		}
 
@@ -793,7 +818,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function llen($key) {
+	public function llen ($key) {
 		return $this->send(["llen", $key]);
 	}
 
@@ -802,7 +827,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function lpop(...$keys) {
+	public function lpop (...$keys) {
 		return $this->send(array_combine(["lpop"], $keys));
 	}
 
@@ -812,7 +837,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function lpush($key, ...$values) {
+	public function lpush ($key, ...$values) {
 		return $this->send(array_combine(["lpush", $key], $values));
 	}
 
@@ -822,7 +847,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function lpushx($key, ...$values) {
+	public function lpushx ($key, ...$values) {
 		return $this->send(array_combine(["lpushx", $key], $values));
 	}
 
@@ -833,7 +858,7 @@ class Redis {
 	 * @return Future
 	 * @yield array
 	 */
-	public function lrange($key, $start = 0, $end = -1) {
+	public function lrange ($key, $start = 0, $end = -1) {
 		return $this->send(["lrange", $key, $start, $end]);
 	}
 
@@ -844,7 +869,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function lrem($key, $value, $count = 0) {
+	public function lrem ($key, $value, $count = 0) {
 		return $this->send(["lrem", $key, $count, $value]);
 	}
 
@@ -855,7 +880,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function lset($key, $index, $value) {
+	public function lset ($key, $index, $value) {
 		return $this->send(["lset", $key, $index, $value]);
 	}
 
@@ -866,7 +891,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function ltrim($key, $start = 0, $stop = -1) {
+	public function ltrim ($key, $start = 0, $stop = -1) {
 		return $this->send(["ltrim", $key, $start, $stop]);
 	}
 
@@ -875,7 +900,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function rpop(...$keys) {
+	public function rpop (...$keys) {
 		return $this->send(array_combine(["rpop"], $keys));
 	}
 
@@ -885,7 +910,7 @@ class Redis {
 	 * @return Future
 	 * @yield string
 	 */
-	public function rpoplpush($source, $destination) {
+	public function rpoplpush ($source, $destination) {
 		return $this->send(["rpoplpush", $source, $destination]);
 	}
 
@@ -895,7 +920,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function rpush($key, ...$values) {
+	public function rpush ($key, ...$values) {
 		return $this->send(array_combine(["rpush", $key], $values));
 	}
 
@@ -905,7 +930,7 @@ class Redis {
 	 * @return Future
 	 * @yield int
 	 */
-	public function rpushx($key, ...$values) {
+	public function rpushx ($key, ...$values) {
 		return $this->send(array_combine(["rpushx", $key], $values));
 	}
 
@@ -926,11 +951,21 @@ class Redis {
 		return $this->send(["echo", $text]);
 	}
 
-	public function subscribe ($channel, $callback) {
-		$this->send(["subscribe", $channel]);
+	/**
+	 * @param string $channel
+	 * @param callable $callback
+	 */
+	public function subscribe ($channel, callable $callback) {
+		$this->mode = self::MODE_PUBSUB;
+		$this->callbacks[$channel] = $callback;
+		$this->send(["subscribe", $channel], null, false);
+	}
 
-		$this->mode = self::MODE_SUBSCRIBE;
-		$this->subscribeCallback = $callback;
+	/**
+	 * @param string $channel
+	 */
+	public function unsubscribe ($channel) {
+		$this->send(["unsubscribe", $channel], null, false);
 	}
 
 	public function __destruct () {
