@@ -105,7 +105,7 @@ class Redis {
 			}
 
 			if (!is_resource($socket) || @feof($socket)) {
-				throw new \Exception("Connection could not be initialised!");
+				throw new RedisException("Connection could not be initialised!");
 			}
 
 			$this->socket = $socket;
