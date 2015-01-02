@@ -246,12 +246,13 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
 	 * @param string $keys
 	 * @return Future
 	 * @yield int
 	 */
-	public function del (...$keys) {
-		return $this->send(array_merge(["del"], $keys));
+	public function del ($key, ...$keys) {
+		return $this->send(array_merge(["del", $key], $keys));
 	}
 
 	/**
@@ -415,14 +416,15 @@ class Redis {
 	}
 
 	/**
-	 * @param string $op
+	 * @param string $operation
 	 * @param string $destination
+	 * @param string $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
 	 */
-	public function bitop ($op, $destination, ...$keys) {
-		return $this->send(array_combine(["bitop", $op, $destination], $keys));
+	public function bitop ($operation, $destination, $key, ...$keys) {
+		return $this->send(array_combine(["bitop", $operation, $destination, $key], $keys));
 	}
 
 	/**
@@ -528,12 +530,13 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield array
 	 */
-	public function mget (...$keys) {
-		return $this->send(array_combine(["mget"], $keys));
+	public function mget ($key, ...$keys) {
+		return $this->send(array_combine(["mget", $key], $keys));
 	}
 
 	/**
@@ -634,12 +637,13 @@ class Redis {
 
 	/**
 	 * @param string $key
+	 * @param string $field
 	 * @param string ...$fields
 	 * @return Future
 	 * @yield int
 	 */
-	public function hdel ($key, ...$fields) {
-		return $this->send(array_combine(["hdel", $key], $fields));
+	public function hdel ($key, $field, ...$fields) {
+		return $this->send(array_combine(["hdel", $key, $field], $fields));
 	}
 
 	/**
@@ -730,12 +734,13 @@ class Redis {
 
 	/**
 	 * @param string $key
+	 * @param string $field
 	 * @param string ...$fields
 	 * @return Future
 	 * @yield array
 	 */
-	public function hmget ($key, ...$fields) {
-		return $this->send(array_combine(["hmget", $key], $fields), function ($response) {
+	public function hmget ($key, $field, ...$fields) {
+		return $this->send(array_combine(["hmget", $key, $field], $fields), function ($response) {
 			if ($response === null) {
 				return null;
 			}
@@ -823,32 +828,35 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
 	 * @param string $keys
 	 * @return Future
 	 * @yield string
 	 */
-	public function lpop (...$keys) {
-		return $this->send(array_combine(["lpop"], $keys));
+	public function lpop ($key, ...$keys) {
+		return $this->send(array_combine(["lpop", $key], $keys));
 	}
 
 	/**
 	 * @param string $key
+	 * @param string $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
 	 */
-	public function lpush ($key, ...$values) {
-		return $this->send(array_combine(["lpush", $key], $values));
+	public function lpush ($key, $value, ...$values) {
+		return $this->send(array_combine(["lpush", $key, $value], $values));
 	}
 
 	/**
 	 * @param string $key
+	 * @param string $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
 	 */
-	public function lpushx ($key, ...$values) {
-		return $this->send(array_combine(["lpushx", $key], $values));
+	public function lpushx ($key, $value, ...$values) {
+		return $this->send(array_combine(["lpushx", $key, $value], $values));
 	}
 
 	/**
@@ -896,12 +904,13 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
 	 * @param string $keys
 	 * @return Future
 	 * @yield string
 	 */
-	public function rpop (...$keys) {
-		return $this->send(array_combine(["rpop"], $keys));
+	public function rpop ($key, ...$keys) {
+		return $this->send(array_combine(["rpop", $key], $keys));
 	}
 
 	/**
@@ -916,32 +925,35 @@ class Redis {
 
 	/**
 	 * @param string $key
+	 * @param string $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
 	 */
-	public function rpush ($key, ...$values) {
-		return $this->send(array_combine(["rpush", $key], $values));
+	public function rpush ($key, $value, ...$values) {
+		return $this->send(array_combine(["rpush", $key, $value], $values));
 	}
 
 	/**
 	 * @param string $key
+	 * @param string $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
 	 */
-	public function rpushx ($key, ...$values) {
-		return $this->send(array_combine(["rpushx", $key], $values));
+	public function rpushx ($key, $value, ...$values) {
+		return $this->send(array_combine(["rpushx", $key, $value], $values));
 	}
 
 	/**
 	 * @param string $key
-	 * @param string ...$member
+	 * @param string $member
+	 * @param string ...$members
 	 * @return Future
 	 * @yield int
 	 */
-	public function sadd ($key, ...$member) {
-		return $this->send(array_combine(["sadd", $key], $member));
+	public function sadd ($key, $member, ...$members) {
+		return $this->send(array_combine(["sadd", $key, $member], $members));
 	}
 
 	/**
