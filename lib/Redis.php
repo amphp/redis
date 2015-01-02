@@ -935,6 +935,159 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
+	 * @param string ...$member
+	 * @return Future
+	 * @yield int
+	 */
+	public function sadd ($key, ...$member) {
+		return $this->send(array_combine(["sadd", $key], $member));
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function scard ($key) {
+		return $this->send(["scard", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield array
+	 */
+	public function sdiff ($key, ...$keys) {
+		return $this->send(array_combine(["sdiff", $key], $keys));
+	}
+
+	/**
+	 * @param string $destination
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function sdiffstore ($destination, $key, ...$keys) {
+		return $this->send(array_combine(["sdiffstore", $destination, $key], $keys));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield array
+	 */
+	public function sinter ($key, ...$keys) {
+		return $this->send(array_combine(["sinter", $key], $keys));
+	}
+
+	/**
+	 * @param string $destination
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function sinterstore ($destination, $key, ...$keys) {
+		return $this->send(array_combine(["sinterstore", $destination, $key], $keys));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @return Future
+	 * @yield bool
+	 */
+	public function sismember ($key, $member) {
+		return $this->send(["sismember", $key, $member], function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield array
+	 */
+	public function smembers ($key) {
+		return $this->send(["smembers", $key]);
+	}
+
+	/**
+	 * @param string $source
+	 * @param string $destination
+	 * @param string $member
+	 * @return Future
+	 * @yield bool
+	 */
+	public function smove ($source, $destination, $member) {
+		return $this->send(["sismember", $source, $destination, $member], function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield string
+	 */
+	public function spop ($key) {
+		return $this->send(["spop", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $count
+	 * @param bool $distinctOnly
+	 * @return Future
+	 * @yield string|array
+	 */
+	public function srandmember ($key, $count = null, $distinctOnly = true) {
+		$payload = ["srandmember", $key];
+
+		if ($count !== null) {
+			$payload[] = $distinctOnly ? $count : -$count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @param string ...$members
+	 * @return Future
+	 * @yield int
+	 */
+	public function srem ($key, $member, ...$members) {
+		return $this->send(array_combine(["srem", $key, $member], $members));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield array
+	 */
+	public function sunion ($key, ...$keys) {
+		return $this->send(array_combine(["sunion", $key], $keys));
+	}
+
+	/**
+	 * @param string $destination
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function sunionstore ($destination, $key, ...$keys) {
+		return $this->send(array_combine(["sunionstore", $destination, $key], $keys));
+	}
+
+	/**
 	 * @return Future
 	 * @yield string
 	 */
