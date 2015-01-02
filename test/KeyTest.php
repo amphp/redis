@@ -16,7 +16,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 
 		if(!empty($pid)) {
 			print `kill $pid`;
-			sleep(3);
+			sleep(1);
 		}
 	}
 
