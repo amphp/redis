@@ -123,6 +123,19 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
 	 */
+	function arrayInnerEmpty () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("*1\r\n*-1\r\n");
+
+		$this->assertEquals([null], $result);
+	}
+
+	/**
+	 * @test
+	 */
 	function pipeline () {
 		$result = null;
 		$parser = new RespParser(function($resp) use (&$result) {
@@ -141,9 +154,20 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 		$parser = new RespParser(function($resp) use (&$result) {
 			$result = $resp;
 		});
-		$parser->append("+foo\r");
+		$parser->append("$3\r");
+		$this->assertEquals(null, $result);
+		$parser->append("\nfoo\r");
 		$this->assertEquals(null, $result);
 		$parser->append("\n");
 		$this->assertEquals("foo", $result);
+	}
+
+	/**
+	 * @test
+	 */
+	function unknownType () {
+		$this->setExpectedException("Amphp\\Redis\\RedisException");
+		$parser = new RespParser(function($resp) { });
+		$parser->append("3$\r\nfoo\r\n");
 	}
 }

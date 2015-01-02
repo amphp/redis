@@ -70,8 +70,7 @@ class RespParser {
 	}
 
 	private function onRespParsed ($type, $payload) {
-		// extend array response
-		if ($this->currentResponse !== null) {
+		if ($this->currentResponse !== null) { // extend array response
 			if ($type === Resp::TYPE_ARRAY) {
 				if ($payload >= 0) {
 					$this->arraySizes[] = $this->currentSize;
@@ -87,7 +86,7 @@ class RespParser {
 			}
 
 			while (--$this->currentSize === 0) {
-				if(sizeof($this->arrayStack) === 0) {
+				if (sizeof($this->arrayStack) === 0) {
 					call_user_func($this->responseCallback, $this->currentResponse);
 					$this->currentResponse = null;
 					return;
@@ -100,10 +99,7 @@ class RespParser {
 				$this->currentSize = array_pop($this->arraySizes);
 				unset($this->arrayStack[$key]);
 			}
-		}
-
-		// start new array response
-		else if ($type === Resp::TYPE_ARRAY) {
+		} else if ($type === Resp::TYPE_ARRAY) { // start new array response
 			if ($payload > 0) {
 				$this->currentSize = $payload;
 				$this->arrayStack = $this->arraySizes = $this->currentResponse = [];
@@ -112,10 +108,7 @@ class RespParser {
 			} else {
 				call_user_func($this->responseCallback, null);
 			}
-		}
-
-		// single data type response
-		else {
+		} else { // single data type response
 			call_user_func($this->responseCallback, $payload);
 		}
 	}
