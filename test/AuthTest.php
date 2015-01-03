@@ -8,6 +8,7 @@ use function Amp\wait;
 class AuthTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
 		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret`;
+		sleep(1);
 	}
 
 	static function tearDownAfterClass () {
