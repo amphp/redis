@@ -1295,10 +1295,7 @@ class Redis {
 	public function zinterstore ($destination, $numkeys, $keys, $aggregate = "sum") {
 		$payload = ["zinterstore", $destination, $numkeys];
 
-		if (!is_array($keys)) {
-			$keys = [$keys];
-		}
-
+		$keys = (array) $keys;
 		$weights = [];
 
 		if (count(array_filter(array_keys($keys), 'is_string'))) {
@@ -1626,10 +1623,7 @@ class Redis {
 	public function zunionstore ($destination, $numkeys, $keys, $aggregate = "sum") {
 		$payload = ["zunionstore", $destination, $numkeys];
 
-		if (!is_array($keys)) {
-			$keys = [$keys];
-		}
-
+		$keys = (array) $keys;
 		$weights = [];
 
 		if (count(array_filter(array_keys($keys), 'is_string'))) {
@@ -1701,10 +1695,7 @@ class Redis {
 	public function subscribe ($channel, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
 
-		if (!is_array($channel)) {
-			$channel = [$channel];
-		}
-
+		$channel = (array) $channel;
 		foreach ($channel as $c) {
 			$this->callbacks[$c] = $callback;
 		}
@@ -1720,10 +1711,7 @@ class Redis {
 	public function psubscribe ($pattern, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
 
-		if (!is_array($pattern)) {
-			$pattern = [$pattern];
-		}
-
+	        $pattern = (array) $pattern;
 		foreach ($pattern as $p) {
 			$this->patternCallbacks[$p] = $callback;
 		}
@@ -1736,11 +1724,7 @@ class Redis {
 	 * @return void
 	 */
 	public function unsubscribe ($channel) {
-		if (!is_array($channel)) {
-			$channel = [$channel];
-		}
-
-		$this->send(array_merge(["unsubscribe"], $channel), null, false);
+		$this->send(array_merge(["unsubscribe"], (array) $channel), null, false);
 	}
 
 	/**
@@ -1748,11 +1732,7 @@ class Redis {
 	 * @return void
 	 */
 	public function punsubscribe ($pattern) {
-		if (!is_array($pattern)) {
-			$pattern = [$pattern];
-		}
-
-		$this->send(array_merge(["punsubscribe"], $pattern), null, false);
+		$this->send(array_merge(["punsubscribe"], (array) $pattern), null, false);
 	}
 
 	/**
