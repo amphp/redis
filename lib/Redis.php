@@ -1246,7 +1246,7 @@ class Redis {
 	public function zrangebylex ($key, $min, $max, $offset = null, $count = null) {
 		$payload = ["zrangebylex", $key, $min, $max];
 
-		if($offset !== null && $count !== null) {
+		if ($offset !== null && $count !== null) {
 			$payload[] = "LIMIT";
 			$payload[] = $offset;
 			$payload[] = $count;
@@ -1272,7 +1272,7 @@ class Redis {
 			$payload[] = "WITHSCORES";
 		}
 
-		if($offset !== null && $count !== null) {
+		if ($offset !== null && $count !== null) {
 			$payload[] = "LIMIT";
 			$payload[] = $offset;
 			$payload[] = $count;
@@ -1389,7 +1389,7 @@ class Redis {
 	public function zrevrangebylex ($key, $min, $max, $offset = null, $count = null) {
 		$payload = ["zrevrangebylex", $key, $min, $max];
 
-		if($offset !== null && $count !== null) {
+		if ($offset !== null && $count !== null) {
 			$payload[] = "LIMIT";
 			$payload[] = $offset;
 			$payload[] = $count;
@@ -1415,7 +1415,7 @@ class Redis {
 			$payload[] = "WITHSCORES";
 		}
 
-		if($offset !== null && $count !== null) {
+		if ($offset !== null && $count !== null) {
 			$payload[] = "LIMIT";
 			$payload[] = $offset;
 			$payload[] = $count;
@@ -1559,11 +1559,11 @@ class Redis {
 	public function subscribe ($channel, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
 
-		if(!is_array($channel)) {
+		if (!is_array($channel)) {
 			$channel = [$channel];
 		}
 
-		foreach($channel as $c) {
+		foreach ($channel as $c) {
 			$this->callbacks[$c] = $callback;
 		}
 
@@ -1578,11 +1578,11 @@ class Redis {
 	public function psubscribe ($pattern, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
 
-		if(!is_array($pattern)) {
+		if (!is_array($pattern)) {
 			$pattern = [$pattern];
 		}
 
-		foreach($pattern as $p) {
+		foreach ($pattern as $p) {
 			$this->patternCallbacks[$p] = $callback;
 		}
 
@@ -1594,7 +1594,7 @@ class Redis {
 	 * @return void
 	 */
 	public function unsubscribe ($channel) {
-		if(!is_array($channel)) {
+		if (!is_array($channel)) {
 			$channel = [$channel];
 		}
 
@@ -1606,7 +1606,7 @@ class Redis {
 	 * @return void
 	 */
 	public function punsubscribe ($pattern) {
-		if(!is_array($pattern)) {
+		if (!is_array($pattern)) {
 			$pattern = [$pattern];
 		}
 
@@ -1621,6 +1621,46 @@ class Redis {
 	 */
 	public function publish ($channel, $message) {
 		return $this->send(["publish", $channel, $message]);
+	}
+
+	/**
+	 * @param string $pattern
+	 * @return Future
+	 * @yield array
+	 */
+	public function pubsub_channels ($pattern = null) {
+		$payload = ["pubsub", "channels"];
+
+		if ($pattern !== null) {
+			$payload[] = $pattern;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $channel
+	 * @return Future
+	 * @yield array
+	 */
+	public function pubsub_numsub (...$channel) {
+		return $this->send(array_merge(["pubsub", "numsub"], $channel), function ($response) {
+			$result = [];
+
+			for ($i = 0; $i < sizeof($response); $i += 2) {
+				$result[$response[$i]] = $response[$i + 1];
+			}
+
+			return $result;
+		});
+	}
+
+	/**
+	 * @return Future
+	 * @yield int
+	 */
+	public function pubsub_numpat () {
+		return $this->send(["pubsub", "numpat"]);
 	}
 
 	public function __destruct () {
