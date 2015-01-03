@@ -1501,6 +1501,40 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
+	 * @param string $element
+	 * @param string ...$elements
+	 * @return Future
+	 * @yield bool
+	 */
+	public function pfadd ($key, $element, ...$elements) {
+		return $this->send(array_combine(["pfadd", $key, $element], $elements), function ($response) {
+			return (bool) $response;
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string ...$keys
+	 * @return Future
+	 * @yield int
+	 */
+	public function pfcount ($key, ...$keys) {
+		return $this->send(array_combine(["pfcount", $key], $keys));
+	}
+
+	/**
+	 * @param string $destinationKey
+	 * @param string $sourceKey
+	 * @param string ...$sourceKeys
+	 * @return Future
+	 * @yield string
+	 */
+	public function pfmerge ($destinationKey, $sourceKey, ...$sourceKeys) {
+		return $this->send(array_combine(["pfmerge", $destinationKey, $sourceKey], $sourceKeys));
+	}
+
+	/**
 	 * @return Future
 	 * @yield string
 	 */
