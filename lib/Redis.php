@@ -1680,6 +1680,255 @@ class Redis {
 		return $this->send(["select", $index]);
 	}
 
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function bgrewriteaof () {
+		return $this->send(["bgrewriteaof"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function bgsave () {
+		return $this->send(["bgsave"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function client_getname () {
+		return $this->send(["client", "getname"]);
+	}
+
+	/**
+	 * @param string $args
+	 * @return Future
+	 * @yield string|int
+	 */
+	public function client_kill (...$args) {
+		return $this->send(array_merge(["client", "kill"], $args));
+	}
+
+	/**
+	 * @return Future
+	 * @yield array
+	 */
+	public function client_list () {
+		return $this->send(["client", "list"], function ($response) {
+			return explode("\n", $response);
+		});
+	}
+
+	/**
+	 * @param int $timeout
+	 * @return Future
+	 * @yield string
+	 */
+	public function client_pause ($timeout) {
+		return $this->send(["client", "pause", $timeout]);
+	}
+
+	/**
+	 * @param string $name
+	 * @return Future
+	 * @yield string
+	 */
+	public function client_setname ($name) {
+		return $this->send(["client", "setname", $name]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function cluster_slots () {
+		return $this->send(["cluster", "slots"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield array
+	 */
+	public function command () {
+		return $this->send(["command"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield array
+	 */
+	public function command_count () {
+		return $this->send(["command", "count"]);
+	}
+
+	/**
+	 * @param string $args
+	 * @return Future
+	 * @yield array
+	 */
+	public function command_getkeys (...$args) {
+		return $this->send(array_merge(["command", "getkeys"], $args));
+	}
+
+	/**
+	 * @param string $command
+	 * @param string $commands
+	 * @return Future
+	 * @yield array
+	 */
+	public function command_info ($command, ...$commands) {
+		return $this->send(array_merge(["command", "info", $command], $commands));
+	}
+
+	/**
+	 * @param string $parameter
+	 * @return Future
+	 * @yield array
+	 */
+	public function config_get ($parameter) {
+		return $this->send(["config", "get", $parameter]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function config_resetstat () {
+		return $this->send(["config", "resetstat"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function config_rewrite () {
+		return $this->send(["config", "rewrite"]);
+	}
+
+	/**
+	 * @param string $parameter
+	 * @param string $value
+	 * @return Future
+	 * @yield string
+	 */
+	public function config_set ($parameter, $value) {
+		return $this->send(["config", "set", $parameter, $value]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield int
+	 */
+	public function dbsize () {
+		return $this->send(["dbsize"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function flushall () {
+		return $this->send(["flushall"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function flushdb () {
+		return $this->send(["flushdb"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function info () {
+		return $this->send(["info"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield int
+	 */
+	public function lastsave () {
+		return $this->send(["lastsave"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield array
+	 */
+	public function role () {
+		return $this->send(["role"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function save () {
+		return $this->send(["save"]);
+	}
+
+	/**
+	 * @param string $modifier
+	 * @return Future
+	 * @yield string
+	 */
+	public function shutdown ($modifier = null) {
+		$payload = ["shutdown"];
+
+		if ($modifier !== null) {
+			$payload[] = $modifier;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function slowlog_get ($count = null) {
+		$payload = ["slowlog", "get"];
+
+		if ($count !== null) {
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @return Future
+	 * @yield int
+	 */
+	public function slowlog_len () {
+		return $this->send(["slowlog", "len"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function slowlog_reset () {
+		return $this->send(["slowlog", "reset"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield array
+	 */
+	public function time () {
+		return $this->send(["time"]);
+	}
+
 	public function __destruct () {
 		$this->close();
 	}
