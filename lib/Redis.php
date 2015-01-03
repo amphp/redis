@@ -436,10 +436,7 @@ class Redis {
 		}
 
 		if ($get !== null) {
-			if (!is_array($get)) {
-				$get = [$get];
-			}
-
+			$get = (array) $get;
 			foreach ($get as $pattern) {
 				$payload[] = "GET";
 				$payload[] = $pattern;
