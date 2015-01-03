@@ -1535,23 +1535,6 @@ class Redis {
 	}
 
 	/**
-	 * @return Future
-	 * @yield string
-	 */
-	public function ping () {
-		return $this->send(["ping"]);
-	}
-
-	/**
-	 * @param string $text
-	 * @return Future
-	 * @yield string
-	 */
-	public function echotest ($text) {
-		return $this->send(["echo", $text]);
-	}
-
-	/**
 	 * @param string|array $channel
 	 * @param callable $callback
 	 * @return void
@@ -1661,6 +1644,40 @@ class Redis {
 	 */
 	public function pubsub_numpat () {
 		return $this->send(["pubsub", "numpat"]);
+	}
+
+	/**
+	 * @param string $text
+	 * @return Future
+	 * @yield string
+	 */
+	public function echotest ($text) {
+		return $this->send(["echo", $text]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function ping () {
+		return $this->send(["ping"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function quit () {
+		return $this->send(["quit"]);
+	}
+
+	/**
+	 * @param int $index
+	 * @return Future
+	 * @yield string
+	 */
+	public function select ($index) {
+		return $this->send(["select", $index]);
 	}
 
 	public function __destruct () {
