@@ -424,7 +424,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function bitop ($operation, $destination, $key, ...$keys) {
-		return $this->send(array_combine(["bitop", $operation, $destination, $key], $keys));
+		return $this->send(array_merge(["bitop", $operation, $destination, $key], $keys));
 	}
 
 	/**
@@ -536,7 +536,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function mget ($key, ...$keys) {
-		return $this->send(array_combine(["mget", $key], $keys));
+		return $this->send(array_merge(["mget", $key], $keys));
 	}
 
 	/**
@@ -643,7 +643,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function hdel ($key, $field, ...$fields) {
-		return $this->send(array_combine(["hdel", $key, $field], $fields));
+		return $this->send(array_merge(["hdel", $key, $field], $fields));
 	}
 
 	/**
@@ -740,7 +740,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function hmget ($key, $field, ...$fields) {
-		return $this->send(array_combine(["hmget", $key, $field], $fields), function ($response) {
+		return $this->send(array_merge(["hmget", $key, $field], $fields), function ($response) {
 			if ($response === null) {
 				return null;
 			}
@@ -834,7 +834,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function lpop ($key, ...$keys) {
-		return $this->send(array_combine(["lpop", $key], $keys));
+		return $this->send(array_merge(["lpop", $key], $keys));
 	}
 
 	/**
@@ -845,7 +845,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function lpush ($key, $value, ...$values) {
-		return $this->send(array_combine(["lpush", $key, $value], $values));
+		return $this->send(array_merge(["lpush", $key, $value], $values));
 	}
 
 	/**
@@ -856,7 +856,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function lpushx ($key, $value, ...$values) {
-		return $this->send(array_combine(["lpushx", $key, $value], $values));
+		return $this->send(array_merge(["lpushx", $key, $value], $values));
 	}
 
 	/**
@@ -910,7 +910,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function rpop ($key, ...$keys) {
-		return $this->send(array_combine(["rpop", $key], $keys));
+		return $this->send(array_merge(["rpop", $key], $keys));
 	}
 
 	/**
@@ -931,7 +931,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function rpush ($key, $value, ...$values) {
-		return $this->send(array_combine(["rpush", $key, $value], $values));
+		return $this->send(array_merge(["rpush", $key, $value], $values));
 	}
 
 	/**
@@ -942,7 +942,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function rpushx ($key, $value, ...$values) {
-		return $this->send(array_combine(["rpushx", $key, $value], $values));
+		return $this->send(array_merge(["rpushx", $key, $value], $values));
 	}
 
 	/**
@@ -953,7 +953,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sadd ($key, $member, ...$members) {
-		return $this->send(array_combine(["sadd", $key, $member], $members));
+		return $this->send(array_merge(["sadd", $key, $member], $members));
 	}
 
 	/**
@@ -972,7 +972,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sdiff ($key, ...$keys) {
-		return $this->send(array_combine(["sdiff", $key], $keys));
+		return $this->send(array_merge(["sdiff", $key], $keys));
 	}
 
 	/**
@@ -983,7 +983,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sdiffstore ($destination, $key, ...$keys) {
-		return $this->send(array_combine(["sdiffstore", $destination, $key], $keys));
+		return $this->send(array_merge(["sdiffstore", $destination, $key], $keys));
 	}
 
 	/**
@@ -993,7 +993,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sinter ($key, ...$keys) {
-		return $this->send(array_combine(["sinter", $key], $keys));
+		return $this->send(array_merge(["sinter", $key], $keys));
 	}
 
 	/**
@@ -1004,7 +1004,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sinterstore ($destination, $key, ...$keys) {
-		return $this->send(array_combine(["sinterstore", $destination, $key], $keys));
+		return $this->send(array_merge(["sinterstore", $destination, $key], $keys));
 	}
 
 	/**
@@ -1075,7 +1075,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function srem ($key, $member, ...$members) {
-		return $this->send(array_combine(["srem", $key, $member], $members));
+		return $this->send(array_merge(["srem", $key, $member], $members));
 	}
 
 	/**
@@ -1085,7 +1085,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sunion ($key, ...$keys) {
-		return $this->send(array_combine(["sunion", $key], $keys));
+		return $this->send(array_merge(["sunion", $key], $keys));
 	}
 
 	/**
@@ -1096,7 +1096,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sunionstore ($destination, $key, ...$keys) {
-		return $this->send(array_combine(["sunionstore", $destination, $key], $keys));
+		return $this->send(array_merge(["sunionstore", $destination, $key], $keys));
 	}
 
 	/**
@@ -1311,7 +1311,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function zrem ($key, $member, ...$members) {
-		return $this->send(array_combine(["zrem"], $key, $member, $members));
+		return $this->send(array_merge(["zrem"], $key, $member, $members));
 	}
 
 	/**
@@ -1508,7 +1508,7 @@ class Redis {
 	 * @yield bool
 	 */
 	public function pfadd ($key, $element, ...$elements) {
-		return $this->send(array_combine(["pfadd", $key, $element], $elements), function ($response) {
+		return $this->send(array_merge(["pfadd", $key, $element], $elements), function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -1520,7 +1520,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function pfcount ($key, ...$keys) {
-		return $this->send(array_combine(["pfcount", $key], $keys));
+		return $this->send(array_merge(["pfcount", $key], $keys));
 	}
 
 	/**
@@ -1531,7 +1531,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function pfmerge ($destinationKey, $sourceKey, ...$sourceKeys) {
-		return $this->send(array_combine(["pfmerge", $destinationKey, $sourceKey], $sourceKeys));
+		return $this->send(array_merge(["pfmerge", $destinationKey, $sourceKey], $sourceKeys));
 	}
 
 	/**
@@ -1552,20 +1552,75 @@ class Redis {
 	}
 
 	/**
-	 * @param string $channel
+	 * @param string|array $channel
 	 * @param callable $callback
+	 * @return void
 	 */
 	public function subscribe ($channel, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
-		$this->callbacks[$channel] = $callback;
-		$this->send(["subscribe", $channel], null, false);
+
+		if(!is_array($channel)) {
+			$channel = [$channel];
+		}
+
+		foreach($channel as $c) {
+			$this->callbacks[$c] = $callback;
+		}
+
+		$this->send(array_merge(["subscribe"], $channel), null, false);
+	}
+
+	/**
+	 * @param string|array $pattern
+	 * @param callable $callback
+	 * @return void
+	 */
+	public function psubscribe ($pattern, callable $callback) {
+		$this->mode = self::MODE_PUBSUB;
+
+		if(!is_array($pattern)) {
+			$pattern = [$pattern];
+		}
+
+		foreach($pattern as $p) {
+			$this->patternCallbacks[$p] = $callback;
+		}
+
+		$this->send(array_merge(["psubscribe"], $pattern), null, false);
 	}
 
 	/**
 	 * @param string $channel
+	 * @return void
 	 */
 	public function unsubscribe ($channel) {
-		$this->send(["unsubscribe", $channel], null, false);
+		if(!is_array($channel)) {
+			$channel = [$channel];
+		}
+
+		$this->send(array_merge(["unsubscribe"], $channel), null, false);
+	}
+
+	/**
+	 * @param string $pattern
+	 * @return void
+	 */
+	public function punsubscribe ($pattern) {
+		if(!is_array($pattern)) {
+			$pattern = [$pattern];
+		}
+
+		$this->send(array_merge(["punsubscribe"], $pattern), null, false);
+	}
+
+	/**
+	 * @param $channel
+	 * @param $message
+	 * @return Future
+	 * @yield int
+	 */
+	public function publish ($channel, $message) {
+		return $this->send(["publish", $channel, $message]);
 	}
 
 	public function __destruct () {
