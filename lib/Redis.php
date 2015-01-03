@@ -1,18 +1,5 @@
 <?php
 
-/*
- * TODO:
- *
- * keys:
- *  - migrate
- *  - object
- *  - sort
- *  - scan
- *
- * hashes:
- *  - hscan
- */
-
 namespace Amphp\Redis;
 
 use Amp\Reactor;
@@ -327,6 +314,33 @@ class Redis {
 	/**
 	 * @param string $key
 	 * @return Future
+	 * @yield int
+	 */
+	public function object_refcount ($key) {
+		return $this->send(["object", "refcount", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield string
+	 */
+	public function object_encoding ($key) {
+		return $this->send(["object", "encoding", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function object_idletime ($key) {
+		return $this->send(["object", "idletime", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
 	 * @yield bool
 	 */
 	public function persist ($key) {
@@ -366,6 +380,82 @@ class Redis {
 	 */
 	public function restore ($key, $serializedValue, $ttlMillis = 0) {
 		return $this->send(["restore", $key, $ttlMillis, $serializedValue]);
+	}
+
+	/**
+	 * @param string $cursor
+	 * @param string $pattern
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function scan ($cursor, $pattern = null, $count = null) {
+		$payload = ["scan", $cursor];
+
+		if ($pattern !== null) {
+			$payload[] = "PATTERN";
+			$payload[] = $pattern;
+		}
+
+		if ($count !== null) {
+			$payload[] = "COUNT";
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $pattern
+	 * @param string $direction
+	 * @param array|string $get
+	 * @param int $offset
+	 * @param int $count
+	 * @param bool $alpha
+	 * @param string $store
+	 * @return Future
+	 * @yield array|int
+	 */
+	public function sort ($key, $pattern = null, $direction = null, $get = null, $offset = null, $count = null, $alpha = false, $store = null) {
+		$payload = ["sort", $key];
+
+		if ($pattern !== null) {
+			$payload[] = "BY";
+			$payload[] = $pattern;
+		}
+
+		if ($offset !== null && $count !== null) {
+			$payload[] = "LIMIT";
+			$payload[] = $offset;
+			$payload[] = $count;
+		}
+
+		if ($direction !== null) {
+			$payload[] = $direction;
+		}
+
+		if ($get !== null) {
+			if (!is_array($get)) {
+				$get = [$get];
+			}
+
+			foreach ($get as $pattern) {
+				$payload[] = "GET";
+				$payload[] = $pattern;
+			}
+		}
+
+		if ($alpha) {
+			$payload[] = "ALPHA";
+		}
+
+		if ($store !== null) {
+			$payload[] = "STORE";
+			$payload[] = $store;
+		}
+
+		return $this->send($payload);
 	}
 
 	/**
@@ -775,6 +865,30 @@ class Redis {
 
 	/**
 	 * @param string $key
+	 * @param string $cursor
+	 * @param string $pattern
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function hscan ($key, $cursor, $pattern = null, $count = null) {
+		$payload = ["hscan", $key, $cursor];
+
+		if ($pattern !== null) {
+			$payload[] = "PATTERN";
+			$payload[] = $pattern;
+		}
+
+		if ($count !== null) {
+			$payload[] = "COUNT";
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
 	 * @param string $field
 	 * @param string $value
 	 * @param bool $notExistingOnly
@@ -1076,6 +1190,30 @@ class Redis {
 	 */
 	public function srem ($key, $member, ...$members) {
 		return $this->send(array_merge(["srem", $key, $member], $members));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $cursor
+	 * @param string $pattern
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function sscan ($key, $cursor, $pattern = null, $count = null) {
+		$payload = ["sscan", $key, $cursor];
+
+		if ($pattern !== null) {
+			$payload[] = "PATTERN";
+			$payload[] = $pattern;
+		}
+
+		if ($count !== null) {
+			$payload[] = "COUNT";
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
 	}
 
 	/**
@@ -1444,6 +1582,30 @@ class Redis {
 	 */
 	public function zrevrank ($key, $member) {
 		return $this->send(["zrevrank", $key, $member]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $cursor
+	 * @param string $pattern
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function zscan ($key, $cursor, $pattern = null, $count = null) {
+		$payload = ["zscan", $key, $cursor];
+
+		if ($pattern !== null) {
+			$payload[] = "PATTERN";
+			$payload[] = $pattern;
+		}
+
+		if ($count !== null) {
+			$payload[] = "COUNT";
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
 	}
 
 	/**
@@ -1888,6 +2050,15 @@ class Redis {
 		}
 
 		return $this->send($payload);
+	}
+
+	public function slaveof ($host, $port = null) {
+		if ($host === null) {
+			$host = "no";
+			$port = "one";
+		}
+
+		$this->send(["slaveof", $host, $port]);
 	}
 
 	/**
