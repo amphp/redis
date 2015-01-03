@@ -1100,6 +1100,407 @@ class Redis {
 	}
 
 	/**
+	 * @param string $key
+	 * @param array $data
+	 * @return Future
+	 * @yield int
+	 */
+	public function zadd ($key, array $data) {
+		$payload = ["zadd", $key];
+
+		foreach ($data as $member => $score) {
+			$payload[] = $score;
+			$payload[] = $member;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @return Future
+	 * @yield int
+	 */
+	public function zcard ($key) {
+		return $this->send(["zcard", $key]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $min
+	 * @param int $max
+	 * @return Future
+	 * @yield int
+	 */
+	public function zcount ($key, $min, $max) {
+		return $this->send(["zcount", $key, $min, $max]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @param int|float $increment
+	 * @return Future
+	 * @yield float
+	 */
+	public function zincrby ($key, $member, $increment = 1) {
+		return $this->send(["zincrby", $key, $increment, $member], function ($response) {
+			return (float) $response;
+		});
+	}
+
+	/**
+	 * @param string $destination
+	 * @param int $numkeys
+	 * @param string|array $keys
+	 * @param string $aggregate
+	 * @return Future
+	 * @yield int
+	 */
+	public function zinterstore ($destination, $numkeys, $keys, $aggregate = "sum") {
+		$payload = ["zinterstore", $destination, $numkeys];
+
+		if (!is_array($keys)) {
+			$keys = [$keys];
+		}
+
+		$weights = [];
+
+		if (count(array_filter(array_keys($keys), 'is_string'))) {
+			foreach ($keys as $key => $weight) {
+				$payload[] = $key;
+				$weights[] = $weight;
+			}
+		} else {
+			foreach ($keys as $key) {
+				$payload[] = $key;
+			}
+		}
+
+		if (sizeof($weights) > 0) {
+			$payload[] = "WEIGHTS";
+
+			foreach ($weights as $weight) {
+				$payload[] = $weight;
+			}
+		}
+
+		if (strtolower($aggregate) !== "sum") {
+			$payload[] = "AGGREGATE";
+			$payload[] = $aggregate;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $min
+	 * @param string $max
+	 * @return Future
+	 * @yield int
+	 */
+	public function zlexcount ($key, $min, $max) {
+		return $this->send(["zlexcount", $key, $min, $max]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $start
+	 * @param int $stop
+	 * @param bool $withScores
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrange ($key, $start = 0, $stop = -1, $withScores = false) {
+		$payload = ["zrange", $key, $start, $stop];
+
+		if ($withScores) {
+			$payload[] = "WITHSCORES";
+		}
+
+		return $this->send($payload, function ($response) use ($withScores) {
+			if ($withScores) {
+				$result = [];
+
+				for ($i = 0; $i < sizeof($response); $i += 2) {
+					$result[$response[$i]] = $response[$i + 1];
+				}
+
+				return $result;
+			} else {
+				return $response;
+			}
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $min
+	 * @param string $max
+	 * @param int $offset
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrangebylex ($key, $min, $max, $offset = null, $count = null) {
+		$payload = ["zrangebylex", $key, $min, $max];
+
+		if($offset !== null && $count !== null) {
+			$payload[] = "LIMIT";
+			$payload[] = $offset;
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string|int $min
+	 * @param string|int $max
+	 * @param bool $withScores
+	 * @param int $offset
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrangebyscore ($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null) {
+		$payload = ["zrangebyscore", $key, $min, $max];
+
+		if ($withScores) {
+			$payload[] = "WITHSCORES";
+		}
+
+		if($offset !== null && $count !== null) {
+			$payload[] = "LIMIT";
+			$payload[] = $offset;
+			$payload[] = $count;
+		}
+
+		return $this->send($payload, function ($response) use ($withScores) {
+			if ($withScores) {
+				$result = [];
+
+				for ($i = 0; $i < sizeof($response); $i += 2) {
+					$result[$response[$i]] = $response[$i + 1];
+				}
+
+				return $result;
+			} else {
+				return $response;
+			}
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @return Future
+	 * @yield int|null
+	 */
+	public function zrank ($key, $member) {
+		return $this->send(["zrank", $key, $member]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @param string ...$members
+	 * @return Future
+	 * @yield int
+	 */
+	public function zrem ($key, $member, ...$members) {
+		return $this->send(array_combine(["zrem"], $key, $member, $members));
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $min
+	 * @param string $max
+	 * @return Future
+	 * @yield int
+	 */
+	public function zremrangebylex ($key, $min, $max) {
+		return $this->send(["zremrangebylex", $key, $min, $max]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $start
+	 * @param int $stop
+	 * @return Future
+	 * @yield int
+	 */
+	public function zremrangebyrank ($key, $start, $stop) {
+		return $this->send(["zremrangebyrank", $key, $start, $stop]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $min
+	 * @param int $max
+	 * @return Future
+	 * @yield int
+	 */
+	public function zremrangebyscore ($key, $min, $max) {
+		return $this->send(["zremrangebyscore", $key, $min, $max]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param int $min
+	 * @param int $max
+	 * @param bool $withScores
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrevrange ($key, $min = 0, $max = -1, $withScores = false) {
+		$payload = ["zrevrange", $key, $min, $max];
+
+		if ($withScores) {
+			$payload[] = "WITHSCORES";
+		}
+
+		return $this->send($payload, function ($response) use ($withScores) {
+			if ($withScores) {
+				$result = [];
+
+				for ($i = 0; $i < sizeof($response); $i += 2) {
+					$result[$response[$i]] = $response[$i + 1];
+				}
+
+				return $result;
+			} else {
+				return $response;
+			}
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $min
+	 * @param string $max
+	 * @param int $offset
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrevrangebylex ($key, $min, $max, $offset = null, $count = null) {
+		$payload = ["zrevrangebylex", $key, $min, $max];
+
+		if($offset !== null && $count !== null) {
+			$payload[] = "LIMIT";
+			$payload[] = $offset;
+			$payload[] = $count;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string|int $min
+	 * @param string|int $max
+	 * @param bool $withScores
+	 * @param int $offset
+	 * @param int $count
+	 * @return Future
+	 * @yield array
+	 */
+	public function zrevrangebyscore ($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null) {
+		$payload = ["zrangebyscore", $key, $min, $max];
+
+		if ($withScores) {
+			$payload[] = "WITHSCORES";
+		}
+
+		if($offset !== null && $count !== null) {
+			$payload[] = "LIMIT";
+			$payload[] = $offset;
+			$payload[] = $count;
+		}
+
+		return $this->send($payload, function ($response) use ($withScores) {
+			if ($withScores) {
+				$result = [];
+
+				for ($i = 0; $i < sizeof($response); $i += 2) {
+					$result[$response[$i]] = $response[$i + 1];
+				}
+
+				return $result;
+			} else {
+				return $response;
+			}
+		});
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @return Future
+	 * @yield int|null
+	 */
+	public function zrevrank ($key, $member) {
+		return $this->send(["zrevrank", $key, $member]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $member
+	 * @return Future
+	 * @yield int|null
+	 */
+	public function zscore ($key, $member) {
+		return $this->send(["zscore", $key, $member]);
+	}
+
+	/**
+	 * @param string $destination
+	 * @param int $numkeys
+	 * @param string|array $keys
+	 * @param string $aggregate
+	 * @return Future
+	 * @yield int
+	 */
+	public function zunionstore ($destination, $numkeys, $keys, $aggregate = "sum") {
+		$payload = ["zunionstore", $destination, $numkeys];
+
+		if (!is_array($keys)) {
+			$keys = [$keys];
+		}
+
+		$weights = [];
+
+		if (count(array_filter(array_keys($keys), 'is_string'))) {
+			foreach ($keys as $key => $weight) {
+				$payload[] = $key;
+				$weights[] = $weight;
+			}
+		} else {
+			foreach ($keys as $key) {
+				$payload[] = $key;
+			}
+		}
+
+		if (sizeof($weights) > 0) {
+			$payload[] = "WEIGHTS";
+
+			foreach ($weights as $weight) {
+				$payload[] = $weight;
+			}
+		}
+
+		if (strtolower($aggregate) !== "sum") {
+			$payload[] = "AGGREGATE";
+			$payload[] = $aggregate;
+		}
+
+		return $this->send($payload);
+	}
+
+	/**
 	 * @return Future
 	 * @yield string
 	 */
