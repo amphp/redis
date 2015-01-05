@@ -24,14 +24,9 @@ class Redis {
 	private $connector;
 
 	/**
-	 * @var string
+	 * @var array
 	 */
-	private $host;
-
-	/**
-	 * @var string
-	 */
-	private $password;
+	private $options;
 
 	/**
 	 * @var int
@@ -75,13 +70,11 @@ class Redis {
 
 	/**
 	 * @param Reactor $reactor
-	 * @param string $host
-	 * @param string ...$options
+	 * @param array $options
 	 */
-	public function __construct ($reactor, $host, ...$options) {
+	public function __construct ($reactor, array $options = []) {
 		$this->reactor = $reactor;
 		$this->connector = new Connector;
-		$this->host = $host;
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
@@ -89,13 +82,10 @@ class Redis {
 			$this->onResponse($result);
 		});
 
-		foreach ($options as $option) {
-			list($key, $value) = explode("=", $option, 2);
-
-			if ($key === "password") {
-				$this->password = $value;
-			}
-		}
+		$this->options = array_merge([
+			"host" => "127.0.0.1",
+			"password" => null
+		], $options);
 	}
 
 	public function connect () {
@@ -103,7 +93,7 @@ class Redis {
 			return;
 		}
 
-		$this->connectFuture = $this->connector->connect("tcp://" . $this->host);
+		$this->connectFuture = $this->connector->connect("tcp://" . $this->options["host"]);
 		$this->connectFuture->when(function ($error, $socket) {
 			if ($error) {
 				throw $error;
@@ -115,9 +105,9 @@ class Redis {
 
 			$this->socket = $socket;
 
-			if ($this->password !== null) {
+			if ($this->options["password"] !== null) {
 				array_unshift($this->futures, new Future);
-				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($this->password) . "\r\n" . $this->password . "\r\n" . $this->outputBuffer;
+				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($this->options["password"]) . "\r\n" . $this->options["password"] . "\r\n" . $this->outputBuffer;
 				$this->outputBufferLength = strlen($this->outputBuffer);
 			}
 

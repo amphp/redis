@@ -27,7 +27,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function keys () {
 		(new NativeReactor)->run(function ($reactor) {
-			$redis = new Redis($reactor, "127.0.0.1:25325");
+			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertEquals([], (yield $redis->keys("*")));
 			$redis->set("foo", 42);
 			$this->assertEquals(["foo"], (yield $redis->keys("*")));
@@ -40,7 +40,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function exists () {
 		(new NativeReactor)->run(function ($reactor) {
-			$redis = new Redis($reactor, "127.0.0.1:25325");
+			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$this->assertFalse((yield $redis->exists("bar")));
 			$redis->close();
@@ -52,7 +52,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function del () {
 		(new NativeReactor)->run(function ($reactor) {
-			$redis = new Redis($reactor, "127.0.0.1:25325");
+			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$redis->del("foo");
 			$this->assertFalse((yield $redis->exists("foo")));
