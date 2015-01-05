@@ -2077,6 +2077,48 @@ class Redis {
 		return $this->send(["time"]);
 	}
 
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function discard () {
+		return $this->send(["discard"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function exec () {
+		return $this->send(["exec"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function multi () {
+		return $this->send(["multi"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function unwatch () {
+		return $this->send(["unwatch"]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $keys
+	 * @return Future
+	 * @yield string
+	 */
+	public function watch ($key, ...$keys) {
+		return $this->send(array_merge(["unwatch", $key], $keys));
+	}
+
 	public function __destruct () {
 		$this->close();
 	}
