@@ -2116,7 +2116,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function watch ($key, ...$keys) {
-		return $this->send(array_merge(["unwatch", $key], $keys));
+		return $this->send(array_merge(["watch", $key], $keys));
 	}
 
 	public function __destruct () {
