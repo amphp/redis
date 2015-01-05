@@ -1,5 +1,5 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 class RedisException extends \Exception { }

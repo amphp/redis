@@ -1,6 +1,6 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 use Amp\Reactor;
 use Nbsock\Connector;
@@ -24,9 +24,14 @@ class Redis {
 	private $connector;
 
 	/**
-	 * @var ConnectionConfig
+	 * @var string
 	 */
-	private $config;
+	private $host;
+
+	/**
+	 * @var string
+	 */
+	private $password;
 
 	/**
 	 * @var int
@@ -68,16 +73,29 @@ class Redis {
 	 */
 	private $patternCallbacks;
 
-	public function __construct (ConnectionConfig $config) {
-		$this->reactor = getReactor();
+	/**
+	 * @param Reactor $reactor
+	 * @param string $host
+	 * @param string ...$options
+	 */
+	public function __construct ($reactor, $host, ...$options) {
+		$this->reactor = $reactor;
 		$this->connector = new Connector;
-		$this->config = $config;
+		$this->host = $host;
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
 		$this->parser = new RespParser(function ($result) {
 			$this->onResponse($result);
 		});
+
+		foreach ($options as $option) {
+			list($key, $value) = explode("=", $option, 2);
+
+			if ($key === "password") {
+				$this->password = $value;
+			}
+		}
 	}
 
 	public function connect () {
@@ -85,7 +103,7 @@ class Redis {
 			return;
 		}
 
-		$this->connectFuture = $this->connector->connect("tcp://" . $this->config->getHost() . ":" . $this->config->getPort());
+		$this->connectFuture = $this->connector->connect("tcp://" . $this->host);
 		$this->connectFuture->when(function ($error, $socket) {
 			if ($error) {
 				throw $error;
@@ -97,10 +115,9 @@ class Redis {
 
 			$this->socket = $socket;
 
-			if ($this->config->hasPassword()) {
-				$pass = $this->config->getPassword();
+			if ($this->password !== null) {
 				array_unshift($this->futures, new Future);
-				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($pass) . "\r\n" . $pass . "\r\n" . $this->outputBuffer;
+				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($this->password) . "\r\n" . $this->password . "\r\n" . $this->outputBuffer;
 				$this->outputBufferLength = strlen($this->outputBuffer);
 			}
 
@@ -186,10 +203,6 @@ class Redis {
 
 	public function close () {
 		$this->closeSocket();
-	}
-
-	public function getConfig () {
-		return $this->config;
 	}
 
 	private function closeSocket () {
@@ -1711,7 +1724,7 @@ class Redis {
 	public function psubscribe ($pattern, callable $callback) {
 		$this->mode = self::MODE_PUBSUB;
 
-	        $pattern = (array) $pattern;
+		$pattern = (array) $pattern;
 		foreach ($pattern as $p) {
 			$this->patternCallbacks[$p] = $callback;
 		}

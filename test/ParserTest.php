@@ -1,6 +1,6 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 class ParserTest extends \PHPUnit_Framework_TestCase {
 	/**
@@ -52,7 +52,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 		});
 		$parser->append("-ERR something went wrong :(\r\n");
 
-		$this->assertInstanceOf("Amphp\\Redis\\RedisException", $result);
+		$this->assertInstanceOf("Amp\\Redis\\RedisException", $result);
 	}
 
 	/**
@@ -166,7 +166,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function unknownType () {
-		$this->setExpectedException("Amphp\\Redis\\RedisException");
+		$this->setExpectedException("Amp\\Redis\\RedisException");
 		$parser = new RespParser(function($resp) { });
 		$parser->append("3$\r\nfoo\r\n");
 	}

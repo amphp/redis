@@ -1,7 +1,8 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
+use Amp\NativeReactor;
 use function Amp\run;
 use function Amp\wait;
 
@@ -15,7 +16,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 		$pid = @file_get_contents("/tmp/amp-redis.pid");
 		@unlink("/tmp/amp-redis.pid");
 
-		if(!empty($pid)) {
+		if (!empty($pid)) {
 			print `kill $pid`;
 			sleep(1);
 		}
@@ -25,17 +26,10 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function ping () {
-		$config = new ConnectionConfig("127.0.0.1", 25325, "secret");
-		$response = null;
-
-		$callable = function() use ($config, &$response) {
-			$redis = new Redis($config);
-			$response = (yield $redis->ping());
+		(new NativeReactor)->run(function ($reactor) {
+			$redis = new Redis($reactor, "127.0.0.1:25325", "password=secret");
+			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();
-		};
-
-		run($callable);
-
-		$this->assertEquals("PONG", $response);
+		});
 	}
 }

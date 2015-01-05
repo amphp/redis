@@ -1,6 +1,6 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 class Future extends \Amp\Future {
 	private $callback;

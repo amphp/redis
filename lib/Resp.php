@@ -1,6 +1,6 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 class Resp {
 	const TYPE_SIMPLE_STRING = "+";

@@ -1,9 +1,10 @@
 {
 	"name": "amphp/amp-redis",
-	"description": "",
+	"description": "an async redis client based on the amp framework",
 	"keywords": [
 		"amp",
-		"async"
+		"async",
+		"redis"
 	],
 	"homepage": "https://github.com/kelunik/amp-redis",
 	"authors": [
@@ -14,10 +15,10 @@
 		}
 	],
 	"support": {
-		"issues": "https://github.com/kelunik/amp-redis"
+		"issues": "https://github.com/kelunik/amp-redis/issues"
 	},
 	"require": {
-                "php": "~5.6",
+		"php": ">=5.6",
 		"amphp/amp": "~0.15",
 		"rdlowrey/nbsock": "~0.5"
 	},
@@ -27,7 +28,7 @@
 	"minimum-stability": "dev",
 	"autoload": {
 		"psr-4": {
-			"Amphp\\Redis\\": "lib/"
+			"Amp\\Redis\\": "lib/"
 		}
 	}
 }

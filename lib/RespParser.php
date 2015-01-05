@@ -1,6 +1,6 @@
 <?php
 
-namespace Amphp\Redis;
+namespace Amp\Redis;
 
 class RespParser {
 	const CRLF = "\r\n";
