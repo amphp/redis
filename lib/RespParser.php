@@ -36,20 +36,12 @@ class RespParser {
 
 		switch ($type) {
 			case Resp::TYPE_SIMPLE_STRING:
-				$this->onRespParsed($type, substr($this->buffer, 1, $pos - 1));
-				$this->buffer = substr($this->buffer, $pos + 2);
-				return true;
-
-			case Resp::TYPE_ERROR:
-				$this->onRespParsed($type, new RedisException(substr($this->buffer, 1, $pos - 1)));
-				$this->buffer = substr($this->buffer, $pos + 2);
-				return true;
-
-			case Resp::TYPE_ARRAY:
 			case Resp::TYPE_INTEGER:
-				$this->onRespParsed($type, (int) substr($this->buffer, 1, $pos - 1));
-				$this->buffer = substr($this->buffer, $pos + 2);
-				return true;
+			case Resp::TYPE_ARRAY:
+			case Resp::TYPE_ERROR:
+				$payload = substr($this->buffer, 1, $pos - 1);
+				$remove = $pos + 2;
+				break;
 
 			case Resp::TYPE_BULK_STRING:
 				$length = (int) substr($this->buffer, 1, $pos);
@@ -58,15 +50,35 @@ class RespParser {
 					return false;
 				}
 
-				$this->onRespParsed($type, substr($this->buffer, $pos + 2, $length));
-				$this->buffer = substr($this->buffer, $pos + $length + 4);
-				return true;
+				$payload = substr($this->buffer, $pos + 2, $length);
+				$remove = $pos + $length + 4;
+				break;
 
 			default:
 				throw new RedisException (
 					sprintf("unknown resp data type: %s", $type)
 				);
 		}
+
+		$this->buffer = substr($this->buffer, $remove);
+
+		switch ($type) {
+			case Resp::TYPE_INTEGER:
+			case Resp::TYPE_ARRAY:
+				$payload = intval($payload);
+				break;
+
+			case Resp::TYPE_ERROR:
+				$payload = new RedisException($payload);
+				break;
+
+			default:
+				break;
+		}
+
+		$this->onRespParsed($type, $payload);
+
+		return true;
 	}
 
 	private function onRespParsed ($type, $payload) {

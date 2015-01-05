@@ -179,7 +179,7 @@ class Redis {
 
 			throw new RedisException("connection gone");
 		} else {
-			$this->outputBuffer = substr($this->outputBuffer, $bytes);
+			$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
 			$this->outputBufferLength -= $bytes;
 		}
 	}
@@ -225,7 +225,7 @@ class Redis {
 		$this->outputBuffer .= $payload;
 		$this->outputBufferLength += strlen($payload);
 
-		if ($this->writeWatcher) {
+		if ($this->writeWatcher !== null) {
 			$this->reactor->enable($this->writeWatcher);
 		}
 
