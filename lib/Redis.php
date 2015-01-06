@@ -95,8 +95,11 @@ class Redis {
 
 		$this->connectFuture = $this->connector->connect("tcp://" . $this->options["host"]);
 		$this->connectFuture->when(function ($error, $socket) {
-			$this->socket = $socket;
+			if ($error) {
+				throw $error;
+			}
 
+			$this->socket = $socket;
 			$this->onRead();
 
 			if ($this->options["password"] !== null) {
@@ -115,8 +118,6 @@ class Redis {
 
 			$this->connectFuture = null;
 		});
-
-		wait($this->connectFuture);
 	}
 
 	private function onRead () {
@@ -125,7 +126,7 @@ class Redis {
 		if ($read !== false && $read !== "") {
 			$this->parser->append($read);
 		} else if (!is_resource($this->socket) || @feof($this->socket)) {
-			if($this->readWatcher || $this->writeWatcher) {
+			if ($this->readWatcher || $this->writeWatcher) {
 				$this->reactor->cancel($this->readWatcher);
 				$this->reactor->cancel($this->writeWatcher);
 
