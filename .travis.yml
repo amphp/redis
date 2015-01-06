@@ -4,4 +4,4 @@ php:
   - 5.6
 before_script:
   - composer install
-script: php vendor/bin/phpunit
+script: php vendor/bin/phpunit --coverage-text

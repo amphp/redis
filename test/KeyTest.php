@@ -2,12 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\NativeReactor;
+use function Amp\run;
 
 class KeyTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
 		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid`;
-		sleep(1);
+		sleep(2);
 	}
 
 	static function tearDownAfterClass () {
@@ -16,7 +16,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 
 		if (!empty($pid)) {
 			print `kill $pid`;
-			sleep(1);
+			sleep(2);
 		}
 	}
 
@@ -24,7 +24,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function keys () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertEquals([], (yield $redis->keys("*")));
 			$redis->set("foo", 42);
@@ -37,7 +37,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function exists () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$this->assertFalse((yield $redis->exists("bar")));
@@ -49,7 +49,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function del () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$redis->del("foo");

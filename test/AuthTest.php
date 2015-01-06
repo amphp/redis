@@ -2,12 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\NativeReactor;
+use function Amp\run;
 
 class AuthTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
 		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret`;
-		sleep(1);
+		sleep(2);
 	}
 
 	static function tearDownAfterClass () {
@@ -16,7 +16,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 
 		if (!empty($pid)) {
 			print `kill $pid`;
-			sleep(1);
+			sleep(2);
 		}
 	}
 
@@ -24,7 +24,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function ping () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325", "password" => "secret"]);
 			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();

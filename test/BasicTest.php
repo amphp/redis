@@ -2,12 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\NativeReactor;
+use function Amp\run;
 
 class BasicTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
 		print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid`;
-		sleep(1);
+		sleep(2);
 	}
 
 	static function tearDownAfterClass () {
@@ -16,7 +16,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 
 		if (!empty($pid)) {
 			print `kill $pid`;
-			sleep(1);
+			sleep(2);
 		}
 	}
 
@@ -24,7 +24,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function connect () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();
@@ -35,7 +35,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function multiCommand () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$redis->echotest("1");
 			$this->assertEquals("2", (yield $redis->echotest("2")));
@@ -48,7 +48,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 * @medium
 	 */
 	function timeout () {
-		(new NativeReactor)->run(function ($reactor) {
+		run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$redis->echotest("1");
 
