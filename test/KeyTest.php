@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\NativeReactor;
 use function Amp\run;
 
 class KeyTest extends \PHPUnit_Framework_TestCase {
@@ -24,7 +25,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function keys () {
-		run(function ($reactor) {
+		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertEquals([], (yield $redis->keys("*")));
 			$redis->set("foo", 42);
@@ -37,7 +38,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function exists () {
-		run(function ($reactor) {
+		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$this->assertFalse((yield $redis->exists("bar")));
@@ -49,7 +50,7 @@ class KeyTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function del () {
-		run(function ($reactor) {
+		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
 			$this->assertTrue((yield $redis->exists("foo")));
 			$redis->del("foo");

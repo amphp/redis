@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="test/bootstrap.php" colors="true" strict="false">
+<phpunit bootstrap="test/bootstrap.php" colors="true" strict="true">
 	<testsuites>
 		<testsuite name="amp-redis test suite">
 			<directory>test</directory>

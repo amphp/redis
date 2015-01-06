@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\NativeReactor;
 use function Amp\run;
 
 class AuthTest extends \PHPUnit_Framework_TestCase {
@@ -24,7 +25,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	function ping () {
-		run(function ($reactor) {
+		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325", "password" => "secret"]);
 			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();

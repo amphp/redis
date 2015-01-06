@@ -4,10 +4,6 @@ namespace Amp\Redis;
 
 use Amp\Reactor;
 use Nbsock\Connector;
-use function Amp\cancel;
-use function Amp\getReactor;
-use function Amp\onReadable;
-use function Amp\wait;
 
 class Redis {
 	const MODE_DEFAULT = 0;
@@ -74,7 +70,7 @@ class Redis {
 	 */
 	public function __construct ($reactor, array $options = []) {
 		$this->reactor = $reactor;
-		$this->connector = new Connector;
+		$this->connector = new Connector($reactor);
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
