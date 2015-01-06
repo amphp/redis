@@ -26,7 +26,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function connect () {
 		(new NativeReactor())->run(function ($reactor) {
-			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
+			$redis = new Redis(["host" => "127.0.0.1:25325"], $reactor);
 			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();
 		});
@@ -37,7 +37,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function multiCommand () {
 		(new NativeReactor())->run(function ($reactor) {
-			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
+			$redis = new Redis(["host" => "127.0.0.1:25325"], $reactor);
 			$redis->echotest("1");
 			$this->assertEquals("2", (yield $redis->echotest("2")));
 			$redis->close();
@@ -50,7 +50,7 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function timeout () {
 		(new NativeReactor())->run(function ($reactor) {
-			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325"]);
+			$redis = new Redis(["host" => "127.0.0.1:25325"], $reactor);
 			$redis->echotest("1");
 
 			yield "pause" => 8000;

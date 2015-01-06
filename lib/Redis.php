@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use function Amp\getReactor;
 use Amp\Reactor;
 use Nbsock\Connector;
 
@@ -68,20 +69,21 @@ class Redis {
 	 * @param Reactor $reactor
 	 * @param array $options
 	 */
-	public function __construct ($reactor, array $options = []) {
-		$this->reactor = $reactor;
-		$this->connector = new Connector($reactor);
-		$this->mode = self::MODE_DEFAULT;
-		$this->outputBufferLength = 0;
-		$this->outputBuffer = "";
-		$this->parser = new RespParser(function ($result) {
-			$this->onResponse($result);
-		});
-
+	public function __construct (array $options = [], Reactor $reactor = null) {
 		$this->options = array_merge([
 			"host" => "127.0.0.1",
 			"password" => null
 		], $options);
+		$this->reactor = $reactor ?: getReactor();
+
+		$this->mode = self::MODE_DEFAULT;
+		$this->outputBufferLength = 0;
+		$this->outputBuffer = "";
+
+		$this->connector = new Connector($reactor);
+		$this->parser = new RespParser(function ($result) {
+			$this->onResponse($result);
+		});
 	}
 
 	public function connect () {

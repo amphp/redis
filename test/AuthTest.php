@@ -26,7 +26,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
 	 */
 	function ping () {
 		(new NativeReactor())->run(function ($reactor) {
-			$redis = new Redis($reactor, ["host" => "127.0.0.1:25325", "password" => "secret"]);
+			$redis = new Redis(["host" => "127.0.0.1:25325", "password" => "secret"], $reactor);
 			$this->assertEquals("PONG", (yield $redis->ping()));
 			$redis->close();
 		});
