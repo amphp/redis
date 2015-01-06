@@ -95,15 +95,9 @@ class Redis {
 
 		$this->connectFuture = $this->connector->connect("tcp://" . $this->options["host"]);
 		$this->connectFuture->when(function ($error, $socket) {
-			if ($error) {
-				throw $error;
-			}
-
-			if (!is_resource($socket) || @feof($socket)) {
-				throw new RedisException("Connection could not be initialised!");
-			}
-
 			$this->socket = $socket;
+
+			$this->onRead();
 
 			if ($this->options["password"] !== null) {
 				array_unshift($this->futures, new Future);
@@ -121,6 +115,8 @@ class Redis {
 
 			$this->connectFuture = null;
 		});
+
+		wait($this->connectFuture);
 	}
 
 	private function onRead () {
@@ -129,11 +125,15 @@ class Redis {
 		if ($read !== false && $read !== "") {
 			$this->parser->append($read);
 		} else if (!is_resource($this->socket) || @feof($this->socket)) {
-			$this->reactor->cancel($this->readWatcher);
-			$this->reactor->cancel($this->writeWatcher);
+			if($this->readWatcher || $this->writeWatcher) {
+				$this->reactor->cancel($this->readWatcher);
+				$this->reactor->cancel($this->writeWatcher);
 
-			$this->readWatcher = null;
-			$this->writeWatcher = null;
+				$this->readWatcher = null;
+				$this->writeWatcher = null;
+			} else {
+				throw new RedisException("connection could not be initialized");
+			}
 		}
 	}
 

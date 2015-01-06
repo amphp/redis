@@ -3,8 +3,6 @@
 namespace Amp\Redis;
 
 use Amp\NativeReactor;
-use function Amp\run;
-use function Amp\wait;
 
 class KeyTest extends \PHPUnit_Framework_TestCase {
 	static function setUpBeforeClass () {
