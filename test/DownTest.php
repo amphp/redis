@@ -8,7 +8,7 @@ use function Amp\run;
 class DownTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
-	 * @expectedException \Amp\Redis\RedisException
+	 * @expectedException \Amp\Redis\ConnectException
 	 */
 	function ping () {
 		(new NativeReactor())->run(function ($reactor) {

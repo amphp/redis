@@ -131,7 +131,7 @@ class Redis {
 				$this->readWatcher = null;
 				$this->writeWatcher = null;
 			} else {
-				throw new RedisException("connection could not be initialized");
+				throw new ConnectException("connection could not be initialized");
 			}
 		}
 	}
@@ -183,7 +183,7 @@ class Redis {
 			$this->readWatcher = null;
 			$this->writeWatcher = null;
 
-			throw new RedisException("connection gone");
+			throw new ConnectException("connection gone");
 		} else {
 			$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
 			$this->outputBufferLength -= $bytes;
