@@ -164,7 +164,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @expectedException \Amp\Redis\RedisException
+	 * @expectedException \Amp\Redis\ParserException
 	 */
 	function unknownType () {
 		$parser = new RespParser(function($resp) { });

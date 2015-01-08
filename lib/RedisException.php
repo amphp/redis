@@ -2,4 +2,6 @@
 
 namespace Amp\Redis;
 
-class RedisException extends \Exception { }
+class RedisException extends Exception {
+
+}

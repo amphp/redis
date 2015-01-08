@@ -55,7 +55,7 @@ class RespParser {
 				break;
 
 			default:
-				throw new RedisException (
+				throw new ParserException (
 					sprintf("unknown resp data type: %s", $type)
 				);
 		}
