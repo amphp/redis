@@ -58,14 +58,27 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
 	 */
+	function stringNull () {
+		$result = false;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("$-1\r\n");
+
+		$this->assertSame(null, $result);
+	}
+
+	/**
+	 * @test
+	 */
 	function arrayNull () {
-		$result = null;
+		$result = false;
 		$parser = new RespParser(function($resp) use (&$result) {
 			$result = $resp;
 		});
 		$parser->append("*-1\r\n");
 
-		$this->assertEquals(null, $result);
+		$this->assertSame(null, $result);
 	}
 
 	/**

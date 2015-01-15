@@ -46,12 +46,18 @@ class RespParser {
 			case Resp::TYPE_BULK_STRING:
 				$length = (int) substr($this->buffer, 1, $pos);
 
-				if (strlen($this->buffer) < $pos + $length + 4) {
-					return false;
+				if($length === -1) {
+					$payload = null;
+					$remove = $pos + 2;
+				} else {
+					if (strlen($this->buffer) < $pos + $length + 4) {
+						return false;
+					}
+
+					$payload = substr($this->buffer, $pos + 2, $length);
+					$remove = $pos + $length + 4;
 				}
 
-				$payload = substr($this->buffer, $pos + 2, $length);
-				$remove = $pos + $length + 4;
 				break;
 
 			default:
