@@ -1,4 +1,4 @@
-# amp-redis [![Build Status](https://travis-ci.org/kelunik/amp-redis.svg?branch=master)](https://travis-ci.org/kelunik/amp-redis)
+# amp-redis [![Build Status](https://travis-ci.org/amphp/redis.svg?branch=master)](https://travis-ci.org/amphp/redis)
 
 amp-redis is an async [redis](http://redis.io) client based on the [amp](https://github.com/amphp/amp) framework.
 

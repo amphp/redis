@@ -1,5 +1,5 @@
 {
-	"name": "amphp/amp-redis",
+	"name": "amphp/redis",
 	"description": "an async redis client based on the amp framework",
 	"keywords": [
 		"amp",
@@ -7,17 +7,17 @@
 		"client",
 		"redis"
 	],
-	"homepage": "https://github.com/kelunik/amp-redis",
+	"homepage": "https://github.com/amphp/redis",
 	"authors": [
 		{
 			"name": "Niklas Keller",
 			"email": "me@kelunik.com",
-			"homepage": "http://www.kelunik.com",
-			"role": "Creator / Lead Developer"
+			"role": "Creator / Lead Developer",
+			"homepage": "http://www.kelunik.com"
 		}
 	],
 	"support": {
-		"issues": "https://github.com/kelunik/amp-redis/issues"
+		"issues": "https://github.com/amphp/redis/issues"
 	},
 	"require": {
 		"amphp/amp": "~0.15",
