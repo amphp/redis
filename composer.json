@@ -4,6 +4,7 @@
 	"keywords": [
 		"amp",
 		"async",
+		"client",
 		"redis"
 	],
 	"homepage": "https://github.com/kelunik/amp-redis",
@@ -11,7 +12,8 @@
 		{
 			"name": "Niklas Keller",
 			"email": "me@kelunik.com",
-			"homepage": "http://www.kelunik.com"
+			"homepage": "http://www.kelunik.com",
+			"role": "Creator / Lead Developer"
 		}
 	],
 	"support": {
@@ -24,7 +26,7 @@
 	"require-dev": {
 		"phpunit/phpunit": "~4.4.0"
 	},
-	"minimum-stability": "dev",
+	"minimum-stability": "stable",
 	"autoload": {
 		"psr-4": {
 			"Amp\\Redis\\": "lib/"
