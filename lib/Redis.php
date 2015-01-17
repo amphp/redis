@@ -1149,7 +1149,7 @@ class Redis {
 	 * @yield bool
 	 */
 	public function smove ($source, $destination, $member) {
-		return $this->send(["sismember", $source, $destination, $member], function ($response) {
+		return $this->send(["smove", $source, $destination, $member], function ($response) {
 			return (bool) $response;
 		});
 	}
