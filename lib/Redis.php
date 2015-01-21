@@ -241,8 +241,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function del ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["del"], $key, $keys));
+		return $this->send(array_merge(["del"], (array) $key, $keys));
 	}
 
 	/**
@@ -514,8 +513,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function bitop ($operation, $destination, $key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["bitop", $operation, $destination], $key, $keys));
+		return $this->send(array_merge(["bitop", $operation, $destination], (array) $key, $keys));
 	}
 
 	/**
@@ -627,8 +625,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function mget ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["mget"], $key, $keys));
+		return $this->send(array_merge(["mget"], (array) $key, $keys));
 	}
 
 	/**
@@ -735,8 +732,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function hdel ($key, $field, ...$fields) {
-		$field = is_array($field) ? $field : [$field];
-		return $this->send(array_merge(["hdel", $key], $field, $fields));
+		return $this->send(array_merge(["hdel", $key], (array) $field, $fields));
 	}
 
 	/**
@@ -833,8 +829,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function hmget ($key, $field, ...$fields) {
-		$field = is_array($field) ? $field : [$field];
-		return $this->send(array_merge(["hmget", $key], $field, $fields), function ($response) {
+		return $this->send(array_merge(["hmget", $key], (array) $field, $fields), function ($response) {
 			if ($response === null) {
 				return null;
 			}
@@ -952,8 +947,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function lpop ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["lpop"], $key, $keys));
+		return $this->send(array_merge(["lpop"], (array) $key, $keys));
 	}
 
 	/**
@@ -964,8 +958,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function lpush ($key, $value, ...$values) {
-		$value = is_array($value) ? $value : [$value];
-		return $this->send(array_merge(["lpush", $key], $value, $values));
+		return $this->send(array_merge(["lpush", $key], (array) $value, $values));
 	}
 
 	/**
@@ -976,8 +969,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function lpushx ($key, $value, ...$values) {
-		$value = is_array($value) ? $value : [$value];
-		return $this->send(array_merge(["lpushx", $key], $value, $values));
+		return $this->send(array_merge(["lpushx", $key], (array) $value, $values));
 	}
 
 	/**
@@ -1031,8 +1023,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function rpop ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["rpop"], $key, $keys));
+		return $this->send(array_merge(["rpop"], (array) $key, $keys));
 	}
 
 	/**
@@ -1053,8 +1044,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function rpush ($key, $value, ...$values) {
-		$value = is_array($value) ? $value : [$value];
-		return $this->send(array_merge(["rpush", $key], $value, $values));
+		return $this->send(array_merge(["rpush", $key], (array) $value, $values));
 	}
 
 	/**
@@ -1065,8 +1055,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function rpushx ($key, $value, ...$values) {
-		$value = is_array($value) ? $value : [$value];
-		return $this->send(array_merge(["rpushx", $key], $value, $values));
+		return $this->send(array_merge(["rpushx", $key], (array) $value, $values));
 	}
 
 	/**
@@ -1077,8 +1066,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sadd ($key, $member, ...$members) {
-		$member = is_array($member) ? $member : [$member];
-		return $this->send(array_merge(["sadd", $key], $member, $members));
+		return $this->send(array_merge(["sadd", $key], (array) $member, $members));
 	}
 
 	/**
@@ -1097,8 +1085,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sdiff ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sdiff"], $key, $keys));
+		return $this->send(array_merge(["sdiff"], (array) $key, $keys));
 	}
 
 	/**
@@ -1109,8 +1096,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sdiffstore ($destination, $key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sdiffstore", $destination], $key, $keys));
+		return $this->send(array_merge(["sdiffstore", $destination], (array) $key, $keys));
 	}
 
 	/**
@@ -1120,8 +1106,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sinter ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sinter"], $key, $keys));
+		return $this->send(array_merge(["sinter"], (array) $key, $keys));
 	}
 
 	/**
@@ -1132,8 +1117,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sinterstore ($destination, $key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sinterstore", $destination], $key, $keys));
+		return $this->send(array_merge(["sinterstore", $destination], (array) $key, $keys));
 	}
 
 	/**
@@ -1204,8 +1188,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function srem ($key, $member, ...$members) {
-		$member = is_array($member) ? $member : [$member];
-		return $this->send(array_merge(["srem", $key], $member, $members));
+		return $this->send(array_merge(["srem", $key], (array) $member, $members));
 	}
 
 	/**
@@ -1239,8 +1222,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function sunion ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sunion"], $key, $keys));
+		return $this->send(array_merge(["sunion"], (array) $key, $keys));
 	}
 
 	/**
@@ -1251,8 +1233,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function sunionstore ($destination, $key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["sunionstore", $destination], $key, $keys));
+		return $this->send(array_merge(["sunionstore", $destination], (array) $key, $keys));
 	}
 
 	/**
@@ -1464,8 +1445,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function zrem ($key, $member, ...$members) {
-		$member = is_array($member) ? $member : [$member];
-		return $this->send(array_merge(["zrem", $key], $member, $members));
+		return $this->send(array_merge(["zrem", $key], (array) $member, $members));
 	}
 
 	/**
@@ -1683,8 +1663,7 @@ class Redis {
 	 * @yield bool
 	 */
 	public function pfadd ($key, $element, ...$elements) {
-		$element = is_array($element) ? $element : [$element];
-		return $this->send(array_merge(["pfadd", $key], $element, $elements), function ($response) {
+		return $this->send(array_merge(["pfadd", $key], (array) $element, $elements), function ($response) {
 			return (bool) $response;
 		});
 	}
@@ -1696,8 +1675,7 @@ class Redis {
 	 * @yield int
 	 */
 	public function pfcount ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["pfcount"], $key, $keys));
+		return $this->send(array_merge(["pfcount"], (array) $key, $keys));
 	}
 
 	/**
@@ -1708,8 +1686,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function pfmerge ($destinationKey, $sourceKey, ...$sourceKeys) {
-		$sourceKey = is_array($sourceKey) ? $sourceKey : [$sourceKey];
-		return $this->send(array_merge(["pfmerge", $destinationKey], $sourceKey, $sourceKeys));
+		return $this->send(array_merge(["pfmerge", $destinationKey], (array) $sourceKey, $sourceKeys));
 	}
 
 	/**
@@ -1792,8 +1769,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function pubsub_numsub ($channel = [], ...$channels) {
-		$channel = is_array($channel) ? $channel : [$channel];
-		return $this->send(array_merge(["pubsub", "numsub"], $channel, $channels), function ($response) {
+		return $this->send(array_merge(["pubsub", "numsub"], (array) $channel, $channels), function ($response) {
 			$result = [];
 
 			for ($i = 0; $i < sizeof($response); $i += 2) {
@@ -1947,8 +1923,7 @@ class Redis {
 	 * @yield array
 	 */
 	public function command_info ($command, ...$commands) {
-		$command = is_array($command) ? $command : [$command];
-		return $this->send(array_merge(["command", "info"], $command, $commands));
+		return $this->send(array_merge(["command", "info"], (array) $command, $commands));
 	}
 
 	/**
@@ -2144,8 +2119,7 @@ class Redis {
 	 * @yield string
 	 */
 	public function watch ($key, ...$keys) {
-		$key = is_array($key) ? $key : [$key];
-		return $this->send(array_merge(["watch"], $key, $keys));
+		return $this->send(array_merge(["watch"], (array) $key, $keys));
 	}
 
 	public function __destruct () {
