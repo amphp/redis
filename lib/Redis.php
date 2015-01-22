@@ -3,6 +3,9 @@
 namespace Amp\Redis;
 
 use Amp\Reactor;
+use Amp\Success;
+use Amp\Future;
+use Amp\Redis\Future as RedisFuture;
 use Nbsock\Connector;
 use function Amp\getReactor;
 
@@ -48,12 +51,12 @@ class Redis {
 	/**
 	 * @var Future
 	 */
-	private $connectFuture;
+	private $connectPromisor;
 
 	/**
 	 * @var Future[]
 	 */
-	private $futures = [];
+	private $promisors = [];
 
 	/**
 	 * @var callable[]
@@ -74,6 +77,7 @@ class Redis {
 			"host" => "127.0.0.1",
 			"password" => null
 		], $options);
+
 		$this->reactor = $reactor ?: getReactor();
 
 		$this->mode = self::MODE_DEFAULT;
@@ -87,21 +91,36 @@ class Redis {
 	}
 
 	public function connect () {
-		if ($this->connectFuture || $this->readWatcher) {
-			return;
+		if ($this->connectPromisor) {
+			// If we're in the process of connecting already return that same promise
+			return $this->connectPromisor->promise();
+		}
+		if ($this->readWatcher) {
+			// If a read watcher exists we know we're already connected
+			return new Success($this);
 		}
 
-		$this->connectFuture = $this->connector->connect("tcp://" . $this->options["host"]);
-		$this->connectFuture->when(function ($error, $socket) {
+		$this->connectPromisor = new Future;
+		$socketPromise = $this->connector->connect("tcp://" . $this->options["host"], $opts = [
+			Connector::OP_MS_CONNECT_TIMEOUT => 1000
+		]);
+		$socketPromise->when(function($error, $socket) {
+			$connectPromisor = $this->connectPromisor;
+			$this->connectPromisor = null;
+
 			if ($error) {
-				throw $error;
+				$connectPromisor->fail(new ConnectException(
+					"Connection attempt failed",
+					$code = 0,
+					$error
+				));
+				return;
 			}
 
 			$this->socket = $socket;
-			$this->onRead();
 
 			if ($this->options["password"] !== null) {
-				array_unshift($this->futures, new Future);
+				array_unshift($this->promisors, new Future);
 				$this->outputBuffer = "*2\r\n$4\r\rauth\r\n$" . strlen($this->options["password"]) . "\r\n" . $this->options["password"] . "\r\n" . $this->outputBuffer;
 				$this->outputBufferLength = strlen($this->outputBuffer);
 			}
@@ -114,36 +133,29 @@ class Redis {
 				$this->onWrite($reactor, $watcherId);
 			}, !empty($this->outputBuffer));
 
-			$this->connectFuture = null;
+			$connectPromisor->succeed($this);
 		});
+
+		return $this->connectPromisor->promise();
 	}
 
 	private function onRead () {
 		$read = fread($this->socket, 8192);
-
-		if ($read !== false && $read !== "") {
+		if ($read != "") {
 			$this->parser->append($read);
-		} else if (!is_resource($this->socket) || @feof($this->socket)) {
-			if ($this->readWatcher || $this->writeWatcher) {
-				$this->reactor->cancel($this->readWatcher);
-				$this->reactor->cancel($this->writeWatcher);
-
-				$this->readWatcher = null;
-				$this->writeWatcher = null;
-			} else {
-				throw new ConnectException("connection could not be initialized");
-			}
+		} elseif (!is_resource($this->socket) || @feof($this->socket)) {
+			$this->close();
 		}
 	}
 
 	private function onResponse ($result) {
 		if ($this->mode === self::MODE_DEFAULT) {
-			$future = array_shift($this->futures);
+			$promisor = array_shift($this->promisors);
 
 			if ($result instanceof RedisException) {
-				$future->fail($result);
+				$promisor->fail($result);
 			} else {
-				$future->succeed($result);
+				$promisor->succeed($result);
 			}
 		} else {
 			switch ($result[0]) {
@@ -177,13 +189,7 @@ class Redis {
 		$bytes = fwrite($this->socket, $this->outputBuffer);
 
 		if ($bytes === 0) {
-			$this->reactor->cancel($this->readWatcher);
-			$this->reactor->cancel($this->writeWatcher);
-
-			$this->readWatcher = null;
-			$this->writeWatcher = null;
-
-			throw new ConnectException("connection gone");
+			$this->close();
 		} else {
 			$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
 			$this->outputBufferLength -= $bytes;
@@ -192,6 +198,18 @@ class Redis {
 
 	public function close () {
 		$this->closeSocket();
+		$this->outputBuffer = '';
+		$this->outputBufferLength = 0;
+		$this->parser->reset();
+
+		// Fail any outstanding promises
+		if ($this->promisors) {
+			$error = new ConnectException("Connection went away :(");
+			while ($this->promisors) {
+				$promisor = array_shift($this->promisors);
+				$promisor->fail($error);
+			}
+		}
 	}
 
 	private function closeSocket () {
@@ -202,13 +220,24 @@ class Redis {
 		$this->writeWatcher = null;
 
 		if (is_resource($this->socket)) {
-			fclose($this->socket);
+			@fclose($this->socket);
 		}
 	}
 
 	private function send (array $strings, callable $responseCallback = null, $addFuture = true) {
-		$this->connect();
+		$promisor = new Future;
+		$this->connect()->when(function($error, $result) use ($promisor, $strings, $responseCallback, $addFuture) {
+			if ($error) {
+				$promisor->fail($error);
+			} else {
+				$promisor->succeed($this->doSend($strings, $responseCallback, $addFuture));
+			}
+		});
 
+		return $promisor;
+	}
+
+	private function doSend (array $strings, callable $responseCallback = null, $addFuture = true) {
 		$payload = "";
 
 		foreach ($strings as $string) {
@@ -218,10 +247,10 @@ class Redis {
 		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
 
 		if ($addFuture) {
-			$future = new Future($responseCallback);
-			$this->futures[] = $future;
+			$promisor = new RedisFuture($responseCallback);
+			$this->promisors[] = $promisor;
 		} else {
-			$future = null;
+			$promisor = null;
 		}
 
 		$this->outputBuffer .= $payload;
@@ -231,7 +260,7 @@ class Redis {
 			$this->reactor->enable($this->writeWatcher);
 		}
 
-		return $future;
+		return $promisor;
 	}
 
 	/**

@@ -16,6 +16,11 @@ class RespParser {
 		$this->responseCallback = $responseCallback;
 	}
 
+	public function reset() {
+		$this->buffer = "";
+		$this->currentResponse = $this->arrayStack = $this->currentSize = $this->arraySizes = null;
+	}
+
 	public function append ($str) {
 		$this->buffer .= $str;
 
