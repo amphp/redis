@@ -102,7 +102,8 @@ class RespParser {
 
 				while (--$this->currentSize === 0) {
 					if (sizeof($this->arrayStack) === 0) {
-						call_user_func($this->responseCallback, $this->currentResponse);
+                                               $cb = $this->responseCallback;
+						$cb($this->currentResponse);
 						$this->currentResponse = null;
 						break;
 					}
@@ -119,12 +120,15 @@ class RespParser {
 					$this->currentSize = $payload;
 					$this->arrayStack = $this->arraySizes = $this->currentResponse = [];
 				} else if ($payload === 0) {
-					call_user_func($this->responseCallback, []);
+                                       $cb = $this->responseCallback;
+					$cb([]);
 				} else {
-					call_user_func($this->responseCallback, null);
+                                       $cb = $this->responseCallback;
+					$cb(null);
 				}
 			} else { // single data type response
-				call_user_func($this->responseCallback, $payload);
+                               $cb = $this->responseCallback;
+				$cb($payload);
 			}
 		} while(isset($this->buffer[0]));
 	}
