@@ -71,6 +71,35 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 	/**
 	 * @test
 	 */
+	function pipeline () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("+foo\r\n+bar\r\n");
+
+		$this->assertEquals("bar", $result);
+	}
+
+	/**
+	 * @test
+	 */
+	function latency () {
+		$result = null;
+		$parser = new RespParser(function($resp) use (&$result) {
+			$result = $resp;
+		});
+		$parser->append("$3\r");
+		$this->assertEquals(null, $result);
+		$parser->append("\nfoo\r");
+		$this->assertEquals(null, $result);
+		$parser->append("\n");
+		$this->assertEquals("foo", $result);
+	}
+
+	/**
+	 * @test
+	 */
 	function arrayNull () {
 		$result = false;
 		$parser = new RespParser(function($resp) use (&$result) {
@@ -148,31 +177,16 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
+	 * @see https://github.com/amphp/redis/commit/a495189735412c8962b219b6633685ddca84040c
 	 */
-	function pipeline () {
+	function arrayPipeline () {
 		$result = null;
 		$parser = new RespParser(function($resp) use (&$result) {
 			$result = $resp;
 		});
-		$parser->append("+foo\r\n+bar\r\n");
+		$parser->append("*1\r\n+foo\r\n*1\r\n+bar\r\n");
 
-		$this->assertEquals("bar", $result);
-	}
-
-	/**
-	 * @test
-	 */
-	function latency () {
-		$result = null;
-		$parser = new RespParser(function($resp) use (&$result) {
-			$result = $resp;
-		});
-		$parser->append("$3\r");
-		$this->assertEquals(null, $result);
-		$parser->append("\nfoo\r");
-		$this->assertEquals(null, $result);
-		$parser->append("\n");
-		$this->assertEquals("foo", $result);
+		$this->assertEquals(["bar"], $result);
 	}
 
 	/**
