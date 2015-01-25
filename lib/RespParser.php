@@ -104,7 +104,7 @@ class RespParser {
 					if (sizeof($this->arrayStack) === 0) {
 						call_user_func($this->responseCallback, $this->currentResponse);
 						$this->currentResponse = null;
-						return;
+						break;
 					}
 
 					// index doesn't start at 0 :(
