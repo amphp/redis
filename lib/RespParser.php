@@ -29,7 +29,7 @@ class RespParser {
 	public function append ($str) {
 		$this->buffer .= $str;
 
-		start: {
+		do {
 			$type = $this->buffer[0];
 			$pos = strpos($this->buffer, self::CRLF);
 
@@ -84,9 +84,7 @@ class RespParser {
 				default:
 					break;
 			}
-		}
 
-		complete: {
 			if ($this->currentResponse !== null) { // extend array response
 				if ($type === self::TYPE_ARRAY) {
 					if ($payload >= 0) {
@@ -128,10 +126,6 @@ class RespParser {
 			} else { // single data type response
 				call_user_func($this->responseCallback, $payload);
 			}
-
-			if(isset($this->buffer[0])) {
-				goto start;
-			}
-		}
+		} while(isset($this->buffer[0]));
 	}
 }
