@@ -4,6 +4,11 @@ namespace Amp\Redis;
 
 class RespParser {
 	const CRLF = "\r\n";
+	const TYPE_SIMPLE_STRING = "+";
+	const TYPE_ERROR = "-";
+	const TYPE_ARRAY = "*";
+	const TYPE_BULK_STRING = "$";
+	const TYPE_INTEGER = ":";
 
 	private $responseCallback;
 	private $buffer = "";
@@ -40,15 +45,15 @@ class RespParser {
 		}
 
 		switch ($type) {
-			case Resp::TYPE_SIMPLE_STRING:
-			case Resp::TYPE_INTEGER:
-			case Resp::TYPE_ARRAY:
-			case Resp::TYPE_ERROR:
+			case self::TYPE_SIMPLE_STRING:
+			case self::TYPE_INTEGER:
+			case self::TYPE_ARRAY:
+			case self::TYPE_ERROR:
 				$payload = substr($this->buffer, 1, $pos - 1);
 				$remove = $pos + 2;
 				break;
 
-			case Resp::TYPE_BULK_STRING:
+			case self::TYPE_BULK_STRING:
 				$length = (int) substr($this->buffer, 1, $pos);
 
 				if($length === -1) {
@@ -74,12 +79,12 @@ class RespParser {
 		$this->buffer = substr($this->buffer, $remove);
 
 		switch ($type) {
-			case Resp::TYPE_INTEGER:
-			case Resp::TYPE_ARRAY:
+			case self::TYPE_INTEGER:
+			case self::TYPE_ARRAY:
 				$payload = intval($payload);
 				break;
 
-			case Resp::TYPE_ERROR:
+			case self::TYPE_ERROR:
 				$payload = new RedisException($payload);
 				break;
 
@@ -94,7 +99,7 @@ class RespParser {
 
 	private function onRespParsed ($type, $payload) {
 		if ($this->currentResponse !== null) { // extend array response
-			if ($type === Resp::TYPE_ARRAY) {
+			if ($type === self::TYPE_ARRAY) {
 				if ($payload >= 0) {
 					$this->arraySizes[] = $this->currentSize;
 					$this->arrayStack[] = &$this->currentResponse;
@@ -122,7 +127,7 @@ class RespParser {
 				$this->currentSize = array_pop($this->arraySizes);
 				unset($this->arrayStack[$key]);
 			}
-		} else if ($type === Resp::TYPE_ARRAY) { // start new array response
+		} else if ($type === self::TYPE_ARRAY) { // start new array response
 			if ($payload > 0) {
 				$this->currentSize = $payload;
 				$this->arrayStack = $this->arraySizes = $this->currentResponse = [];

@@ -95,6 +95,7 @@ class Redis {
 			// If we're in the process of connecting already return that same promise
 			return $this->connectPromisor->promise();
 		}
+
 		if ($this->readWatcher) {
 			// If a read watcher exists we know we're already connected
 			return new Success($this);
@@ -114,6 +115,7 @@ class Redis {
 					$code = 0,
 					$error
 				));
+
 				return;
 			}
 
@@ -141,6 +143,7 @@ class Redis {
 
 	private function onRead () {
 		$read = fread($this->socket, 8192);
+
 		if ($read != "") {
 			$this->parser->append($read);
 		} elseif (!is_resource($this->socket) || @feof($this->socket)) {
@@ -205,6 +208,7 @@ class Redis {
 		// Fail any outstanding promises
 		if ($this->promisors) {
 			$error = new ConnectException("Connection went away :(");
+
 			while ($this->promisors) {
 				$promisor = array_shift($this->promisors);
 				$promisor->fail($error);
@@ -226,6 +230,7 @@ class Redis {
 
 	private function send (array $strings, callable $responseCallback = null, $addFuture = true) {
 		$promisor = new Future;
+
 		$this->connect()->when(function($error, $result) use ($promisor, $strings, $responseCallback, $addFuture) {
 			if ($error) {
 				$promisor->fail($error);
