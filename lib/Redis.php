@@ -163,7 +163,8 @@ class Redis {
 		} else {
 			switch ($result[0]) {
 				case "message":
-					call_user_func($this->callbacks[$result[1]], $result[2]);
+					$cb = $this->callbacks[$result[1]];
+					$cb($result[2]);
 					break;
 				case "unsubscribe":
 					if ($result[2] === 0) {
