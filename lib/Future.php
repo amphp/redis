@@ -11,7 +11,8 @@ class Future extends \Amp\Future {
 
 	public function succeed($result = null) {
 		if($this->callback !== null) {
-			$result = call_user_func($this->callback, $result);
+			$cb = $this->callback;
+			$result = $cb($result);
 		}
 
 		parent::succeed($result);
