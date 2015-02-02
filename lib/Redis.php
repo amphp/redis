@@ -212,12 +212,11 @@ class Redis {
 		if ($immediately) {
 			$this->closeSocket();
 			$this->parser->reset();
+			$this->outputBuffer = '';
+			$this->outputBufferLength = 0;
 		} else {
 			$this->acceptCommands = false;
 		}
-
-		$this->outputBuffer = '';
-		$this->outputBufferLength = 0;
 
 		if ($immediately) {
 			// Fail any outstanding promises
@@ -233,6 +232,7 @@ class Redis {
 			return new Success($this);
 		} else {
 			if (empty($this->promisors)) {
+				$this->acceptCommands = true;
 				return new Success($this);
 			}
 
