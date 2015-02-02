@@ -209,11 +209,11 @@ class Redis {
 	}
 
 	public function close ($immediately = false) {
-		$this->acceptCommands = false;
-
 		if ($immediately) {
 			$this->closeSocket();
 			$this->parser->reset();
+		} else {
+			$this->acceptCommands = false;
 		}
 
 		$this->outputBuffer = '';
@@ -248,6 +248,7 @@ class Redis {
 					if (--$remaining === 0) {
 						$this->closeSocket();
 						$this->parser->reset();
+						$this->acceptCommands = true;
 
 						$promisor->succeed($this);
 					}
