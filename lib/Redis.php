@@ -2,10 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\Reactor;
-use Amp\Success;
+use Amp\Failure;
 use Amp\Future;
+use Amp\Promise;
+use Amp\Reactor;
 use Amp\Redis\Future as RedisFuture;
+use Amp\Success;
 use Nbsock\Connector;
 use function Amp\getReactor;
 
@@ -37,6 +39,11 @@ class Redis {
 	 * @var resource
 	 */
 	private $socket;
+
+	/**
+	 * @var bool
+	 */
+	private $acceptCommands;
 
 	private $readWatcher;
 	private $writeWatcher;
@@ -83,6 +90,7 @@ class Redis {
 		$this->mode = self::MODE_DEFAULT;
 		$this->outputBufferLength = 0;
 		$this->outputBuffer = "";
+		$this->acceptCommands = true;
 
 		$this->connector = new Connector($reactor);
 		$this->parser = new RespParser(function ($result) {
@@ -105,7 +113,7 @@ class Redis {
 		$socketPromise = $this->connector->connect("tcp://" . $this->options["host"], $opts = [
 			Connector::OP_MS_CONNECT_TIMEOUT => 1000
 		]);
-		$socketPromise->when(function($error, $socket) {
+		$socketPromise->when(function ($error, $socket) {
 			$connectPromisor = $this->connectPromisor;
 			$this->connectPromisor = null;
 
@@ -147,7 +155,7 @@ class Redis {
 		if ($read != "") {
 			$this->parser->append($read);
 		} elseif (!is_resource($this->socket) || @feof($this->socket)) {
-			$this->close();
+			$this->close(true);
 		}
 	}
 
@@ -193,27 +201,60 @@ class Redis {
 		$bytes = fwrite($this->socket, $this->outputBuffer);
 
 		if ($bytes === 0) {
-			$this->close();
+			$this->close(true);
 		} else {
 			$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
 			$this->outputBufferLength -= $bytes;
 		}
 	}
 
-	public function close () {
-		$this->closeSocket();
+	public function close ($immediately = false) {
+		$this->acceptCommands = false;
+
+		if ($immediately) {
+			$this->closeSocket();
+			$this->parser->reset();
+		}
+
 		$this->outputBuffer = '';
 		$this->outputBufferLength = 0;
-		$this->parser->reset();
 
-		// Fail any outstanding promises
-		if ($this->promisors) {
-			$error = new ConnectException("Connection went away :(");
+		if ($immediately) {
+			// Fail any outstanding promises
+			if ($this->promisors) {
+				$error = new ConnectException("Connection went away :(");
 
-			while ($this->promisors) {
-				$promisor = array_shift($this->promisors);
-				$promisor->fail($error);
+				while ($this->promisors) {
+					$promisor = array_shift($this->promisors);
+					$promisor->fail($error);
+				}
 			}
+
+			return new Success($this);
+		} else {
+			if (empty($this->promisors)) {
+				return new Success($this);
+			}
+
+			$remaining = sizeof($this->promisors);
+			$promisor = new Future;
+
+			foreach ($this->promisors as $key => $resolvable) {
+				if (!$resolvable instanceof Promise) {
+					$resolvable = new Success($resolvable);
+				}
+
+				$resolvable->when(function ($error, $result) use (&$remaining, $key, $promisor) {
+					if (--$remaining === 0) {
+						$this->closeSocket();
+						$this->parser->reset();
+
+						$promisor->succeed($this);
+					}
+				});
+			}
+
+			return $promisor;
 		}
 	}
 
@@ -230,15 +271,19 @@ class Redis {
 	}
 
 	private function send (array $strings, callable $responseCallback = null, $addFuture = true) {
-		$promisor = new Future;
+		if ($this->acceptCommands) {
+			$promisor = new Future;
 
-		$this->connect()->when(function($error, $result) use ($promisor, $strings, $responseCallback, $addFuture) {
-			if ($error) {
-				$promisor->fail($error);
-			} else {
-				$promisor->succeed($this->doSend($strings, $responseCallback, $addFuture));
-			}
-		});
+			$this->connect()->when(function ($error, $result) use ($promisor, $strings, $responseCallback, $addFuture) {
+				if ($error) {
+					$promisor->fail($error);
+				} else {
+					$promisor->succeed($this->doSend($strings, $responseCallback, $addFuture));
+				}
+			});
+		} else {
+			$promisor = new Failure(new ConnectException("connection has already been closed"));
+		}
 
 		return $promisor;
 	}
@@ -2158,6 +2203,6 @@ class Redis {
 	}
 
 	public function __destruct () {
-		$this->close();
+		$this->close(true);
 	}
 }
