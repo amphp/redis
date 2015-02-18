@@ -1803,7 +1803,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string $channel
+	 * @param string|array $channel
 	 * @return void
 	 */
 	public function unsubscribe ($channel) {
@@ -1811,7 +1811,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string $pattern
+	 * @param string|array $pattern
 	 * @return void
 	 */
 	public function punsubscribe ($pattern) {
