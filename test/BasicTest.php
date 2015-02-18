@@ -38,8 +38,8 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	function multiCommand () {
 		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis(["host" => "127.0.0.1:25325"], $reactor);
-			$redis->echotest("1");
-			$this->assertEquals("2", (yield $redis->echotest("2")));
+			$redis->echo("1");
+			$this->assertEquals("2", (yield $redis->echo("2")));
 			$redis->close();
 		});
 	}
@@ -51,11 +51,11 @@ class BasicTest extends \PHPUnit_Framework_TestCase {
 	function timeout () {
 		(new NativeReactor())->run(function ($reactor) {
 			$redis = new Redis(["host" => "127.0.0.1:25325"], $reactor);
-			$redis->echotest("1");
+			$redis->echo("1");
 
 			yield "pause" => 8000;
 
-			$this->assertEquals("2", (yield $redis->echotest("2")));
+			$this->assertEquals("2", (yield $redis->echo("2")));
 			$redis->close();
 		});
 	}

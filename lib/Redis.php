@@ -11,6 +11,10 @@ use Amp\Success;
 use Nbsock\Connector;
 use function Amp\getReactor;
 
+/**
+ * @method Future echo ($text)
+ * @method Future eval($script, $keys, $args)
+ */
 class Redis {
 	const MODE_DEFAULT = 0;
 	const MODE_PUBSUB = 1;
@@ -1870,15 +1874,6 @@ class Redis {
 	}
 
 	/**
-	 * @param string $text
-	 * @return Future
-	 * @yield string
-	 */
-	public function echotest ($text) {
-		return $this->send(["echo", $text]);
-	}
-
-	/**
 	 * @return Future
 	 * @yield string
 	 */
@@ -2201,6 +2196,80 @@ class Redis {
 	 */
 	public function watch ($key, ...$keys) {
 		return $this->send(array_merge(["watch"], (array) $key, $keys));
+	}
+
+	/**
+	 * @param string $sha1
+	 * @param string|array $keys
+	 * @param string|array $args
+	 * @return Future
+	 * @yield mixed
+	 */
+	public function evalsha ($sha1, $keys = [], $args = []) {
+		return $this->send(array_merge(["evalsha"], $sha1, sizeof((array) $keys), (array) $keys, (array) $args));
+	}
+
+	/**
+	 * @param string|array $script
+	 * @param string ...$scripts
+	 * @return Future
+	 * @yield array
+	 */
+	public function script_exists ($script, ...$scripts) {
+		return $this->send(array_merge(["script", "exists"], (array) $script, $scripts));
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function script_flush () {
+		return $this->send(["script", "flush"]);
+	}
+
+	/**
+	 * @return Future
+	 * @yield string
+	 */
+	public function script_kill () {
+		return $this->send(["script", "kill"]);
+	}
+
+	/**
+	 * @param string $script
+	 * @return Future
+	 * @yield string
+	 */
+	public function script_load ($script) {
+		return $this->send(["script", "load", $script]);
+	}
+
+	public function __call ($method, $args) {
+		if (method_exists($this, "_{$method}")) {
+			return call_user_func_array([$this, "_{$method}"], $args);
+		}
+
+		throw new \BadMethodCallException("method doesn't exist");
+	}
+
+	/**
+	 * @param string $text
+	 * @return Future
+	 * @yield string
+	 */
+	private function _echo ($text) {
+		return $this->send(["echo", $text]);
+	}
+
+	/**
+	 * @param string $script
+	 * @param string|array $keys
+	 * @param string|array $args
+	 * @return Future
+	 * @yield mixed
+	 */
+	private function _eval ($script, $keys, $args) {
+		return $this->send(array_merge(["eval"], $script, sizeof((array) $keys), (array) $keys, (array) $args));
 	}
 
 	public function __destruct () {
