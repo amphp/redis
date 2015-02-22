@@ -320,7 +320,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -496,7 +496,7 @@ class Redis {
 	 * @param string $key
 	 * @param string $pattern
 	 * @param string $direction
-	 * @param array|string $get
+	 * @param string|string[] $get
 	 * @param int $offset
 	 * @param int $count
 	 * @param bool $alpha
@@ -592,7 +592,7 @@ class Redis {
 	/**
 	 * @param string $operation
 	 * @param string $destination
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -704,7 +704,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield array
@@ -811,7 +811,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $field
+	 * @param string|string[] $field
 	 * @param string ...$fields
 	 * @return Future
 	 * @yield int
@@ -908,7 +908,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $field
+	 * @param string|string[] $field
 	 * @param string ...$fields
 	 * @return Future
 	 * @yield array
@@ -1026,7 +1026,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield string
@@ -1037,7 +1037,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $value
+	 * @param string|string[] $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
@@ -1048,7 +1048,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $value
+	 * @param string|string[] $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
@@ -1102,7 +1102,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield string
@@ -1123,7 +1123,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $value
+	 * @param string|string[] $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
@@ -1134,7 +1134,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $value
+	 * @param string|string[] $value
 	 * @param string ...$values
 	 * @return Future
 	 * @yield int
@@ -1145,7 +1145,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $member
+	 * @param string|string[] $member
 	 * @param string ...$members
 	 * @return Future
 	 * @yield int
@@ -1164,7 +1164,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield array
@@ -1175,7 +1175,7 @@ class Redis {
 
 	/**
 	 * @param string $destination
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -1185,7 +1185,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield array
@@ -1196,7 +1196,7 @@ class Redis {
 
 	/**
 	 * @param string $destination
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -1253,7 +1253,7 @@ class Redis {
 	 * @param int $count
 	 * @param bool $distinctOnly
 	 * @return Future
-	 * @yield string|array
+	 * @yield string|string[]
 	 */
 	public function srandmember ($key, $count = null, $distinctOnly = true) {
 		$payload = ["srandmember", $key];
@@ -1267,7 +1267,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $member
+	 * @param string|string[] $member
 	 * @param string ...$members
 	 * @return Future
 	 * @yield int
@@ -1301,7 +1301,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield array
@@ -1312,7 +1312,7 @@ class Redis {
 
 	/**
 	 * @param string $destination
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -1374,7 +1374,7 @@ class Redis {
 	/**
 	 * @param string $destination
 	 * @param int $numkeys
-	 * @param string|array $keys
+	 * @param string|string[] $keys
 	 * @param string $aggregate
 	 * @return Future
 	 * @yield int
@@ -1524,7 +1524,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $member
+	 * @param string|string[] $member
 	 * @param string ...$members
 	 * @return Future
 	 * @yield int
@@ -1702,7 +1702,7 @@ class Redis {
 	/**
 	 * @param string $destination
 	 * @param int $numkeys
-	 * @param string|array $keys
+	 * @param string|string[] $keys
 	 * @param string $aggregate
 	 * @return Future
 	 * @yield int
@@ -1742,7 +1742,7 @@ class Redis {
 
 	/**
 	 * @param string $key
-	 * @param string|array $element
+	 * @param string|string[] $element
 	 * @param string ...$elements
 	 * @return Future
 	 * @yield bool
@@ -1754,7 +1754,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield int
@@ -1765,7 +1765,7 @@ class Redis {
 
 	/**
 	 * @param string $destinationKey
-	 * @param string|array $sourceKey
+	 * @param string|string[] $sourceKey
 	 * @param string ...$sourceKeys
 	 * @return Future
 	 * @yield string
@@ -1775,7 +1775,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $channel
+	 * @param string|string[] $channel
 	 * @param callable $callback
 	 * @return void
 	 */
@@ -1791,7 +1791,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $pattern
+	 * @param string|string[] $pattern
 	 * @param callable $callback
 	 * @return void
 	 */
@@ -1807,7 +1807,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $channel
+	 * @param string|string[] $channel
 	 * @return void
 	 */
 	public function unsubscribe ($channel) {
@@ -1815,7 +1815,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $pattern
+	 * @param string|string[] $pattern
 	 * @return void
 	 */
 	public function punsubscribe ($pattern) {
@@ -1848,7 +1848,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $channel
+	 * @param string|string[] $channel
 	 * @param string ...$channels
 	 * @return Future
 	 * @yield array
@@ -1923,7 +1923,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string $args
+	 * @param string ...$args
 	 * @return Future
 	 * @yield string|int
 	 */
@@ -1984,7 +1984,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string $args
+	 * @param string ...$args
 	 * @return Future
 	 * @yield array
 	 */
@@ -1993,7 +1993,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $command
+	 * @param string|string[] $command
 	 * @param string ...$commands
 	 * @return Future
 	 * @yield array
@@ -2189,7 +2189,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $key
+	 * @param string|string[] $key
 	 * @param string ...$keys
 	 * @return Future
 	 * @yield string
@@ -2200,8 +2200,8 @@ class Redis {
 
 	/**
 	 * @param string $sha1
-	 * @param string|array $keys
-	 * @param string|array $args
+	 * @param string|string[] $keys
+	 * @param string|string[] $args
 	 * @return Future
 	 * @yield mixed
 	 */
@@ -2210,7 +2210,7 @@ class Redis {
 	}
 
 	/**
-	 * @param string|array $script
+	 * @param string|string[] $script
 	 * @param string ...$scripts
 	 * @return Future
 	 * @yield array
@@ -2263,8 +2263,8 @@ class Redis {
 
 	/**
 	 * @param string $script
-	 * @param string|array $keys
-	 * @param string|array $args
+	 * @param string|string[] $keys
+	 * @param string|string[] $args
 	 * @return Future
 	 * @yield mixed
 	 */
