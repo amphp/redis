@@ -117,7 +117,24 @@ class Redis {
 		$socketPromise = $this->connector->connect("tcp://" . $this->options["host"], $opts = [
 			Connector::OP_MS_CONNECT_TIMEOUT => 1000
 		]);
-		$socketPromise->when(function ($error, $socket) {
+		
+		$onWrite = function (Reactor $reactor, $watcherId) {
+			if ($this->outputBufferLength === 0) {
+				$reactor->disable($watcherId);
+				return;
+			}
+	
+			$bytes = fwrite($this->socket, $this->outputBuffer);
+	
+			if ($bytes === 0) {
+				$this->close(true);
+			} else {
+				$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
+				$this->outputBufferLength -= $bytes;
+			}
+		}
+		
+		$socketPromise->when(function ($error, $socket) use ($onWrite) {
 			$connectPromisor = $this->connectPromisor;
 			$this->connectPromisor = null;
 
@@ -143,9 +160,7 @@ class Redis {
 				$this->onRead();
 			});
 
-			$this->writeWatcher = $this->reactor->onWritable($this->socket, function (Reactor $reactor, $watcherId) {
-				$this->onWrite($reactor, $watcherId);
-			}, !empty($this->outputBuffer));
+			$this->writeWatcher = $this->reactor->onWritable($this->socket, $onWrite, !empty($this->outputBuffer));
 
 			$connectPromisor->succeed($this);
 		});
@@ -193,22 +208,6 @@ class Redis {
 					unset($this->patternCallbacks[$result[1]]);
 					break;
 			}
-		}
-	}
-
-	private function onWrite (Reactor $reactor, $watcherId) {
-		if ($this->outputBufferLength === 0) {
-			$reactor->disable($watcherId);
-			return;
-		}
-
-		$bytes = fwrite($this->socket, $this->outputBuffer);
-
-		if ($bytes === 0) {
-			$this->close(true);
-		} else {
-			$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
-			$this->outputBufferLength -= $bytes;
 		}
 	}
 
