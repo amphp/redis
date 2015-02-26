@@ -140,7 +140,13 @@ class Redis {
 			}
 
 			$this->readWatcher = $this->reactor->onReadable($this->socket, function () {
-				$this->onRead();
+				$read = fread($this->socket, 8192);
+		
+				if ($read != "") {
+					$this->parser->append($read);
+				} elseif (!is_resource($this->socket) || @feof($this->socket)) {
+					$this->close(true);
+				}
 			});
 
 			$this->writeWatcher = $this->reactor->onWritable($this->socket, function (Reactor $reactor, $watcherId) {
@@ -151,16 +157,6 @@ class Redis {
 		});
 
 		return $this->connectPromisor->promise();
-	}
-
-	private function onRead () {
-		$read = fread($this->socket, 8192);
-
-		if ($read != "") {
-			$this->parser->append($read);
-		} elseif (!is_resource($this->socket) || @feof($this->socket)) {
-			$this->close(true);
-		}
 	}
 
 	private function onResponse ($result) {
