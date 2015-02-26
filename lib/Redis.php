@@ -132,7 +132,7 @@ class Redis {
 				$this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
 				$this->outputBufferLength -= $bytes;
 			}
-		}
+		};
 		
 		$socketPromise->when(function ($error, $socket) use ($onWrite) {
 			$connectPromisor = $this->connectPromisor;
