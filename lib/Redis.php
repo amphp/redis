@@ -127,7 +127,7 @@ class Redis {
 						break;
 				}
 			}
-		}
+		};
 		$this->connector = new Connector($reactor);
 		$this->parser = new RespParser($onResponse);
 	}
