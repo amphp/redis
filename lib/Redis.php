@@ -2245,6 +2245,7 @@ class Redis {
 	}
 
 	public function __call ($method, $args) {
+		// work arround for method names which conflict with php reserved keywords
 		if (method_exists($this, "_{$method}")) {
 			return call_user_func_array([$this, "_{$method}"], $args);
 		}
