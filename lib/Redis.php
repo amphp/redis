@@ -278,37 +278,29 @@ class Redis {
 				if ($error) {
 					$promisor->fail($error);
 				} else {
-					$promisor->succeed($this->doSend($strings, $responseCallback, $addFuture));
+		                        $payload = "";
+		                        foreach ($strings as $string) {
+			                	$payload .= sprintf("$%d\r\n%s\r\n", strlen($string), $string);
+					}
+					$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
+
+					$future = null;
+					if ($addFuture) {
+						$future = new RedisFuture($responseCallback);
+						$this->promisors[] = $future;
+					}
+
+					$this->outputBuffer .= $payload;
+					$this->outputBufferLength += strlen($payload);
+
+					if ($this->writeWatcher !== null) {
+						$this->reactor->enable($this->writeWatcher);
+					}
+					$promisor->succeed($future);
 				}
 			});
 		} else {
 			$promisor = new Failure(new ConnectException("connection has already been closed"));
-		}
-
-		return $promisor;
-	}
-
-	private function doSend (array $strings, callable $responseCallback = null, $addFuture = true) {
-		$payload = "";
-
-		foreach ($strings as $string) {
-			$payload .= sprintf("$%d\r\n%s\r\n", strlen($string), $string);
-		}
-
-		$payload = sprintf("*%d\r\n%s", sizeof($strings), $payload);
-
-		if ($addFuture) {
-			$promisor = new RedisFuture($responseCallback);
-			$this->promisors[] = $promisor;
-		} else {
-			$promisor = null;
-		}
-
-		$this->outputBuffer .= $payload;
-		$this->outputBufferLength += strlen($payload);
-
-		if ($this->writeWatcher !== null) {
-			$this->reactor->enable($this->writeWatcher);
 		}
 
 		return $promisor;
