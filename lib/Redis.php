@@ -238,12 +238,12 @@ class Redis {
 			$remaining = sizeof($this->promisors);
 			$promisor = new Future;
 
-			foreach ($this->promisors as $key => $resolvable) {
+			foreach ($this->promisors as $resolvable) {
 				if (!$resolvable instanceof Promise) {
 					$resolvable = new Success($resolvable);
 				}
 
-				$resolvable->when(function ($error, $result) use (&$remaining, $key, $promisor) {
+				$resolvable->when(function ($error, $result) use (&$remaining, $promisor) {
 					if (--$remaining === 0) {
 						$this->closeSocket();
 						$this->parser->reset();
