@@ -213,11 +213,7 @@ class Redis {
 			$this->parser->reset();
 			$this->outputBuffer = '';
 			$this->outputBufferLength = 0;
-		} else {
-			$this->acceptCommands = false;
-		}
-
-		if ($immediately) {
+			
 			// Fail any outstanding promises
 			if ($this->promisors) {
 				$error = new ConnectException("Connection went away :(");
@@ -229,33 +225,34 @@ class Redis {
 			}
 
 			return new Success($this);
-		} else {
-			if (empty($this->promisors)) {
-				$this->acceptCommands = true;
-				return new Success($this);
-			}
-
-			$remaining = sizeof($this->promisors);
-			$promisor = new Future;
-
-			foreach ($this->promisors as $resolvable) {
-				if (!$resolvable instanceof Promise) {
-					$resolvable = new Success($resolvable);
-				}
-
-				$resolvable->when(function ($error, $result) use (&$remaining, $promisor) {
-					if (--$remaining === 0) {
-						$this->closeSocket();
-						$this->parser->reset();
-						$this->acceptCommands = true;
-
-						$promisor->succeed($this);
-					}
-				});
-			}
-
-			return $promisor;
 		}
+		
+		$this->acceptCommands = false;
+		if (empty($this->promisors)) {
+			$this->acceptCommands = true;
+			return new Success($this);
+		}
+
+		$remaining = sizeof($this->promisors);
+		$promisor = new Future;
+
+		foreach ($this->promisors as $resolvable) {
+			if (!$resolvable instanceof Promise) {
+				$resolvable = new Success($resolvable);
+			}
+
+			$resolvable->when(function ($error, $result) use (&$remaining, $promisor) {
+				if (--$remaining === 0) {
+					$this->closeSocket();
+					$this->parser->reset();
+					$this->acceptCommands = true;
+
+					$promisor->succeed($this);
+				}
+			});
+		}
+
+		return $promisor;
 	}
 
 	private function closeSocket () {
