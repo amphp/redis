@@ -96,10 +96,40 @@ class Redis {
 		$this->outputBuffer = "";
 		$this->acceptCommands = true;
 
+		$onResponse = function ($result) {
+			if ($this->mode === self::MODE_DEFAULT) {
+				$promisor = array_shift($this->promisors);
+	
+				if ($result instanceof RedisException) {
+					$promisor->fail($result);
+				} else {
+					$promisor->succeed($result);
+				}
+			} else {
+				switch ($result[0]) {
+					case "message":
+						$cb = $this->callbacks[$result[1]];
+						$cb($result[2]);
+						break;
+					case "unsubscribe":
+						if ($result[2] === 0) {
+							$this->mode = self::MODE_DEFAULT;
+						}
+	
+						unset($this->callbacks[$result[1]]);
+						break;
+					case "punsubscribe":
+						if ($result[2] === 0) {
+							$this->mode = self::MODE_DEFAULT;
+						}
+	
+						unset($this->patternCallbacks[$result[1]]);
+						break;
+				}
+			}
+		};
 		$this->connector = new Connector($reactor);
-		$this->parser = new RespParser(function ($result) {
-			$this->onResponse($result);
-		});
+		$this->parser = new RespParser($onResponse);
 	}
 
 	public function connect () {
@@ -172,39 +202,6 @@ class Redis {
 		});
 
 		return $this->connectPromisor->promise();
-	}
-
-	private function onResponse ($result) {
-		if ($this->mode === self::MODE_DEFAULT) {
-			$promisor = array_shift($this->promisors);
-
-			if ($result instanceof RedisException) {
-				$promisor->fail($result);
-			} else {
-				$promisor->succeed($result);
-			}
-		} else {
-			switch ($result[0]) {
-				case "message":
-					$cb = $this->callbacks[$result[1]];
-					$cb($result[2]);
-					break;
-				case "unsubscribe":
-					if ($result[2] === 0) {
-						$this->mode = self::MODE_DEFAULT;
-					}
-
-					unset($this->callbacks[$result[1]]);
-					break;
-				case "punsubscribe":
-					if ($result[2] === 0) {
-						$this->mode = self::MODE_DEFAULT;
-					}
-
-					unset($this->patternCallbacks[$result[1]]);
-					break;
-			}
-		}
 	}
 
 	public function close ($immediately = false) {
