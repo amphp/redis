@@ -24,7 +24,8 @@
 		"rdlowrey/nbsock": "~0.6"
 	},
 	"require-dev": {
-		"phpunit/phpunit": "~4.4.0"
+		"phpunit/phpunit": "~4.4.0",
+		"hoa/bench": "~2.0"
 	},
 	"minimum-stability": "stable",
 	"autoload": {
