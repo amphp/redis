@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Promise;
+use Amp\Promisor;
 use Amp\Reactor;
 use Amp\Redis\Future as RedisFuture;
 use Amp\Success;
@@ -11,6 +12,7 @@ use Nbsock\Connector;
 use function Amp\getReactor;
 
 class Client extends Redis {
+    /** @var Reactor */
     private $reactor;
     private $connector;
     private $options;
@@ -20,9 +22,12 @@ class Client extends Redis {
     private $outputBuffer;
     private $outputBufferLength;
     private $parser;
+    /** @var Promisor */
     private $connectPromisor;
     private $promisors = [];
+    /** @var Promisor[] */
     private $subscribePromisors = [];
+    /** @var Promisor[] */
     private $patternSubscribePromisors = [];
     private $pendingSubscribes = [];
     private $pendingPatternSubscribes = [];
@@ -109,11 +114,15 @@ class Client extends Redis {
                         $this->patternSubscribePromisors[$result[1]]->update($result[3]);
                         break;
                     case "unsubscribe":
+                        $this->subscribePromisors[$result[1]]->succeed($this);
+                        unset($this->subscribePromisors[$result[1]]);
                         unset($this->pendingSubscribes[$result[1]]);
                         $this->subscriptionCount = count($this->pendingSubscribes) + count($this->pendingPatternSubscribes);
                         break;
                     case "punsubscribe":
+                        $this->patternSubscribePromisors[$result[1]]->succeed($this);
                         unset($this->patternSubscribePromisors[$result[1]]);
+                        unset($this->pendingPatternSubscribes[$result[1]]);
                         $this->subscriptionCount = count($this->pendingSubscribes) + count($this->pendingPatternSubscribes);
                         break;
                 }
