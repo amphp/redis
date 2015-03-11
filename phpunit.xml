@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit bootstrap="test/bootstrap.php" colors="true" strict="true">
-	<testsuites>
-		<testsuite name="amp-redis test suite">
-			<directory>test</directory>
-		</testsuite>
-	</testsuites>
-	<filter>
-		<whitelist>
-			<directory>lib</directory>
-		</whitelist>
-	</filter>
-	<!-- <logging>
-		<log type="coverage-text" target="php://stdout" showUncoveredFiles="false" />
-	</logging> -->
+    <testsuites>
+        <testsuite name="redis test suite">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory>lib</directory>
+        </whitelist>
+    </filter>
 </phpunit>

@@ -1,35 +1,35 @@
 {
-	"name": "amphp/redis",
-	"description": "an async redis client based on the amp framework",
-	"keywords": [
-		"amp",
-		"async",
-		"client",
-		"redis"
-	],
-	"homepage": "https://github.com/amphp/redis",
-	"authors": [
-		{
-			"name": "Niklas Keller",
-			"email": "me@kelunik.com",
-			"role": "Creator / Lead Developer",
-			"homepage": "http://www.kelunik.com"
-		}
-	],
-	"support": {
-		"issues": "https://github.com/amphp/redis/issues"
-	},
-	"require": {
-		"amphp/amp": "~0.16",
-		"rdlowrey/nbsock": "~0.6"
-	},
-	"require-dev": {
-		"phpunit/phpunit": "~4.4.0"
-	},
-	"minimum-stability": "stable",
-	"autoload": {
-		"psr-4": {
-			"Amp\\Redis\\": "lib/"
-		}
-	}
+  "name": "amphp/redis",
+  "description": "an async redis client based on the amp framework",
+  "keywords": [
+    "amp",
+    "async",
+    "client",
+    "redis"
+  ],
+  "homepage": "https://github.com/amphp/redis",
+  "authors": [
+    {
+      "name": "Niklas Keller",
+      "email": "me@kelunik.com",
+      "role": "Creator / Lead Developer",
+      "homepage": "http://www.kelunik.com"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/amphp/redis/issues"
+  },
+  "require": {
+    "amphp/amp": "~0.16",
+    "rdlowrey/nbsock": "~0.6"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.4.0"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Amp\\Redis\\": "lib/"
+    }
+  }
 }
