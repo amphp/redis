@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Future;
+use Amp\Promise;
 use BadMethodCallException;
 use function Amp\getReactor;
 
@@ -12,20 +12,29 @@ use function Amp\getReactor;
  */
 abstract class Redis {
     /**
+     * @param string|string[] $arg
+     * @param string ...$args
+     * @return Promise
+     */
+    public function query ($arg, ...$args) {
+        return $this->send(array_merge((array) $arg, $args));
+    }
+
+    /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function del ($key, ...$keys) {
         return $this->send(array_merge(["del"], (array) $key, $keys));
     }
 
-    public abstract function send (array $strings, callable $transform = null);
+    protected abstract function send (array $strings, callable $transform = null);
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function dump ($key) {
@@ -34,7 +43,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function exists ($key) {
@@ -47,7 +56,7 @@ abstract class Redis {
      * @param string $key
      * @param int $seconds
      * @param bool $inMillis
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function expire ($key, $seconds, $inMillis = false) {
@@ -61,7 +70,7 @@ abstract class Redis {
      * @param string $key
      * @param int $timestamp
      * @param bool $inMillis
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function expireAt ($key, $timestamp, $inMillis = false) {
@@ -73,7 +82,7 @@ abstract class Redis {
 
     /**
      * @param string $pattern
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function keys ($pattern) {
@@ -83,7 +92,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param int $db
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function move ($key, $db) {
@@ -94,7 +103,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function objectRefcount ($key) {
@@ -103,7 +112,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function objectEncoding ($key) {
@@ -112,7 +121,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function objectIdletime ($key) {
@@ -121,7 +130,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function persist ($key) {
@@ -131,7 +140,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function randomKey () {
@@ -142,7 +151,7 @@ abstract class Redis {
      * @param string $key
      * @param string $replacement
      * @param bool $existingOnly
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function rename ($key, $replacement, $existingOnly = false) {
@@ -156,7 +165,7 @@ abstract class Redis {
      * @param string $key
      * @param string $serializedValue
      * @param int $ttlMillis
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function restore ($key, $serializedValue, $ttlMillis = 0) {
@@ -167,7 +176,7 @@ abstract class Redis {
      * @param string $cursor
      * @param string $pattern
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function scan ($cursor, $pattern = null, $count = null) {
@@ -195,7 +204,7 @@ abstract class Redis {
      * @param int $count
      * @param bool $alpha
      * @param string $store
-     * @return Future
+     * @return Promise
      * @yield array|int
      */
     public function sort ($key, $pattern = null, $direction = null, $get = null, $offset = null, $count = null, $alpha = false, $store = null) {
@@ -239,7 +248,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param bool $millis
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function ttl ($key, $millis = false) {
@@ -249,7 +258,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function type ($key) {
@@ -259,7 +268,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function append ($key, $value) {
@@ -270,7 +279,7 @@ abstract class Redis {
      * @param string $key
      * @param int|null $start
      * @param int|null $end
-     * @return Future
+     * @return Promise
      */
     public function bitCount ($key, $start = null, $end = null) {
         $cmd = ["bitcount", $key];
@@ -288,7 +297,7 @@ abstract class Redis {
      * @param string $destination
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function bitOp ($operation, $destination, $key, ...$keys) {
@@ -300,7 +309,7 @@ abstract class Redis {
      * @param int $bit
      * @param int $start
      * @param int $end
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function bitPos ($key, $bit, $start = null, $end = null) {
@@ -320,7 +329,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param int $decrement
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function decr ($key, $decrement = 1) {
@@ -333,7 +342,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function get ($key) {
@@ -343,7 +352,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param int $offset
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function getBit ($key, $offset) {
@@ -354,7 +363,7 @@ abstract class Redis {
      * @param string $key
      * @param int $start
      * @param int $end
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function getRange ($key, $start = 0, $end = -1) {
@@ -364,7 +373,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function getSet ($key, $value) {
@@ -374,7 +383,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param int $increment
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function incr ($key, $increment = 1) {
@@ -388,7 +397,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param float $increment
-     * @return Future
+     * @return Promise
      * @yield float
      */
     public function incrByFloat ($key, $increment) {
@@ -400,7 +409,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function mGet ($key, ...$keys) {
@@ -410,7 +419,7 @@ abstract class Redis {
     /**
      * @param array $data
      * @param bool $onlyIfNoneExists
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function mSet (array $data, $onlyIfNoneExists = false) {
@@ -429,7 +438,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function setNx ($key, $value) {
@@ -442,7 +451,7 @@ abstract class Redis {
      * @param int $expire
      * @param bool $useMillis
      * @param string $existOption
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function set ($key, $value, $expire = 0, $useMillis = false, $existOption = null) {
@@ -465,7 +474,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function setXx ($key, $value) {
@@ -476,7 +485,7 @@ abstract class Redis {
      * @param string $key
      * @param int $offset
      * @param bool $value
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function setBit ($key, $offset, $value) {
@@ -487,7 +496,7 @@ abstract class Redis {
      * @param $key
      * @param $offset
      * @param $value
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function setRange ($key, $offset, $value) {
@@ -496,7 +505,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function strlen ($key) {
@@ -507,7 +516,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $field
      * @param string ...$fields
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function hDel ($key, $field, ...$fields) {
@@ -517,7 +526,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $field
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function hExists ($key, $field) {
@@ -529,7 +538,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $field
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function hGet ($key, $field) {
@@ -538,7 +547,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function hGetAll ($key) {
@@ -562,7 +571,7 @@ abstract class Redis {
      * @param string $key
      * @param string $field
      * @param int $increment
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function hIncrBy ($key, $field, $increment = 1) {
@@ -573,7 +582,7 @@ abstract class Redis {
      * @param string $key
      * @param string $field
      * @param float $increment
-     * @return Future
+     * @return Promise
      * @yield float
      */
     public function hIncrByFloat ($key, $field, $increment) {
@@ -584,7 +593,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function hKeys ($key) {
@@ -593,7 +602,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function hLen ($key) {
@@ -604,7 +613,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $field
      * @param string ...$fields
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function hmGet ($key, $field, ...$fields) {
@@ -627,7 +636,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param array $data
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function hmSet ($key, array $data) {
@@ -646,7 +655,7 @@ abstract class Redis {
      * @param string $cursor
      * @param string $pattern
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function hScan ($key, $cursor, $pattern = null, $count = null) {
@@ -670,7 +679,7 @@ abstract class Redis {
      * @param string $field
      * @param string $value
      * @param bool $notExistingOnly
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function hSet ($key, $field, $value, $notExistingOnly = false) {
@@ -683,7 +692,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $index
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function lIndex ($key, $index) {
@@ -695,7 +704,7 @@ abstract class Redis {
      * @param string $relativePosition
      * @param string $pivot
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lInsert ($key, $relativePosition, $pivot, $value) {
@@ -712,7 +721,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lLen ($key) {
@@ -723,7 +732,7 @@ abstract class Redis {
      * @param int $timeout
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function blPop ($timeout, $key, ...$keys) {
@@ -734,7 +743,7 @@ abstract class Redis {
      * @param int $timeout
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function brPop ($timeout, $key, ...$keys) {
@@ -745,7 +754,7 @@ abstract class Redis {
      * @param int $timeout
      * @param string $source
      * @param string $destination
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function brPoplPush ($timeout, $source, $destination) {
@@ -755,7 +764,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function lPop ($key, ...$keys) {
@@ -766,7 +775,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $value
      * @param string ...$values
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lPush ($key, $value, ...$values) {
@@ -777,7 +786,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $value
      * @param string ...$values
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lPushX ($key, $value, ...$values) {
@@ -788,7 +797,7 @@ abstract class Redis {
      * @param string $key
      * @param int $start
      * @param int $end
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function lRange ($key, $start = 0, $end = -1) {
@@ -799,7 +808,7 @@ abstract class Redis {
      * @param string $key
      * @param string $value
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lRem ($key, $value, $count = 0) {
@@ -810,7 +819,7 @@ abstract class Redis {
      * @param string $key
      * @param int $index
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function lSet ($key, $index, $value) {
@@ -821,7 +830,7 @@ abstract class Redis {
      * @param string $key
      * @param int $start
      * @param int $stop
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function lTrim ($key, $start = 0, $stop = -1) {
@@ -831,7 +840,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function rPop ($key, ...$keys) {
@@ -841,7 +850,7 @@ abstract class Redis {
     /**
      * @param string $source
      * @param string $destination
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function rPoplPush ($source, $destination) {
@@ -852,7 +861,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $value
      * @param string ...$values
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function rPush ($key, $value, ...$values) {
@@ -863,7 +872,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $value
      * @param string ...$values
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function rPushX ($key, $value, ...$values) {
@@ -874,7 +883,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $member
      * @param string ...$members
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sAdd ($key, $member, ...$members) {
@@ -883,7 +892,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sCard ($key) {
@@ -893,7 +902,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function sDiff ($key, ...$keys) {
@@ -904,7 +913,7 @@ abstract class Redis {
      * @param string $destination
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sDiffStore ($destination, $key, ...$keys) {
@@ -914,7 +923,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function sInter ($key, ...$keys) {
@@ -925,7 +934,7 @@ abstract class Redis {
      * @param string $destination
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sInterStore ($destination, $key, ...$keys) {
@@ -935,7 +944,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $member
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function sIsMember ($key, $member) {
@@ -946,7 +955,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function sMembers ($key) {
@@ -957,7 +966,7 @@ abstract class Redis {
      * @param string $source
      * @param string $destination
      * @param string $member
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function sMove ($source, $destination, $member) {
@@ -968,7 +977,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function sPop ($key) {
@@ -979,7 +988,7 @@ abstract class Redis {
      * @param string $key
      * @param int $count
      * @param bool $distinctOnly
-     * @return Future
+     * @return Promise
      * @yield string|string[]
      */
     public function sRandMember ($key, $count = null, $distinctOnly = true) {
@@ -996,7 +1005,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $member
      * @param string ...$members
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sRem ($key, $member, ...$members) {
@@ -1008,7 +1017,7 @@ abstract class Redis {
      * @param string $cursor
      * @param string $pattern
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function sScan ($key, $cursor, $pattern = null, $count = null) {
@@ -1030,7 +1039,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function sUnion ($key, ...$keys) {
@@ -1041,7 +1050,7 @@ abstract class Redis {
      * @param string $destination
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function sUnionStore ($destination, $key, ...$keys) {
@@ -1051,7 +1060,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param array $data
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zAdd ($key, array $data) {
@@ -1067,7 +1076,7 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zCard ($key) {
@@ -1078,7 +1087,7 @@ abstract class Redis {
      * @param string $key
      * @param int $min
      * @param int $max
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zCount ($key, $min, $max) {
@@ -1089,7 +1098,7 @@ abstract class Redis {
      * @param string $key
      * @param string $member
      * @param int|float $increment
-     * @return Future
+     * @return Promise
      * @yield float
      */
     public function zIncrBy ($key, $member, $increment = 1) {
@@ -1103,7 +1112,7 @@ abstract class Redis {
      * @param int $numkeys
      * @param string|string[] $keys
      * @param string $aggregate
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zInterStore ($destination, $numkeys, $keys, $aggregate = "sum") {
@@ -1143,7 +1152,7 @@ abstract class Redis {
      * @param string $key
      * @param string $min
      * @param string $max
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zLexCount ($key, $min, $max) {
@@ -1155,7 +1164,7 @@ abstract class Redis {
      * @param int $start
      * @param int $stop
      * @param bool $withScores
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRange ($key, $start = 0, $stop = -1, $withScores = false) {
@@ -1186,7 +1195,7 @@ abstract class Redis {
      * @param string $max
      * @param int $offset
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRangeByLex ($key, $min, $max, $offset = null, $count = null) {
@@ -1208,7 +1217,7 @@ abstract class Redis {
      * @param bool $withScores
      * @param int $offset
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRangeByScore ($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null) {
@@ -1242,7 +1251,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $member
-     * @return Future
+     * @return Promise
      * @yield int|null
      */
     public function zRank ($key, $member) {
@@ -1253,7 +1262,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $member
      * @param string ...$members
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zRem ($key, $member, ...$members) {
@@ -1264,7 +1273,7 @@ abstract class Redis {
      * @param string $key
      * @param string $min
      * @param string $max
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zRemRangeByLex ($key, $min, $max) {
@@ -1275,7 +1284,7 @@ abstract class Redis {
      * @param string $key
      * @param int $start
      * @param int $stop
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zRemRangeByRank ($key, $start, $stop) {
@@ -1286,7 +1295,7 @@ abstract class Redis {
      * @param string $key
      * @param int $min
      * @param int $max
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zRemRangeByScore ($key, $min, $max) {
@@ -1298,7 +1307,7 @@ abstract class Redis {
      * @param int $min
      * @param int $max
      * @param bool $withScores
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRevRange ($key, $min = 0, $max = -1, $withScores = false) {
@@ -1329,7 +1338,7 @@ abstract class Redis {
      * @param string $max
      * @param int $offset
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRevRangeByLex ($key, $min, $max, $offset = null, $count = null) {
@@ -1351,7 +1360,7 @@ abstract class Redis {
      * @param bool $withScores
      * @param int $offset
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zRevRangeByScore ($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null) {
@@ -1385,7 +1394,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $member
-     * @return Future
+     * @return Promise
      * @yield int|null
      */
     public function zRevRank ($key, $member) {
@@ -1397,7 +1406,7 @@ abstract class Redis {
      * @param string $cursor
      * @param string $pattern
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function zScan ($key, $cursor, $pattern = null, $count = null) {
@@ -1419,7 +1428,7 @@ abstract class Redis {
     /**
      * @param string $key
      * @param string $member
-     * @return Future
+     * @return Promise
      * @yield int|null
      */
     public function zScore ($key, $member) {
@@ -1431,7 +1440,7 @@ abstract class Redis {
      * @param int $numkeys
      * @param string|string[] $keys
      * @param string $aggregate
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function zUnionStore ($destination, $numkeys, $keys, $aggregate = "sum") {
@@ -1471,7 +1480,7 @@ abstract class Redis {
      * @param string $key
      * @param string|string[] $element
      * @param string ...$elements
-     * @return Future
+     * @return Promise
      * @yield bool
      */
     public function pfAdd ($key, $element, ...$elements) {
@@ -1483,7 +1492,7 @@ abstract class Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function pfCount ($key, ...$keys) {
@@ -1494,7 +1503,7 @@ abstract class Redis {
      * @param string $destinationKey
      * @param string|string[] $sourceKey
      * @param string ...$sourceKeys
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function pfMerge ($destinationKey, $sourceKey, ...$sourceKeys) {
@@ -1504,7 +1513,7 @@ abstract class Redis {
     /**
      * @param $channel
      * @param $message
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function publish ($channel, $message) {
@@ -1513,7 +1522,7 @@ abstract class Redis {
 
     /**
      * @param string $pattern
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function pubSubChannels ($pattern = null) {
@@ -1529,7 +1538,7 @@ abstract class Redis {
     /**
      * @param string|string[] $channel
      * @param string ...$channels
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function pubSubNumSub ($channel = [], ...$channels) {
@@ -1545,7 +1554,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function pubSubNumPat () {
@@ -1553,7 +1562,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function ping () {
@@ -1561,7 +1570,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function quit () {
@@ -1570,7 +1579,7 @@ abstract class Redis {
 
     /**
      * @param int $index
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function select ($index) {
@@ -1578,7 +1587,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function bgRewriteAOF () {
@@ -1586,7 +1595,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function bgSave () {
@@ -1594,7 +1603,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function clientGetName () {
@@ -1603,7 +1612,7 @@ abstract class Redis {
 
     /**
      * @param string ...$args
-     * @return Future
+     * @return Promise
      * @yield string|int
      */
     public function clientKill (...$args) {
@@ -1611,7 +1620,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function clientList () {
@@ -1622,7 +1631,7 @@ abstract class Redis {
 
     /**
      * @param int $timeout
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function clientPause ($timeout) {
@@ -1631,7 +1640,7 @@ abstract class Redis {
 
     /**
      * @param string $name
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function clientSetName ($name) {
@@ -1639,7 +1648,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function clusterSlots () {
@@ -1647,7 +1656,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function command () {
@@ -1655,7 +1664,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function commandCount () {
@@ -1664,7 +1673,7 @@ abstract class Redis {
 
     /**
      * @param string ...$args
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function commandGetKeys (...$args) {
@@ -1674,7 +1683,7 @@ abstract class Redis {
     /**
      * @param string|string[] $command
      * @param string ...$commands
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function commandInfo ($command, ...$commands) {
@@ -1683,7 +1692,7 @@ abstract class Redis {
 
     /**
      * @param string $parameter
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function configGet ($parameter) {
@@ -1691,7 +1700,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function configResetStat () {
@@ -1699,7 +1708,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function configRewrite () {
@@ -1709,7 +1718,7 @@ abstract class Redis {
     /**
      * @param string $parameter
      * @param string $value
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function configSet ($parameter, $value) {
@@ -1717,7 +1726,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function dbSize () {
@@ -1725,7 +1734,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function flushAll () {
@@ -1733,7 +1742,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function flushDB () {
@@ -1741,7 +1750,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function info () {
@@ -1749,7 +1758,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function lastSave () {
@@ -1757,7 +1766,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function role () {
@@ -1765,7 +1774,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function save () {
@@ -1774,7 +1783,7 @@ abstract class Redis {
 
     /**
      * @param string $modifier
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function shutdown ($modifier = null) {
@@ -1798,7 +1807,7 @@ abstract class Redis {
 
     /**
      * @param int $count
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function slowlogGet ($count = null) {
@@ -1812,7 +1821,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield int
      */
     public function slowlogLen () {
@@ -1820,7 +1829,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function slowlogReset () {
@@ -1828,7 +1837,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function time () {
@@ -1839,7 +1848,7 @@ abstract class Redis {
      * @param string $sha1
      * @param string|string[] $keys
      * @param string|string[] $args
-     * @return Future
+     * @return Promise
      * @yield mixed
      */
     public function evalSha ($sha1, $keys = [], $args = []) {
@@ -1849,7 +1858,7 @@ abstract class Redis {
     /**
      * @param string|string[] $script
      * @param string ...$scripts
-     * @return Future
+     * @return Promise
      * @yield array
      */
     public function scriptExists ($script, ...$scripts) {
@@ -1857,7 +1866,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function scriptFlush () {
@@ -1865,7 +1874,7 @@ abstract class Redis {
     }
 
     /**
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function scriptKill () {
@@ -1874,7 +1883,7 @@ abstract class Redis {
 
     /**
      * @param string $script
-     * @return Future
+     * @return Promise
      * @yield string
      */
     public function scriptLoad ($script) {
@@ -1892,7 +1901,7 @@ abstract class Redis {
 
     /**
      * @param string $text
-     * @return Future
+     * @return Promise
      * @yield string
      */
     private function _echo ($text) {
@@ -1903,7 +1912,7 @@ abstract class Redis {
      * @param string $script
      * @param string|string[] $keys
      * @param string|string[] $args
-     * @return Future
+     * @return Promise
      * @yield mixed
      */
     private function _eval ($script, $keys, $args) {

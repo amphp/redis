@@ -26,7 +26,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase {
      */
     function success () {
         (new NativeReactor())->run(function ($reactor) {
-            $_1 = new Client(["host" => "tcp://127.0.0.1:25325"], $reactor);
+            $_1 = new Client("tcp://127.0.0.1:25325", null, $reactor);
             yield $_1->set("key", "1");
 
             $transaction = $_1->transaction();
@@ -47,8 +47,8 @@ class TransactionTest extends \PHPUnit_Framework_TestCase {
      */
     function failure () {
         (new NativeReactor())->run(function ($reactor) {
-            $_1 = new Client(["host" => "tcp://127.0.0.1:25325"], $reactor);
-            $_2 = new Client(["host" => "tcp://127.0.0.1:25325"], $reactor);
+            $_1 = new Client("tcp://127.0.0.1:25325", null, $reactor);
+            $_2 = new Client("tcp://127.0.0.1:25325", null, $reactor);
 
             yield $_1->set("key", "1");
 

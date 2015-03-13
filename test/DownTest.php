@@ -12,7 +12,7 @@ class DownTest extends \PHPUnit_Framework_TestCase {
      */
     function ping () {
         (new NativeReactor())->run(function ($reactor) {
-            $redis = new Client(["host" => "tcp://127.0.0.1:25325"], $reactor);
+            $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
             yield $redis->ping();
         });
     }
