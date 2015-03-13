@@ -52,7 +52,7 @@ class ParserTest extends \PHPUnit_Framework_TestCase {
         });
         $parser->append("-ERR something went wrong :(\r\n");
 
-        $this->assertInstanceOf("Amp\\Redis\\RedisException", $result);
+        $this->assertInstanceOf("Amp\\Redis\\QueryException", $result);
     }
 
     /**

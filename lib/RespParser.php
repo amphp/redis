@@ -78,7 +78,7 @@ class RespParser {
                     break;
 
                 case self::TYPE_ERROR:
-                    $payload = new RedisException($payload);
+                    $payload = new QueryException($payload);
                     break;
 
                 default:

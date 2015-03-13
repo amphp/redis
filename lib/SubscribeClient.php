@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Future;
 use Amp\Promise;
 use Amp\Promisor;
 use Amp\Reactor;

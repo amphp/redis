@@ -2,6 +2,6 @@
 
 namespace Amp\Redis;
 
-class ParserException extends Exception {
+class ParserException extends RedisException {
 
 }
