@@ -729,8 +729,8 @@ abstract class Redis {
     }
 
     /**
-     * @param int $timeout
      * @param string|string[] $keys
+     * @param int $timeout
      * @return Promise
      * @yield string
      */
@@ -739,8 +739,8 @@ abstract class Redis {
     }
 
     /**
-     * @param int $timeout
      * @param string|string[] $keys
+     * @param int $timeout
      * @return Promise
      * @yield string
      */
@@ -749,9 +749,9 @@ abstract class Redis {
     }
 
     /**
-     * @param int $timeout
      * @param string $source
      * @param string $destination
+     * @param int $timeout
      * @return Promise
      * @yield string
      */
