@@ -730,24 +730,22 @@ abstract class Redis {
 
     /**
      * @param int $timeout
-     * @param string|string[] $key
-     * @param string ...$keys
+     * @param string|string[] $keys
      * @return Promise
      * @yield string
      */
-    public function blPop ($timeout, $key, ...$keys) {
-        return $this->send(array_merge(["blpop"], (array) $key, $keys, [$timeout]));
+    public function blPop ($keys, $timeout = 0) {
+        return $this->send(array_merge(["blpop"], (array) $keys, [$timeout]));
     }
 
     /**
      * @param int $timeout
-     * @param string|string[] $key
-     * @param string ...$keys
+     * @param string|string[] $keys
      * @return Promise
      * @yield string
      */
-    public function brPop ($timeout, $key, ...$keys) {
-        return $this->send(array_merge(["brpop"], (array) $key, $keys, [$timeout]));
+    public function brPop ($keys, $timeout = 0) {
+        return $this->send(array_merge(["brpop"], (array) $keys, [$timeout]));
     }
 
     /**
@@ -757,7 +755,7 @@ abstract class Redis {
      * @return Promise
      * @yield string
      */
-    public function brPoplPush ($timeout, $source, $destination) {
+    public function brPoplPush ($source, $destination, $timeout = 0) {
         return $this->send(["brpoplpush", $source, $destination, $timeout]);
     }
 
