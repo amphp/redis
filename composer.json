@@ -7,6 +7,7 @@
     "client",
     "redis"
   ],
+  "license": "MIT",
   "homepage": "https://github.com/amphp/redis",
   "authors": [
     {
