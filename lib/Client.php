@@ -21,7 +21,7 @@ class Client extends Redis {
      * @param string $password
      * @param Reactor $reactor
      */
-    public function __construct ($uri, $password, Reactor $reactor = null) {
+    public function __construct ($uri, $password = null, Reactor $reactor = null) {
         if (!is_string($password) && !is_null($password)) {
             throw new DomainException(sprintf(
                 "Password must be string or null, %s given",
