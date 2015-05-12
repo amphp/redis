@@ -32,5 +32,10 @@
     "psr-4": {
       "Amp\\Redis\\": "lib/"
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Amp\\Redis\\": "test/"
+    }
   }
 }
