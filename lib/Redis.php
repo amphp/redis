@@ -659,19 +659,7 @@ abstract class Redis {
      * @yield array
      */
     public function hScan ($key, $cursor, $pattern = null, $count = null) {
-        $payload = ["hscan", $key, $cursor];
-
-        if ($pattern !== null) {
-            $payload[] = "PATTERN";
-            $payload[] = $pattern;
-        }
-
-        if ($count !== null) {
-            $payload[] = "COUNT";
-            $payload[] = $count;
-        }
-
-        return $this->send($payload);
+        return $this->_scan("hscan", $key, $cursor, $pattern, $cursor);
     }
 
     /**
@@ -1019,19 +1007,7 @@ abstract class Redis {
      * @yield array
      */
     public function sScan ($key, $cursor, $pattern = null, $count = null) {
-        $payload = ["sscan", $key, $cursor];
-
-        if ($pattern !== null) {
-            $payload[] = "PATTERN";
-            $payload[] = $pattern;
-        }
-
-        if ($count !== null) {
-            $payload[] = "COUNT";
-            $payload[] = $count;
-        }
-
-        return $this->send($payload);
+        return $this->_scan("sscan", $key, $cursor, $pattern, $count);
     }
 
     /**
@@ -1166,25 +1142,7 @@ abstract class Redis {
      * @yield array
      */
     public function zRange ($key, $start = 0, $stop = -1, $withScores = false) {
-        $payload = ["zrange", $key, $start, $stop];
-
-        if ($withScores) {
-            $payload[] = "WITHSCORES";
-        }
-
-        return $this->send($payload, function ($response) use ($withScores) {
-            if ($withScores) {
-                $result = [];
-
-                for ($i = 0; $i < sizeof($response); $i += 2) {
-                    $result[$response[$i]] = $response[$i + 1];
-                }
-
-                return $result;
-            } else {
-                return $response;
-            }
-        });
+        return $this->_zRange("zrange", $key, $start, $stop, $withScores);
     }
 
     /**
@@ -1302,32 +1260,14 @@ abstract class Redis {
 
     /**
      * @param string $key
-     * @param int $min
-     * @param int $max
+     * @param int $start
+     * @param int $stop
      * @param bool $withScores
      * @return Promise
      * @yield array
      */
-    public function zRevRange ($key, $min = 0, $max = -1, $withScores = false) {
-        $payload = ["zrevrange", $key, $min, $max];
-
-        if ($withScores) {
-            $payload[] = "WITHSCORES";
-        }
-
-        return $this->send($payload, function ($response) use ($withScores) {
-            if ($withScores) {
-                $result = [];
-
-                for ($i = 0; $i < sizeof($response); $i += 2) {
-                    $result[$response[$i]] = $response[$i + 1];
-                }
-
-                return $result;
-            } else {
-                return $response;
-            }
-        });
+    public function zRevRange ($key, $start = 0, $stop = -1, $withScores = false) {
+        return $this->_zRange("zrevrange", $key, $start, $stop, $withScores);
     }
 
     /**
@@ -1408,19 +1348,7 @@ abstract class Redis {
      * @yield array
      */
     public function zScan ($key, $cursor, $pattern = null, $count = null) {
-        $payload = ["zscan", $key, $cursor];
-
-        if ($pattern !== null) {
-            $payload[] = "PATTERN";
-            $payload[] = $pattern;
-        }
-
-        if ($count !== null) {
-            $payload[] = "COUNT";
-            $payload[] = $count;
-        }
-
-        return $this->send($payload);
+        return $this->_scan("zscan", $key, $cursor, $pattern, $count);
     }
 
     /**
@@ -1915,5 +1843,43 @@ abstract class Redis {
      */
     private function _eval ($script, $keys, $args) {
         return $this->send(array_merge(["eval"], $script, sizeof((array) $keys), (array) $keys, (array) $args));
+    }
+
+    private function _scan ($command, $key, $cursor, $pattern = null, $count = null) {
+        $payload = [$command, $key, $cursor];
+
+        if ($pattern !== null) {
+            $payload[] = "PATTERN";
+            $payload[] = $pattern;
+        }
+
+        if ($count !== null) {
+            $payload[] = "COUNT";
+            $payload[] = $count;
+        }
+
+        return $this->send($payload);
+    }
+
+    private function _zRange ($command, $key, $start = 0, $stop = -1, $withScores = false) {
+        $payload = [$command, $key, $start, $stop];
+
+        if ($withScores) {
+            $payload[] = "WITHSCORES";
+        }
+
+        return $this->send($payload, function ($response) use ($withScores) {
+            if ($withScores) {
+                $result = [];
+
+                for ($i = 0; $i < sizeof($response); $i += 2) {
+                    $result[$response[$i]] = $response[$i + 1];
+                }
+
+                return $result;
+            } else {
+                return $response;
+            }
+        });
     }
 }
