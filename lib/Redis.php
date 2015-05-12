@@ -1155,15 +1155,7 @@ abstract class Redis {
      * @yield array
      */
     public function zRangeByLex ($key, $min, $max, $offset = null, $count = null) {
-        $payload = ["zrangebylex", $key, $min, $max];
-
-        if ($offset !== null && $count !== null) {
-            $payload[] = "LIMIT";
-            $payload[] = $offset;
-            $payload[] = $count;
-        }
-
-        return $this->send($payload);
+        return $this->_zRangeByLex("zrangebylex", $key, $min, $max, $offset, $count);
     }
 
     /**
@@ -1280,15 +1272,7 @@ abstract class Redis {
      * @yield array
      */
     public function zRevRangeByLex ($key, $min, $max, $offset = null, $count = null) {
-        $payload = ["zrevrangebylex", $key, $min, $max];
-
-        if ($offset !== null && $count !== null) {
-            $payload[] = "LIMIT";
-            $payload[] = $offset;
-            $payload[] = $count;
-        }
-
-        return $this->send($payload);
+        return $this->_zRangeByLex("zrevrangebylex", $key, $min, $max, $offset, $count);
     }
 
     /**
@@ -1881,5 +1865,17 @@ abstract class Redis {
                 return $response;
             }
         });
+    }
+
+    private function _zRangeByLex ($command, $key, $min, $max, $offset = null, $count = null) {
+        $payload = [$command, $key, $min, $max];
+
+        if ($offset !== null && $count !== null) {
+            $payload[] = "LIMIT";
+            $payload[] = $offset;
+            $payload[] = $count;
+        }
+
+        return $this->send($payload);
     }
 }
