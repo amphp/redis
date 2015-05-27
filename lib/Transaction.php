@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\Deferred;
 use Amp\Success;
 use DomainException;
 
@@ -19,7 +20,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Future
+     * @return Deferred
      * @yield string
      */
     public function discard () {
@@ -40,7 +41,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Future
+     * @return Deferred
      * @yield string
      */
     public function exec () {
@@ -73,7 +74,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Future
+     * @return Deferred
      * @yield string
      */
     public function multi () {
@@ -86,7 +87,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Future
+     * @return Deferred
      * @yield string
      */
     public function unwatch () {
@@ -96,7 +97,7 @@ class Transaction extends Redis {
     /**
      * @param string|string[] $key
      * @param string ...$keys
-     * @return Future
+     * @return Deferred
      * @yield string
      */
     public function watch ($key, ...$keys) {

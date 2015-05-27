@@ -2,13 +2,14 @@
 
 namespace Amp\Redis;
 
+use Amp\Deferred;
 use Amp\Promise;
 use BadMethodCallException;
-use function Amp\getReactor;
+use function Amp\reactor;
 
 /**
- * @method Future echo (string $text)
- * @method Future eval(string $script, array $keys, array $args)
+ * @method Deferred echo (string $text)
+ * @method Deferred eval(string $script, array $keys, array $args)
  */
 abstract class Redis {
     /**
@@ -659,7 +660,7 @@ abstract class Redis {
      * @yield array
      */
     public function hScan ($key, $cursor, $pattern = null, $count = null) {
-        return $this->_scan("hscan", $key, $cursor, $pattern, $cursor);
+        return $this->_scan("hscan", $key, $cursor, $pattern, $cursor, $count);
     }
 
     /**

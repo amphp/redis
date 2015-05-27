@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
 use Amp\Reactor;
@@ -116,7 +117,7 @@ class SubscribeClient {
         if (!empty($password)) {
             $this->connection->setConnectCallback(function () use ($password) {
                 // AUTH must be before any other command, so we unshift it here
-                $this->authPromisor = new Future;
+                $this->authPromisor = new Deferred;
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($password) . "\r\n{$password}\r\n";
             });
         }
@@ -144,11 +145,11 @@ class SubscribeClient {
      */
     public function subscribe ($channel) {
         if (!isset($this->promisors[$channel])) {
-            $this->promisors[$channel] = new Future;
+            $this->promisors[$channel] = new Deferred;
             $this->connection->send(["subscribe", $channel], $this->promisors[$channel]);
         }
 
-        return $this->promisors[$channel];
+        return $this->promisors[$channel]->promise();
     }
 
     /**
@@ -157,11 +158,11 @@ class SubscribeClient {
      */
     public function pSubscribe ($pattern) {
         if (!isset($this->patternPromisors[$pattern])) {
-            $this->patternPromisors[$pattern] = new Future;
+            $this->patternPromisors[$pattern] = new Deferred;
             $this->connection->send(["psubscribe", $pattern], $this->patternPromisors[$pattern]);
         }
 
-        return $this->patternPromisors[$pattern];
+        return $this->patternPromisors[$pattern]->promise();
     }
 
     /**
@@ -170,7 +171,7 @@ class SubscribeClient {
      */
     public function unsubscribe ($channel = null) {
         if ($channel === null) {
-            $promisor = new Future;
+            $promisor = new Deferred;
             $this->connection->send(["unsubscribe"], $promisor);
             return all(array_merge($this->promisors, [$promisor]));
         }
@@ -180,7 +181,7 @@ class SubscribeClient {
         }
 
         $this->connection->send(["unsubscribe", $channel], $this->promisors[$channel]);
-        return $this->promisors[$channel];
+        return $this->promisors[$channel]->promise();
     }
 
     /**
@@ -189,7 +190,7 @@ class SubscribeClient {
      */
     public function pUnsubscribe ($pattern = null) {
         if ($pattern === null) {
-            $promisor = new Future;
+            $promisor = new Deferred;
             $this->connection->send(["punsubscribe"], $promisor);
             return all(array_merge($this->patternPromisors, [$promisor]));
         }
@@ -199,6 +200,6 @@ class SubscribeClient {
         }
 
         $this->connection->send(["punsubscribe", $pattern], $this->patternPromisors[$pattern]);
-        return $this->patternPromisors[$pattern];
+        return $this->patternPromisors[$pattern]->promise();
     }
 }

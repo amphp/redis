@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\NativeReactor;
+use Amp\Pause;
 use function Amp\run;
 
 class BasicTest extends RedisTest {
@@ -38,7 +39,7 @@ class BasicTest extends RedisTest {
             $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
             yield $redis->echo("1");
 
-            yield "pause" => 8000;
+            yield new Pause(8000, $reactor);
 
             $this->assertEquals("2", (yield $redis->echo("2")));
             $redis->close();

@@ -2,13 +2,13 @@
 
 namespace Amp\Redis;
 
+use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
 use Amp\Reactor;
-use Amp\Redis\Future as RedisFuture;
 use DomainException;
 use function Amp\all;
-use function Amp\getReactor;
+use function Amp\pipe;
 
 class Client extends Redis {
     /** @var Promisor[] */
@@ -55,7 +55,7 @@ class Client extends Redis {
         if (!empty($password)) {
             $this->connection->setConnectCallback(function () use ($password) {
                 // AUTH must be before any other command, so we unshift it here
-                array_unshift($this->promisors, new RedisFuture);
+                array_unshift($this->promisors, new Deferred);
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($password) . "\r\n{$password}\r\n";
             });
         }
@@ -87,9 +87,14 @@ class Client extends Redis {
      * @return Promise
      */
     protected function send (array $args, callable $transform = null) {
-        $promisor = new RedisFuture($transform);
+        $promisor = new Deferred;
         $this->promisors[] = $promisor;
         $this->connection->send($args, $promisor);
-        return $promisor->promise();
+
+        if ($transform) {
+            return pipe($promisor->promise(), $transform);
+        } else {
+            return $promisor->promise();
+        }
     }
 }

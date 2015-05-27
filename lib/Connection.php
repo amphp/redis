@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Future;
+use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
 use Amp\Reactor;
@@ -10,7 +10,6 @@ use Amp\Success;
 use DomainException;
 use Exception;
 use Nbsock\Connector;
-use function Amp\getReactor;
 
 class Connection implements Promise {
     /** @var Reactor */
@@ -50,7 +49,7 @@ class Connection implements Promise {
         }
 
         $this->uri = $uri;
-        $this->reactor = $reactor ?: getReactor();
+        $this->reactor = $reactor ?: reactor();
 
         $this->outputBufferLength = 0;
         $this->outputBuffer = "";
@@ -74,7 +73,7 @@ class Connection implements Promise {
             return new Success($this);
         }
 
-        $this->connectPromisor = new Future;
+        $this->connectPromisor = new Deferred;
         $socketPromise = $this->connector->connect($this->uri, $opts = [
             Connector::OP_MS_CONNECT_TIMEOUT => 1000
         ]);
@@ -129,7 +128,7 @@ class Connection implements Promise {
                 }
             });
 
-            $this->writeWatcher = $this->reactor->onWritable($this->socket, $onWrite, !empty($this->outputBuffer));
+            $this->writeWatcher = $this->reactor->onWritable($this->socket, $onWrite, ["enable" => !empty($this->outputBuffer)]);
             $connectPromisor->succeed();
         });
 
@@ -179,11 +178,11 @@ class Connection implements Promise {
         });
     }
 
-    public function watch (callable $callback) {
+    public function watch (callable $callback, $data = null) {
         $this->watchers[] = $callback;
     }
 
-    public function when (callable $callback) {
+    public function when (callable $callback, $data = null) {
         $this->whens[] = $callback;
     }
 
