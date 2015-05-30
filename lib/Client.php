@@ -43,11 +43,9 @@ class Client extends Redis {
         $this->connection->when(function ($error) {
             if ($error) {
                 // Fail any outstanding promises
-                if ($this->promisors) {
-                    while ($this->promisors) {
-                        $promisor = array_shift($this->promisors);
-                        $promisor->fail($error);
-                    }
+                while ($this->promisors) {
+                    $promisor = array_shift($this->promisors);
+                    $promisor->fail($error);
                 }
             }
         });
@@ -72,8 +70,14 @@ class Client extends Redis {
      * @return Promise
      */
     public function close () {
+        $promises = [];
+
+        foreach ($this->promisors as $promisor) {
+            $promises[] = $promisor->promise();
+        }
+
         /** @var Promise $promise */
-        $promise = all($this->promisors);
+        $promise = all($promises);
         $promise->when(function () {
             $this->connection->close();
         });
