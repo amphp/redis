@@ -1827,7 +1827,7 @@ abstract class Redis {
      * @yield mixed
      */
     private function _eval ($script, $keys, $args) {
-        return $this->send(array_merge(["eval", $script], sizeof((array) $keys), (array) $keys, (array) $args));
+        return $this->send(array_merge(["eval", $script, sizeof((array) $keys)], (array) $keys, (array) $args));
     }
 
     private function _scan ($command, $key, $cursor, $pattern = null, $count = null) {
