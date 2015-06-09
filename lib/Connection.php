@@ -12,34 +12,38 @@ use Exception;
 use Nbsock\Connector;
 use function Amp\pipe;
 
-class Connection implements Promise {
+class Connection {
     /** @var Reactor */
     private $reactor;
     /** @var Connector */
     private $connector;
-    /** @var RespParser */
-    private $parser;
     /** @var Promisor */
     private $connectPromisor;
+    /** @var RespParser */
+    private $parser;
 
+    /** @var string */
     private $uri;
-    private $database;
+    /** @var resource */
     private $socket;
+    /** @var string */
     private $readWatcher;
+    /** @var string */
     private $writeWatcher;
-    private $outputBuffer;
-    private $outputBufferLength;
-    private $connectCallback;
 
-    private $whens;
-    private $watchers;
+    /** @var string */
+    private $outputBuffer;
+    /** @var int */
+    private $outputBufferLength;
+
+    /** @var array */
+    private $handlers;
 
     /**
      * @param string $uri
-     * @param int $database
      * @param Reactor $reactor
      */
-    public function __construct ($uri, $database, Reactor $reactor) {
+    public function __construct ($uri, Reactor $reactor) {
         if (!is_string($uri)) {
             throw new DomainException(sprintf(
                 "URI must be string, %s given",
@@ -52,16 +56,22 @@ class Connection implements Promise {
         }
 
         $this->uri = $uri;
-        $this->database = $database;
         $this->reactor = $reactor;
 
         $this->outputBufferLength = 0;
         $this->outputBuffer = "";
 
+        $this->handlers = [
+            "connect" => [],
+            "response" => [],
+            "error" => [],
+            "close" => []
+        ];
+
         $this->connector = new Connector($reactor);
         $this->parser = new RespParser(function ($response) {
-            foreach ($this->watchers as $watcher) {
-                $watcher($response);
+            foreach ($this->handlers["response"] as $handler) {
+                $handler($response);
             }
         });
     }
@@ -91,7 +101,7 @@ class Connection implements Promise {
             $bytes = fwrite($this->socket, $this->outputBuffer);
 
             if ($bytes === 0) {
-                $this->fail(new ConnectException("Connection went away", $code = 1));
+                $this->onError(new ConnectException("Connection went away", $code = 1));
             } else {
                 $this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
                 $this->outputBufferLength -= $bytes;
@@ -112,13 +122,12 @@ class Connection implements Promise {
 
             $this->socket = $socket;
 
-            if (isset($this->connectCallback)) {
-                $callback = $this->connectCallback;
-                $pipelinedCommand = $callback();
+            foreach ($this->handlers["connect"] as $handler) {
+                $pipelinedCommand = $handler();
 
                 if (!empty($pipelinedCommand)) {
                     $this->outputBuffer = $pipelinedCommand . $this->outputBuffer;
-                    $this->outputBufferLength = strlen($this->outputBuffer);
+                    $this->outputBufferLength += strlen($pipelinedCommand);
                 }
             }
 
@@ -128,7 +137,7 @@ class Connection implements Promise {
                 if ($read != "") {
                     $this->parser->append($read);
                 } elseif (!is_resource($this->socket) || @feof($this->socket)) {
-                    $this->fail(new ConnectException("Connection went away", $code = 2));
+                    $this->onError(new ConnectException("Connection went away", $code = 2));
                 }
             });
 
@@ -153,12 +162,28 @@ class Connection implements Promise {
         if (is_resource($this->socket)) {
             @fclose($this->socket);
         }
+
+        foreach ($this->handlers["close"] as $handler) {
+            $handler();
+        }
     }
 
-    public function setConnectCallback (callable $callback = null) {
-        $this->connectCallback = $callback;
+    public function addEventHandler ($event, callable $callback) {
+        $events = (array) $event;
+
+        foreach ($events as $event) {
+            if (!isset($this->handlers[$event])) {
+                throw new DomainException("Unknown event: " . $event);
+            }
+
+            $this->handlers[$event][] = $callback;
+        }
     }
 
+    /**
+     * @param array $strings
+     * @return Promise
+     */
     public function send (array $strings) {
         return pipe($this->connect(), function () use ($strings) {
             $payload = "";
@@ -178,24 +203,16 @@ class Connection implements Promise {
         });
     }
 
-    public function watch (callable $callback, $data = null) {
-        $this->watchers[] = $callback;
-    }
-
-    public function when (callable $callback, $data = null) {
-        $this->whens[] = $callback;
-    }
-
     public function close () {
         $this->closeSocket();
     }
 
-    private function fail (Exception $exception) {
-        $this->closeSocket();
-
-        foreach ($this->whens as $when) {
-            $when($exception);
+    private function onError (Exception $exception) {
+        foreach ($this->handlers["error"] as $handler) {
+            $handler($exception);
         }
+
+        $this->closeSocket();
     }
 
     public function __destruct () {

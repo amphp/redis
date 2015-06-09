@@ -7,6 +7,7 @@ use Amp\Promise;
 use Amp\Promisor;
 use Amp\Reactor;
 use DomainException;
+use Exception;
 use function Amp\all;
 use function Amp\pipe;
 
@@ -15,6 +16,10 @@ class Client extends Redis {
     private $promisors;
     /** @var Connection */
     private $connection;
+    /** @var string */
+    private $password;
+    /** @var int */
+    private $database;
 
     /**
      * @param string $uri
@@ -22,28 +27,22 @@ class Client extends Redis {
      * @param Reactor $reactor
      */
     public function __construct ($uri, array $options = [], Reactor $reactor = null) {
-        $password = isset($options["password"]) ? $options["password"] : null;
-        $database = isset($options["database"]) ? $options["database"] : 0;
+        $reactor = $reactor ?: \Amp\reactor();
+        $this->applyOptions($options);
+        $this->promisors = [];
 
-        if (!is_string($password) && !is_null($password)) {
-            throw new DomainException(sprintf(
-                "Password must be string or null, %s given",
-                gettype($password)
-            ));
-        }
-
-        $this->connection = new Connection($uri, $database, $reactor);
-        $this->connection->watch(function ($response) {
+        $this->connection = new Connection($uri, $reactor);
+        $this->connection->addEventHandler("response", function ($response) {
             $promisor = array_shift($this->promisors);
 
-            if ($response instanceof RedisException) {
+            if ($response instanceof Exception) {
                 $promisor->fail($response);
             } else {
                 $promisor->succeed($response);
             }
         });
 
-        $this->connection->when(function ($error) {
+        $this->connection->addEventHandler(["close", "error"], function ($error = null) {
             if ($error) {
                 // Fail any outstanding promises
                 while ($this->promisors) {
@@ -53,12 +52,40 @@ class Client extends Redis {
             }
         });
 
-        if (!empty($password)) {
-            $this->connection->setConnectCallback(function () use ($password) {
+        if ($this->database != 0) {
+            $this->connection->addEventHandler("connect", function () {
+                // SELECT must be called for every new connection if another database than 0 is used
+                array_unshift($this->promisors, new Deferred);
+                return "*2\r\n$6\r\rSELECT\r\n$" . strlen($this->database) . "\r\n{$this->database}\r\n";
+            });
+        }
+
+        if (!empty($this->password)) {
+            $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it here
                 array_unshift($this->promisors, new Deferred);
-                return "*2\r\n$4\r\rAUTH\r\n$" . strlen($password) . "\r\n{$password}\r\n";
+                return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
             });
+        }
+    }
+
+    private function applyOptions (array $options) {
+        $this->password = isset($options["password"]) ? $options["password"] : null;
+
+        if (!is_string($this->password) && !is_null($this->password)) {
+            throw new DomainException(sprintf(
+                "Password must be string or null, %s given",
+                gettype($this->password)
+            ));
+        }
+
+        $this->database = isset($options["database"]) ? $options["database"] : 0;
+
+        if (!is_int($this->database)) {
+            throw new DomainException(sprintf(
+                "Database must be int, %s given",
+                gettype($this->database)
+            ));
         }
     }
 
@@ -95,9 +122,15 @@ class Client extends Redis {
      */
     protected function send (array $args, callable $transform = null) {
         $promisor = new Deferred;
-        $this->promisors[] = $promisor;
 
-        $this->connection->send($args, $promisor);
+        $promise = $this->connection->send($args);
+        $promise->when(function ($error) use ($promisor) {
+            if ($error) {
+                $promisor->fail($error);
+            } else {
+                $this->promisors[] = $promisor;
+            }
+        });
 
         return $transform
             ? pipe($promisor->promise(), $transform)
