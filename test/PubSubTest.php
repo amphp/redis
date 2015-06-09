@@ -11,7 +11,7 @@ class PubSubTest extends RedisTest {
      */
     function basic () {
         (new NativeReactor())->run(function ($reactor) {
-            $subscriber = new SubscribeClient("tcp://127.0.0.1:25325", null, $reactor);
+            $subscriber = new SubscribeClient("tcp://127.0.0.1:25325", [], $reactor);
             $promise = $subscriber->subscribe("foo");
 
             $result = null;
@@ -20,7 +20,7 @@ class PubSubTest extends RedisTest {
                 $result = $response;
             });
 
-            $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
+            $redis = new Client("tcp://127.0.0.1:25325", [], $reactor);
 
             yield $redis->publish("foo", "bar");
             yield $subscriber->unsubscribe("foo");

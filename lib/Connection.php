@@ -10,6 +10,7 @@ use Amp\Success;
 use DomainException;
 use Exception;
 use Nbsock\Connector;
+use function Amp\pipe;
 
 class Connection implements Promise {
     /** @var Reactor */
@@ -22,6 +23,7 @@ class Connection implements Promise {
     private $connectPromisor;
 
     private $uri;
+    private $database;
     private $socket;
     private $readWatcher;
     private $writeWatcher;
@@ -34,9 +36,10 @@ class Connection implements Promise {
 
     /**
      * @param string $uri
+     * @param int $database
      * @param Reactor $reactor
      */
-    public function __construct ($uri, Reactor $reactor) {
+    public function __construct ($uri, $database, Reactor $reactor) {
         if (!is_string($uri)) {
             throw new DomainException(sprintf(
                 "URI must be string, %s given",
@@ -49,7 +52,8 @@ class Connection implements Promise {
         }
 
         $this->uri = $uri;
-        $this->reactor = $reactor ?: reactor();
+        $this->database = $database;
+        $this->reactor = $reactor;
 
         $this->outputBufferLength = 0;
         $this->outputBuffer = "";
@@ -155,25 +159,21 @@ class Connection implements Promise {
         $this->connectCallback = $callback;
     }
 
-    public function send (array $strings, Promisor $promisor) {
-        $this->connect()->when(function ($error) use ($strings, $promisor) {
-            if ($error) {
-                $promisor->fail($error);
-            } else {
-                $payload = "";
+    public function send (array $strings) {
+        return pipe($this->connect(), function () use ($strings) {
+            $payload = "";
 
-                foreach ($strings as $string) {
-                    $payload .= "$" . strlen($string) . "\r\n{$string}\r\n";
-                }
+            foreach ($strings as $string) {
+                $payload .= "$" . strlen($string) . "\r\n{$string}\r\n";
+            }
 
-                $payload = "*" . count($strings) . "\r\n{$payload}";
+            $payload = "*" . count($strings) . "\r\n{$payload}";
 
-                $this->outputBuffer .= $payload;
-                $this->outputBufferLength += strlen($payload);
+            $this->outputBuffer .= $payload;
+            $this->outputBufferLength += strlen($payload);
 
-                if ($this->writeWatcher !== null) {
-                    $this->reactor->enable($this->writeWatcher);
-                }
+            if ($this->writeWatcher !== null) {
+                $this->reactor->enable($this->writeWatcher);
             }
         });
     }

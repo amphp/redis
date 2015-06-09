@@ -1489,15 +1489,6 @@ abstract class Redis {
     }
 
     /**
-     * @param int $index
-     * @return Promise
-     * @yield string
-     */
-    public function select ($index) {
-        return $this->send(["select", $index]);
-    }
-
-    /**
      * @return Promise
      * @yield string
      */

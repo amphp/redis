@@ -12,7 +12,7 @@ class BasicTest extends RedisTest {
      */
     function connect () {
         (new NativeReactor())->run(function ($reactor) {
-            $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
+            $redis = new Client("tcp://127.0.0.1:25325", [], $reactor);
             $this->assertEquals("PONG", (yield $redis->ping()));
             $redis->close();
         });
@@ -23,7 +23,7 @@ class BasicTest extends RedisTest {
      */
     function multiCommand () {
         (new NativeReactor())->run(function ($reactor) {
-            $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
+            $redis = new Client("tcp://127.0.0.1:25325", [], $reactor);
             $redis->echo("1");
             $this->assertEquals("2", (yield $redis->echo("2")));
             $redis->close();
@@ -36,7 +36,7 @@ class BasicTest extends RedisTest {
      */
     function timeout () {
         (new NativeReactor())->run(function ($reactor) {
-            $redis = new Client("tcp://127.0.0.1:25325", null, $reactor);
+            $redis = new Client("tcp://127.0.0.1:25325", [], $reactor);
             yield $redis->echo("1");
 
             yield new Pause(8000, $reactor);

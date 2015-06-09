@@ -18,10 +18,13 @@ class Client extends Redis {
 
     /**
      * @param string $uri
-     * @param string $password
+     * @param array $options
      * @param Reactor $reactor
      */
-    public function __construct ($uri, $password = null, Reactor $reactor = null) {
+    public function __construct ($uri, array $options = [], Reactor $reactor = null) {
+        $password = isset($options["password"]) ? $options["password"] : null;
+        $database = isset($options["database"]) ? $options["database"] : 0;
+
         if (!is_string($password) && !is_null($password)) {
             throw new DomainException(sprintf(
                 "Password must be string or null, %s given",
@@ -29,7 +32,7 @@ class Client extends Redis {
             ));
         }
 
-        $this->connection = new Connection($uri, $reactor);
+        $this->connection = new Connection($uri, $database, $reactor);
         $this->connection->watch(function ($response) {
             $promisor = array_shift($this->promisors);
 
@@ -93,12 +96,11 @@ class Client extends Redis {
     protected function send (array $args, callable $transform = null) {
         $promisor = new Deferred;
         $this->promisors[] = $promisor;
+
         $this->connection->send($args, $promisor);
 
-        if ($transform) {
-            return pipe($promisor->promise(), $transform);
-        } else {
-            return $promisor->promise();
-        }
+        return $transform
+            ? pipe($promisor->promise(), $transform)
+            : $promisor->promise();
     }
 }
