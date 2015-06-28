@@ -26,6 +26,7 @@ class SubscribeClient {
      * @param Reactor $reactor
      */
     public function __construct ($uri, $options = [], Reactor $reactor = null) {
+        $reactor = $reactor ?: \Amp\reactor();
         $password = isset($options["password"]) ? $options["password"] : null;
 
         if (!is_string($password) && !is_null($password)) {
