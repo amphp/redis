@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit colors="true" strict="true">
+<phpunit colors="true">
     <testsuites>
-        <testsuite name="redis test suite">
+        <testsuite name="Tests">
             <directory>test</directory>
         </testsuite>
     </testsuites>

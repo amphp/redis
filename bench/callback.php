@@ -3,17 +3,11 @@
 chdir(__DIR__);
 error_reporting(E_ALL);
 
-use Amp\Redis\RespParser;
-
-const DEBUG = true;
-
-require "../vendor/autoload.php";
-
 class BenchCase {
-    private $parser;
+    private $callable;
 
-    public function __construct (RespParser $parser) {
-        $this->parser = $parser;
+    public function __construct (callable $callable) {
+        $this->callable = $callable;
     }
 
     public function bench () {
@@ -23,7 +17,7 @@ class BenchCase {
             $start = microtime(1);
 
             for ($i = 0; $i < 1000000; $i++) {
-                $this->parser->append("*2\r\n$5\r\nHello\r\n:123456789\r\n");
+                ($this->callable)(null);
             }
 
             $time = min($time, microtime(1) - $start);
@@ -38,26 +32,24 @@ class BenchCase {
 }
 
 class AnonymousFunctionCase extends BenchCase {
-    public function __construct() {
-        parent::__construct(new RespParser(function($data) {
+    public function __construct () {
+        parent::__construct(function ($data) {
             $this->onData($data);
-        }));
+        });
     }
 }
 
 class ReflectionCase extends BenchCase {
-    public function __construct() {
+    public function __construct () {
         $reflection = new ReflectionClass(self::class);
         $closure = $reflection->getMethod("onData")->getClosure($this);
 
-        parent::__construct(new RespParser($closure));
+        parent::__construct($closure);
     }
 }
 
-Amp\run(function () {
-    $test = new AnonymousFunctionCase;
-    printf("anon function: %f\n", $test->bench());
+$test = new AnonymousFunctionCase;
+printf("anon function: %f\n", $test->bench());
 
-    $test = new ReflectionCase;
-    printf("reflection:    %f\n", $test->bench());
-});
+$test = new ReflectionCase;
+printf("reflection:    %f\n", $test->bench());

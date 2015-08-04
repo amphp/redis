@@ -3,20 +3,20 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
+use function Amp\enable;
 use Amp\Promise;
 use Amp\Promisor;
-use Amp\Reactor;
 use Amp\Success;
 use DomainException;
 use Exception;
-use Nbsock\Connector;
+use function Amp\cancel;
+use function Amp\disable;
+use function Amp\onReadable;
+use function Amp\onWritable;
 use function Amp\pipe;
+use function Amp\Socket\connect;
 
 class Connection {
-    /** @var Reactor */
-    private $reactor;
-    /** @var Connector */
-    private $connector;
     /** @var Promisor */
     private $connectPromisor;
     /** @var RespParser */
@@ -41,9 +41,8 @@ class Connection {
 
     /**
      * @param string $uri
-     * @param Reactor $reactor
      */
-    public function __construct ($uri, Reactor $reactor) {
+    public function __construct ($uri) {
         if (!is_string($uri)) {
             throw new DomainException(sprintf(
                 "URI must be string, %s given",
@@ -56,8 +55,6 @@ class Connection {
         }
 
         $this->uri = $uri;
-        $this->reactor = $reactor;
-
         $this->outputBufferLength = 0;
         $this->outputBuffer = "";
 
@@ -68,7 +65,6 @@ class Connection {
             "close" => []
         ];
 
-        $this->connector = new Connector($reactor);
         $this->parser = new RespParser(function ($response) {
             foreach ($this->handlers["response"] as $handler) {
                 $handler($response);
@@ -88,20 +84,18 @@ class Connection {
         }
 
         $this->connectPromisor = new Deferred;
-        $socketPromise = $this->connector->connect($this->uri, $opts = [
-            Connector::OP_MS_CONNECT_TIMEOUT => 1000
-        ]);
+        $socketPromise = connect($this->uri, ["timeout" => 1000]);
 
-        $onWrite = function (Reactor $reactor, $watcherId) {
+        $onWrite = function ($watcherId) {
             if ($this->outputBufferLength === 0) {
-                $reactor->disable($watcherId);
+                disable($watcherId);
                 return;
             }
 
             $bytes = fwrite($this->socket, $this->outputBuffer);
 
             if ($bytes === 0) {
-                $this->onError(new ConnectException("Connection went away", $code = 1));
+                $this->onError(new ConnectException("Connection went away (write)", $code = 1));
             } else {
                 $this->outputBuffer = (string) substr($this->outputBuffer, $bytes);
                 $this->outputBufferLength -= $bytes;
@@ -131,17 +125,17 @@ class Connection {
                 }
             }
 
-            $this->readWatcher = $this->reactor->onReadable($this->socket, function () {
+            $this->readWatcher = onReadable($this->socket, function () {
                 $read = fread($this->socket, 8192);
 
                 if ($read != "") {
                     $this->parser->append($read);
                 } elseif (!is_resource($this->socket) || @feof($this->socket)) {
-                    $this->onError(new ConnectException("Connection went away", $code = 2));
+                    $this->onError(new ConnectException("Connection went away (read)", $code = 2));
                 }
             });
 
-            $this->writeWatcher = $this->reactor->onWritable($this->socket, $onWrite, ["enable" => !empty($this->outputBuffer)]);
+            $this->writeWatcher = onWritable($this->socket, $onWrite, ["enable" => !empty($this->outputBuffer)]);
             $connectPromisor->succeed();
         });
 
@@ -149,8 +143,8 @@ class Connection {
     }
 
     private function closeSocket () {
-        $this->reactor->cancel($this->readWatcher);
-        $this->reactor->cancel($this->writeWatcher);
+        cancel($this->readWatcher);
+        cancel($this->writeWatcher);
 
         $this->readWatcher = null;
         $this->writeWatcher = null;
@@ -198,7 +192,7 @@ class Connection {
             $this->outputBufferLength += strlen($payload);
 
             if ($this->writeWatcher !== null) {
-                $this->reactor->enable($this->writeWatcher);
+                enable($this->writeWatcher);
             }
         });
     }

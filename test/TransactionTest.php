@@ -2,7 +2,8 @@
 
 namespace Amp\Redis;
 
-use Amp\NativeReactor;
+use function Amp\driver;
+use function Amp\reactor;
 use function Amp\run;
 
 class TransactionTest extends RedisTest {
@@ -10,8 +11,8 @@ class TransactionTest extends RedisTest {
      * @test
      */
     function success () {
-        (new NativeReactor())->run(function ($reactor) {
-            $_1 = new Client("tcp://127.0.0.1:25325", [], $reactor);
+        reactor(driver())->run(function () {
+            $_1 = new Client("tcp://127.0.0.1:25325", []);
             yield $_1->set("key", "1");
 
             $transaction = $_1->transaction();
@@ -31,9 +32,9 @@ class TransactionTest extends RedisTest {
      * @expectedException \Amp\Redis\RedisException
      */
     function failure () {
-        (new NativeReactor())->run(function ($reactor) {
-            $_1 = new Client("tcp://127.0.0.1:25325", [], $reactor);
-            $_2 = new Client("tcp://127.0.0.1:25325", [], $reactor);
+        reactor(driver())->run(function () {
+            $_1 = new Client("tcp://127.0.0.1:25325", []);
+            $_2 = new Client("tcp://127.0.0.1:25325", []);
 
             yield $_1->set("key", "1");
 

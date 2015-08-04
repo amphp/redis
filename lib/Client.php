@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Promise;
+use function Amp\promises;
 use Amp\Promisor;
 use Amp\Reactor;
 use DomainException;
@@ -24,14 +25,12 @@ class Client extends Redis {
     /**
      * @param string $uri
      * @param array $options
-     * @param Reactor $reactor
      */
-    public function __construct ($uri, array $options = [], Reactor $reactor = null) {
-        $reactor = $reactor ?: \Amp\reactor();
+    public function __construct ($uri, array $options = []) {
         $this->applyOptions($options);
         $this->promisors = [];
 
-        $this->connection = new Connection($uri, $reactor);
+        $this->connection = new Connection($uri);
         $this->connection->addEventHandler("response", function ($response) {
             $promisor = array_shift($this->promisors);
 
@@ -100,14 +99,8 @@ class Client extends Redis {
      * @return Promise
      */
     public function close () {
-        $promises = [];
-
-        foreach ($this->promisors as $promisor) {
-            $promises[] = $promisor->promise();
-        }
-
         /** @var Promise $promise */
-        $promise = all($promises);
+        $promise = all(promises($this->promisors));
         $promise->when(function () {
             $this->connection->close();
         });
@@ -122,15 +115,8 @@ class Client extends Redis {
      */
     protected function send (array $args, callable $transform = null) {
         $promisor = new Deferred;
-
-        $promise = $this->connection->send($args);
-        $promise->when(function ($error) use ($promisor) {
-            if ($error) {
-                $promisor->fail($error);
-            } else {
-                $this->promisors[] = $promisor;
-            }
-        });
+        $this->promisors[] = $promisor;
+        $this->connection->send($args);
 
         return $transform
             ? pipe($promisor->promise(), $transform)

@@ -23,10 +23,8 @@ class SubscribeClient {
     /**
      * @param string $uri
      * @param array $options
-     * @param Reactor $reactor
      */
-    public function __construct ($uri, $options = [], Reactor $reactor = null) {
-        $reactor = $reactor ?: \Amp\reactor();
+    public function __construct ($uri, $options = []) {
         $password = isset($options["password"]) ? $options["password"] : null;
 
         if (!is_string($password) && !is_null($password)) {
@@ -39,7 +37,7 @@ class SubscribeClient {
         $this->promisors = [];
         $this->patternPromisors = [];
 
-        $this->connection = new Connection($uri, $reactor);
+        $this->connection = new Connection($uri);
         $this->connection->addEventHandler("response", function ($response) {
             if ($this->authPromisor) {
                 if ($response instanceof Exception) {
@@ -60,10 +58,8 @@ class SubscribeClient {
 
                     break;
                 case "pmessage":
-                    // Ignore warning, variadic operator only supported in PHP 5.6+
-                    // https://github.com/amphp/amp/blob/v1.0.x/lib/PrivatePromisor.php#L45
                     foreach ($this->patternPromisors[$response[1]] as $promisor) {
-                        $promisor->update($response[3], $response[2]);
+                        $promisor->update([$response[3], $response[2]]);
                     }
 
                     break;

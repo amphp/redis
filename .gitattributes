@@ -1,6 +1,7 @@
 /bench              export-ignore
 /examples           export-ignore
 /test               export-ignore
+/.coveralls.yml     export-ignore
 /.editorconfig      export-ignore
 /.gitattributes     export-ignore
 /.gitignore         export-ignore
