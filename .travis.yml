@@ -9,6 +9,7 @@ before_script:
   - composer self-update
   - composer require satooshi/php-coveralls:dev-master
   - composer install
+  - git clone https://github.com/kelunik/travis-php && travis-php/install.sh master
 
 script:
   - $(php -r 'if (PHP_MAJOR_VERSION >= 7) echo "phpdbg -qrr"; else echo "php";') vendor/bin/phpunit -c phpunit.xml --coverage-text --coverage-clover build/logs/clover.xml
