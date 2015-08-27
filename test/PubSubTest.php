@@ -10,7 +10,7 @@ class PubSubTest extends RedisTest {
     /**
      * @test
      */
-    function basic () {
+    function basic() {
         reactor(driver())->run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325", []);
             $promise = $subscriber->subscribe("foo");

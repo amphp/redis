@@ -12,7 +12,7 @@ class Transaction extends Redis {
     private $transforms;
     private $inTransaction;
 
-    public function __construct (Client $client) {
+    public function __construct(Client $client) {
         $this->client = $client;
         $this->commands = [];
         $this->transforms = [];
@@ -23,19 +23,21 @@ class Transaction extends Redis {
      * @return Deferred
      * @yield string
      */
-    public function discard () {
+    public function discard() {
         $this->commands = [];
         $this->transforms = [];
         $this->inTransaction = false;
+
         return $this->send(["discard"]);
     }
 
-    public function send (array $strings, callable $transform = null) {
+    public function send(array $strings, callable $transform = null) {
         if (!$this->inTransaction) {
             return $this->client->send($strings, $transform);
         } else {
             $this->commands[] = $strings;
             $this->transforms[] = $transform;
+
             return new Success($this);
         }
     }
@@ -44,7 +46,7 @@ class Transaction extends Redis {
      * @return Deferred
      * @yield string
      */
-    public function exec () {
+    public function exec() {
         // sending happens sync here, no need to concatenate these strings before
         foreach ($this->commands as $strings) {
             $this->client->send($strings);
@@ -77,12 +79,13 @@ class Transaction extends Redis {
      * @return Deferred
      * @yield string
      */
-    public function multi () {
+    public function multi() {
         if ($this->inTransaction) {
             throw new DomainException("Multi has already been called, discard or exec your transaction first");
         }
 
         $this->inTransaction = true;
+
         return $this->send(["multi"]);
     }
 
@@ -90,17 +93,17 @@ class Transaction extends Redis {
      * @return Deferred
      * @yield string
      */
-    public function unwatch () {
+    public function unwatch() {
         return $this->send(["unwatch"]);
     }
 
     /**
      * @param string|string[] $key
-     * @param string ...$keys
+     * @param string          ...$keys
      * @return Deferred
      * @yield string
      */
-    public function watch ($key, ...$keys) {
+    public function watch($key, ...$keys) {
         return $this->send(array_merge(["watch"], (array) $key, $keys));
     }
 }

@@ -17,16 +17,16 @@ class RespParser {
     private $currentSize;
     private $arraySizes;
 
-    public function __construct (callable $responseCallback) {
+    public function __construct(callable $responseCallback) {
         $this->responseCallback = $responseCallback;
     }
 
-    public function reset () {
+    public function reset() {
         $this->buffer = "";
         $this->currentResponse = $this->arrayStack = $this->currentSize = $this->arraySizes = null;
     }
 
-    public function append ($str) {
+    public function append($str) {
         $this->buffer .= $str;
 
         do {

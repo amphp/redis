@@ -6,11 +6,11 @@ error_reporting(E_ALL);
 class BenchCase {
     private $callable;
 
-    public function __construct (callable $callable) {
+    public function __construct(callable $callable) {
         $this->callable = $callable;
     }
 
-    public function bench () {
+    public function bench() {
         $time = PHP_INT_MAX;
 
         for ($x = 0; $x < 10; $x++) {
@@ -26,13 +26,13 @@ class BenchCase {
         return $time;
     }
 
-    protected function onData ($data) {
+    protected function onData($data) {
         // empty on purpose!
     }
 }
 
 class AnonymousFunctionCase extends BenchCase {
-    public function __construct () {
+    public function __construct() {
         parent::__construct(function ($data) {
             $this->onData($data);
         });
@@ -40,7 +40,7 @@ class AnonymousFunctionCase extends BenchCase {
 }
 
 class ReflectionCase extends BenchCase {
-    public function __construct () {
+    public function __construct() {
         $reflection = new ReflectionClass(self::class);
         $closure = $reflection->getMethod("onData")->getClosure($this);
 

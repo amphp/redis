@@ -5,7 +5,6 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
-use Amp\Reactor;
 use DomainException;
 use Exception;
 use function Amp\all;
@@ -22,9 +21,9 @@ class SubscribeClient {
 
     /**
      * @param string $uri
-     * @param array $options
+     * @param array  $options
      */
-    public function __construct ($uri, $options = []) {
+    public function __construct($uri, $options = []) {
         $password = isset($options["password"]) ? $options["password"] : null;
 
         if (!is_string($password) && !is_null($password)) {
@@ -47,6 +46,7 @@ class SubscribeClient {
                 }
 
                 $this->authPromisor = null;
+
                 return;
             }
 
@@ -119,6 +119,7 @@ class SubscribeClient {
             $this->connection->addEventHandler("connect", function () use ($password) {
                 // AUTH must be before any other command, so we unshift it here
                 $this->authPromisor = new Deferred;
+
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($password) . "\r\n{$password}\r\n";
             });
         }
@@ -127,7 +128,7 @@ class SubscribeClient {
     /**
      * @return Promise
      */
-    public function close () {
+    public function close() {
         $promises = [];
 
         foreach ($this->promisors as $promisorGroup) {
@@ -159,7 +160,7 @@ class SubscribeClient {
      * @param string $channel
      * @return Promise
      */
-    public function subscribe ($channel) {
+    public function subscribe($channel) {
         $promisor = new Deferred;
 
         $promise = $this->connection->send(["subscribe", $channel]);
@@ -178,7 +179,7 @@ class SubscribeClient {
      * @param string $pattern
      * @return Promise
      */
-    public function pSubscribe ($pattern) {
+    public function pSubscribe($pattern) {
         $promisor = new Deferred;
 
         $promise = $this->connection->send(["psubscribe", $pattern]);
@@ -197,7 +198,7 @@ class SubscribeClient {
      * @param string|string[] $channel
      * @return Promise
      */
-    public function unsubscribe ($channel = null) {
+    public function unsubscribe($channel = null) {
         if ($channel === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -212,7 +213,7 @@ class SubscribeClient {
      * @param string|string[] $pattern
      * @return Promise
      */
-    public function pUnsubscribe ($pattern = null) {
+    public function pUnsubscribe($pattern = null) {
         if ($pattern === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -221,5 +222,9 @@ class SubscribeClient {
         }
 
         return $this->connection->send(["punsubscribe", $pattern]);
+    }
+
+    public function getConnectionState() {
+        return $this->connection->getState();
     }
 }

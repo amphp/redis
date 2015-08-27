@@ -11,7 +11,7 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
-    function connect () {
+    function connect() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $this->assertEquals("PONG", (yield $redis->ping()));
@@ -22,7 +22,7 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
-    function multiCommand () {
+    function multiCommand() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $redis->echo("1");
@@ -35,7 +35,7 @@ class BasicTest extends RedisTest {
      * @test
      * @medium
      */
-    function timeout () {
+    function timeout() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             yield $redis->echo("1");

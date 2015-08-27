@@ -12,11 +12,11 @@ require "../vendor/autoload.php";
 class BenchCase {
     private $parser;
 
-    public function __construct (RespParser $parser) {
+    public function __construct(RespParser $parser) {
         $this->parser = $parser;
     }
 
-    public function bench () {
+    public function bench() {
         $time = PHP_INT_MAX;
 
         for ($x = 0; $x < 10; $x++) {
@@ -32,14 +32,14 @@ class BenchCase {
         return $time;
     }
 
-    protected function onData ($data) {
+    protected function onData($data) {
         // empty on purpose!
     }
 }
 
 class AnonymousFunctionCase extends BenchCase {
     public function __construct() {
-        parent::__construct(new RespParser(function($data) {
+        parent::__construct(new RespParser(function ($data) {
             $this->onData($data);
         }));
     }

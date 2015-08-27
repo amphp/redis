@@ -10,7 +10,7 @@ class KeyTest extends RedisTest {
     /**
      * @test
      */
-    function keys () {
+    function keys() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $this->assertEquals([], (yield $redis->keys("*")));
@@ -23,7 +23,7 @@ class KeyTest extends RedisTest {
     /**
      * @test
      */
-    function exists () {
+    function exists() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $this->assertTrue((yield $redis->exists("foo")));
@@ -35,7 +35,7 @@ class KeyTest extends RedisTest {
     /**
      * @test
      */
-    function del () {
+    function del() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $this->assertTrue((yield $redis->exists("foo")));

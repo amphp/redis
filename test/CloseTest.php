@@ -10,7 +10,7 @@ class CloseTest extends RedisTest {
     /**
      * @test
      */
-    function reconnect () {
+    function reconnect() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $this->assertEquals("PONG", (yield $redis->ping()));
