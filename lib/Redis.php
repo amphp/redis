@@ -1422,8 +1422,8 @@ abstract class Redis {
     }
 
     /**
-     * @param $channel
-     * @param $message
+     * @param string $channel
+     * @param string $message
      * @return Promise
      * @yield int
      */
