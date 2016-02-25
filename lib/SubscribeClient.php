@@ -69,6 +69,7 @@ class SubscribeClient {
                     }
 
                     foreach ($this->promisors[$response[1]] as $promisor) {
+                        unset($this->promisors[$response[1]]);
                         $promisor->succeed();
                     }
 
@@ -79,6 +80,7 @@ class SubscribeClient {
                     }
 
                     foreach ($this->patternPromisors[$response[1]] as $promisor) {
+                        unset($this->patternPromisors[$response[1]]);
                         $promisor->succeed();
                     }
 
@@ -105,7 +107,7 @@ class SubscribeClient {
                 }
 
                 while ($this->patternPromisors) {
-                    $promisorGroup = array_shift($this->promisors);
+                    $promisorGroup = array_shift($this->patternPromisors);
 
                     while ($promisorGroup) {
                         $promisor = array_shift($promisorGroup);
