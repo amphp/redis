@@ -69,7 +69,6 @@ class SubscribeClient {
                     }
 
                     foreach ($this->promisors[$response[1]] as $promisor) {
-                        unset($this->promisors[$response[1]]);
                         $promisor->succeed();
                     }
 
@@ -80,7 +79,6 @@ class SubscribeClient {
                     }
 
                     foreach ($this->patternPromisors[$response[1]] as $promisor) {
-                        unset($this->patternPromisors[$response[1]]);
                         $promisor->succeed();
                     }
 
@@ -171,6 +169,9 @@ class SubscribeClient {
                 $promisor->fail($error);
             } else {
                 $this->promisors[$channel][] = $promisor;
+                $promisor->promise()->when(function () use ($channel) {
+                    array_shift($this->promisors[$channel]);
+                });
             }
         });
 
@@ -190,6 +191,9 @@ class SubscribeClient {
                 $promisor->fail($error);
             } else {
                 $this->patternPromisors[$pattern][] = $promisor;
+                $promisor->promise()->when(function () use ($pattern) {
+                    array_shift($this->patternPromisors[$pattern]);
+                });
             }
         });
 
