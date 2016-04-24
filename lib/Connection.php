@@ -137,7 +137,7 @@ class Connection {
                 return;
             }
 
-            $bytes = fwrite($this->socket, $this->outputBuffer);
+            $bytes = fwrite($this->socket, $this->outputBuffer, 8192);
 
             if ($bytes === 0) {
                 $this->state = self::STATE_DISCONNECTED;

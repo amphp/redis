@@ -22,6 +22,19 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
+    function longPayload() {
+        reactor(driver())->run(function () {
+            $redis = new Client("tcp://127.0.0.1:25325", []);
+            $payload = str_repeat("a", 6000000);
+            yield $redis->set("foobar", $payload);
+            $this->assertEquals($payload, yield $redis->get("foobar"));
+            $redis->close();
+        });
+    }
+
+    /**
+     * @test
+     */
     function multiCommand() {
         reactor(driver())->run(function () {
             $redis = new Client("tcp://127.0.0.1:25325", []);
