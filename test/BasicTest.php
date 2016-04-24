@@ -27,7 +27,7 @@ class BasicTest extends RedisTest {
             $redis = new Client("tcp://127.0.0.1:25325", []);
             $payload = str_repeat("a", 6000000);
             yield $redis->set("foobar", $payload);
-            $this->assertEquals($payload, yield $redis->get("foobar"));
+            $this->assertEquals($payload, (yield $redis->get("foobar")));
             $redis->close();
         });
     }
