@@ -97,6 +97,12 @@ class Connection {
      * @return Promise
      */
     public function send(array $strings) {
+        foreach ($strings as $string) {
+            if (!is_scalar($string)) {
+                throw new \InvalidArgumentException("All elements must be of type string or scalar and convertible to a string.");
+            }
+        }
+
         return pipe($this->connect(), function () use ($strings) {
             $payload = "";
 

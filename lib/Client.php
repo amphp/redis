@@ -116,8 +116,8 @@ class Client extends Redis {
      */
     protected function send(array $args, callable $transform = null) {
         $promisor = new Deferred;
-        $this->promisors[] = $promisor;
         $this->connection->send($args);
+        $this->promisors[] = $promisor;
 
         return $transform
             ? pipe($promisor->promise(), $transform)

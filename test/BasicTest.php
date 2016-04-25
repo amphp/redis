@@ -34,6 +34,17 @@ class BasicTest extends RedisTest {
 
     /**
      * @test
+     * @expectedException \InvalidArgumentException
+     */
+    function acceptsOnlyScalars() {
+        reactor(driver())->run(function () {
+            $redis = new Client("tcp://127.0.0.1:25325", []);
+            $redis->set("foobar", ["abc"]);
+        });
+    }
+
+    /**
+     * @test
      */
     function multiCommand() {
         reactor(driver())->run(function () {
