@@ -5,7 +5,6 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
-use DomainException;
 use Exception;
 use function Amp\all;
 use function Amp\pipe;
@@ -17,19 +16,40 @@ class Client extends Redis {
     /** @var Connection */
     private $connection;
     /** @var string */
+    private $uri;
+    /** @var string */
     private $password;
     /** @var int */
-    private $database;
+    private $database = 0;
 
     /**
      * @param string $uri
-     * @param array  $options
+     * @param array|null $options
      */
-    public function __construct($uri, array $options = []) {
-        $this->applyOptions($options);
-        $this->promisors = [];
+    public function __construct($uri, array $options = null) {
+        if (is_array($options) || func_num_args() === 2) {
+            trigger_error(
+                "Using the options array is deprecated and will be removed in the next version. " .
+                "Please use the URI to pass options like that: tcp://localhost:6379?database=3&password=abc",
+                E_USER_DEPRECATED
+            );
 
-        $this->connection = new Connection($uri);
+            $options = $options ?: [];
+
+            if (isset($options["password"])) {
+                $this->password = $options["password"];
+            }
+
+            if (isset($options["database"])) {
+                $this->database = (int) $options["database"];
+            }
+        }
+
+        $this->applyUri($uri);
+
+        $this->promisors = [];
+        $this->connection = new Connection($this->uri);
+
         $this->connection->addEventHandler("response", function ($response) {
             $promisor = array_shift($this->promisors);
 
@@ -50,7 +70,7 @@ class Client extends Redis {
             }
         });
 
-        if ($this->database != 0) {
+        if ($this->database !== 0) {
             $this->connection->addEventHandler("connect", function () {
                 // SELECT must be called for every new connection if another database than 0 is used
                 array_unshift($this->promisors, new Deferred);
@@ -61,7 +81,7 @@ class Client extends Redis {
 
         if (!empty($this->password)) {
             $this->connection->addEventHandler("connect", function () {
-                // AUTH must be before any other command, so we unshift it here
+                // AUTH must be before any other command, so we unshift it last
                 array_unshift($this->promisors, new Deferred);
 
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
@@ -69,23 +89,36 @@ class Client extends Redis {
         }
     }
 
-    private function applyOptions(array $options) {
-        $this->password = isset($options["password"]) ? $options["password"] : null;
+    private function applyUri($uri) {
+        $parts = explode("?", $uri, 2);
+        $this->uri = $parts[0];
 
-        if (!is_string($this->password) && !is_null($this->password)) {
-            throw new DomainException(sprintf(
-                "Password must be string or null, %s given",
-                gettype($this->password)
-            ));
+        if (count($parts) === 1) {
+            return;
         }
 
-        $this->database = isset($options["database"]) ? $options["database"] : 0;
+        $query = $parts[1];
+        $params = explode("&", $query);
 
-        if (!is_int($this->database)) {
-            throw new DomainException(sprintf(
-                "Database must be int, %s given",
-                gettype($this->database)
-            ));
+        foreach ($params as $param) {
+            $keyValue = explode("=", $param, 2);
+            $key = urldecode($keyValue[0]);
+
+            if (count($keyValue) === 1) {
+                $value = true;
+            } else {
+                $value = urldecode($keyValue[1]);
+            }
+
+            switch ($key) {
+                case "database":
+                    $this->database = (int) $value;
+                    break;
+
+                case "password":
+                    $this->password = $value;
+                    break;
+            }
         }
     }
 

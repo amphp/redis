@@ -12,7 +12,7 @@ class PubSubTest extends RedisTest {
      */
     function basic() {
         reactor(driver())->run(function () {
-            $subscriber = new SubscribeClient("tcp://127.0.0.1:25325", []);
+            $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
             $promise = $subscriber->subscribe("foo");
 
             $result = null;
@@ -21,15 +21,12 @@ class PubSubTest extends RedisTest {
                 $result = $response;
             });
 
-            $redis = new Client("tcp://127.0.0.1:25325", []);
+            $redis = new Client("tcp://127.0.0.1:25325");
 
             yield $redis->publish("foo", "bar");
             yield $subscriber->unsubscribe("foo");
 
             $this->assertEquals("bar", $result);
-
-            $subscriber->close();
-            $redis->close();
         });
     }
 }

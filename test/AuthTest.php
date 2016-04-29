@@ -27,7 +27,7 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
      */
     function ping() {
         reactor(driver())->run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325", ["password" => "secret"]);
+            $redis = new Client("tcp://127.0.0.1:25325?password=secret");
             $this->assertEquals("PONG", (yield $redis->ping()));
             $redis->close();
         });

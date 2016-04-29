@@ -12,7 +12,7 @@ class TransactionTest extends RedisTest {
      */
     function success() {
         reactor(driver())->run(function () {
-            $_1 = new Client("tcp://127.0.0.1:25325", []);
+            $_1 = new Client("tcp://127.0.0.1:25325");
             yield $_1->set("key", "1");
 
             $transaction = $_1->transaction();
@@ -33,8 +33,8 @@ class TransactionTest extends RedisTest {
      */
     function failure() {
         reactor(driver())->run(function () {
-            $_1 = new Client("tcp://127.0.0.1:25325", []);
-            $_2 = new Client("tcp://127.0.0.1:25325", []);
+            $_1 = new Client("tcp://127.0.0.1:25325");
+            $_2 = new Client("tcp://127.0.0.1:25325");
 
             yield $_1->set("key", "1");
 

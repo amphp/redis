@@ -18,25 +18,36 @@ class SubscribeClient {
     private $patternPromisors;
     /** @var Connection */
     private $connection;
+    /** @var string */
+    private $uri;
+    /** @var string */
+    private $password;
 
     /**
      * @param string $uri
      * @param array  $options
      */
-    public function __construct($uri, $options = []) {
-        $password = isset($options["password"]) ? $options["password"] : null;
+    public function __construct($uri, array $options = null) {
+        if (is_array($options) || func_num_args() === 2) {
+            trigger_error(
+                "Using the options array is deprecated and will be removed in the next version. " .
+                "Please use the URI to pass options like that: tcp://localhost:6379?database=3&password=abc",
+                E_USER_DEPRECATED
+            );
 
-        if (!is_string($password) && !is_null($password)) {
-            throw new DomainException(sprintf(
-                "Password must be string or null, %s given",
-                gettype($password)
-            ));
+            $options = $options ?: [];
+
+            if (isset($options["password"])) {
+                $this->password = $options["password"];
+            }
         }
+
+        $this->applyUri($uri);
 
         $this->promisors = [];
         $this->patternPromisors = [];
 
-        $this->connection = new Connection($uri);
+        $this->connection = new Connection($this->uri);
         $this->connection->addEventHandler("response", function ($response) {
             if ($this->authPromisor) {
                 if ($response instanceof Exception) {
@@ -115,13 +126,42 @@ class SubscribeClient {
             }
         });
 
-        if (!empty($password)) {
-            $this->connection->addEventHandler("connect", function () use ($password) {
+        if (!empty($this->password)) {
+            $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it here
                 $this->authPromisor = new Deferred;
 
-                return "*2\r\n$4\r\rAUTH\r\n$" . strlen($password) . "\r\n{$password}\r\n";
+                return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
             });
+        }
+    }
+
+    private function applyUri($uri) {
+        $parts = explode("?", $uri, 2);
+        $this->uri = $parts[0];
+
+        if (count($parts) === 1) {
+            return;
+        }
+
+        $query = $parts[1];
+        $params = explode("&", $query);
+
+        foreach ($params as $param) {
+            $keyValue = explode("=", $param, 2);
+            $key = urldecode($keyValue[0]);
+
+            if (count($keyValue) === 1) {
+                $value = true;
+            } else {
+                $value = urldecode($keyValue[1]);
+            }
+
+            switch ($key) {
+                case "password":
+                    $this->password = $value;
+                    break;
+            }
         }
     }
 

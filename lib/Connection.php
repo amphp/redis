@@ -28,6 +28,8 @@ class Connection {
 
     /** @var string */
     private $uri;
+    /** @var int */
+    private $timeout = 1000;
     /** @var resource */
     private $socket;
     /** @var string */
@@ -61,7 +63,8 @@ class Connection {
             throw new DomainException("URI must start with tcp:// or unix://");
         }
 
-        $this->uri = $uri;
+        $this->parseUri($uri);
+
         $this->outputBufferLength = 0;
         $this->outputBuffer = "";
         $this->state = self::STATE_DISCONNECTED;
@@ -78,6 +81,36 @@ class Connection {
                 $handler($response);
             }
         });
+    }
+
+    private function parseUri($uri) {
+        $parts = explode("?", $uri, 2);
+
+        if (count($parts) === 1) {
+            $this->uri = $uri;
+
+            return;
+        }
+
+        $query = $parts[1];
+        $params = explode("&", $query);
+
+        foreach ($params as $param) {
+            $keyValue = explode("=", $param, 2);
+            $key = $keyValue[0];
+
+            if (count($keyValue) === 1) {
+                $value = true;
+            } else {
+                $value = $keyValue[0];
+            }
+
+            switch ($key) {
+                case "timeout":
+                    $this->timeout = (int) $value;
+                    break;
+            }
+        }
     }
 
     public function addEventHandler($event, callable $callback) {
@@ -134,7 +167,7 @@ class Connection {
 
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
-        $socketPromise = connect($this->uri, ["timeout" => 1000]);
+        $socketPromise = connect($this->uri, ["timeout" => $this->timeout]);
 
         $onWrite = function ($watcherId) {
             if ($this->outputBufferLength === 0) {
