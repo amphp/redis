@@ -5,7 +5,6 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Promisor;
-use DomainException;
 use Exception;
 use function Amp\all;
 
@@ -68,32 +67,14 @@ class SubscribeClient {
                     }
 
                     break;
+
                 case "pmessage":
                     foreach ($this->patternPromisors[$response[1]] as $promisor) {
                         $promisor->update([$response[3], $response[2]]);
                     }
 
                     break;
-                case "unsubscribe":
-                    if ($response[1] === null) {
-                        break;
-                    }
 
-                    foreach ($this->promisors[$response[1]] as $promisor) {
-                        $promisor->succeed();
-                    }
-
-                    break;
-                case "punsubscribe":
-                    if ($response[1] === null) {
-                        break;
-                    }
-
-                    foreach ($this->patternPromisors[$response[1]] as $promisor) {
-                        $promisor->succeed();
-                    }
-
-                    break;
                 default:
                     break;
             }
@@ -166,85 +147,91 @@ class SubscribeClient {
     }
 
     /**
-     * @return Promise
+     * @return void
      */
     public function close() {
-        $promises = [];
-
-        foreach ($this->promisors as $promisorGroup) {
-            foreach ($promisorGroup as $promisor) {
-                $promises[] = $promisor->promise();
-            }
-        }
-
-        foreach ($this->patternPromisors as $promisorGroup) {
-            foreach ($promisorGroup as $promisor) {
-                $promises[] = $promisor->promise();
-            }
-        }
-
-        /** @var Promise $promise */
-        $promise = all($promises);
-
-        $promise->when(function () {
-            $this->connection->close();
-        });
-
-        $this->unsubscribe();
-        $this->pUnsubscribe();
-
-        return $promise;
+        $this->connection->close();
     }
 
     /**
      * @param string $channel
-     * @return Promise
+     * @return Subscription
      */
     public function subscribe($channel) {
         $promisor = new Deferred;
+        $subscription = new Subscription($promisor, function($promisor) use ($channel) {
+            $this->unloadPromisor($promisor, $channel);
+        });
+
+        $this->promisors[$channel][spl_object_hash($promisor)] = $promisor;
 
         $promise = $this->connection->send(["subscribe", $channel]);
         $promise->when(function ($error) use ($channel, $promisor) {
             if ($error) {
+                $this->unloadPromisor($promisor, $channel);
                 $promisor->fail($error);
-            } else {
-                $this->promisors[$channel][] = $promisor;
-                $promisor->promise()->when(function () use ($channel) {
-                    array_shift($this->promisors[$channel]);
-                });
             }
         });
 
-        return $promisor->promise();
+        return $subscription;
+    }
+
+    private function unloadPromisor(Promisor $promisor, $channel) {
+        $hash = spl_object_hash($promisor);
+
+        if (isset($this->promisors[$channel][$hash])) {
+            unset($this->promisors[$channel][$hash]);
+
+            $promisor->succeed();
+
+            if (empty($this->promisors[$channel])) {
+                $this->unsubscribe($channel);
+            }
+        }
     }
 
     /**
      * @param string $pattern
-     * @return Promise
+     * @return Subscription
      */
     public function pSubscribe($pattern) {
         $promisor = new Deferred;
+        $subscription = new Subscription($promisor, function($promisor) use ($pattern) {
+            $this->unloadPatternPromisor($promisor, $pattern);
+        });
+
+        $this->patternPromisors[$pattern][spl_object_hash($promisor)] = $promisor;
 
         $promise = $this->connection->send(["psubscribe", $pattern]);
         $promise->when(function ($error) use ($pattern, $promisor) {
             if ($error) {
+                $this->unloadPatternPromisor($promisor, $pattern);
                 $promisor->fail($error);
-            } else {
-                $this->patternPromisors[$pattern][] = $promisor;
-                $promisor->promise()->when(function () use ($pattern) {
-                    array_shift($this->patternPromisors[$pattern]);
-                });
             }
         });
 
-        return $promisor->promise();
+        return $subscription;
+    }
+
+    private function unloadPatternPromisor(Promisor $promisor, $pattern) {
+        $hash = spl_object_hash($promisor);
+
+        if (isset($this->patternPromisors[$pattern][$hash])) {
+            unset($this->patternPromisors[$pattern][$hash]);
+
+            $promisor->succeed();
+
+            if (empty($this->patternPromisors[$pattern])) {
+                $this->pUnsubscribe($pattern);
+            }
+        }
     }
 
     /**
      * @param string|string[] $channel
      * @return Promise
      */
-    public function unsubscribe($channel = null) {
+    private function unsubscribe($channel = null) {
         if ($channel === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -259,7 +246,7 @@ class SubscribeClient {
      * @param string|string[] $pattern
      * @return Promise
      */
-    public function pUnsubscribe($pattern = null) {
+    private function pUnsubscribe($pattern = null) {
         if ($pattern === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
