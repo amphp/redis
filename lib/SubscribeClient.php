@@ -159,7 +159,7 @@ class SubscribeClient {
      */
     public function subscribe($channel) {
         $promisor = new Deferred;
-        $subscription = new Subscription($promisor, function($promisor) use ($channel) {
+        $subscription = new Subscription($promisor->promise(), function() use ($promisor, $channel) {
             $this->unloadPromisor($promisor, $channel);
         });
 
@@ -196,7 +196,7 @@ class SubscribeClient {
      */
     public function pSubscribe($pattern) {
         $promisor = new Deferred;
-        $subscription = new Subscription($promisor, function($promisor) use ($pattern) {
+        $subscription = new Subscription($promisor->promise(), function() use ($promisor, $pattern) {
             $this->unloadPatternPromisor($promisor, $pattern);
         });
 
