@@ -2,14 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\Deferred;
 use Amp\Promise;
-use Amp\Promisor;
 
 class Subscription implements Promise {
     /** @var callable */
     private $unsubscribeCallback;
-    /** @var Deferred */
+    /** @var Promise */
     private $promise;
 
     public function __construct(Promise $promise, callable $unsubscribeCallback) {
