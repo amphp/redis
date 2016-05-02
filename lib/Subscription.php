@@ -33,8 +33,4 @@ class Subscription implements Promise {
         $cb = $this->unsubscribeCallback;
         $cb();
     }
-
-    public function __destruct() {
-        $this->cancel();
-    }
 }
