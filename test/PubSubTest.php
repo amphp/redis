@@ -2,9 +2,9 @@
 
 namespace Amp\Redis;
 
-use function Amp\driver;
 use Amp\Pause;
 use Amp\PromiseStream;
+use function Amp\driver;
 use function Amp\reactor;
 use function Amp\run;
 
@@ -81,6 +81,8 @@ class PubSubTest extends RedisTest {
 
             $this->assertEquals("bar", $result1);
             $this->assertEquals("xxx", $result2);
+
+            $subscription2->cancel();
         });
     }
 
