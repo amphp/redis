@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use function Amp\driver;
+use Amp\Pause;
 use Amp\PromiseStream;
 use function Amp\reactor;
 use function Amp\run;
@@ -25,6 +26,8 @@ class PubSubTest extends RedisTest {
             $redis = new Client("tcp://127.0.0.1:25325");
 
             yield $redis->publish("foo", "bar");
+            yield new Pause(500);
+
             $subscription->cancel();
 
             $this->assertEquals("bar", $result);
@@ -66,12 +69,15 @@ class PubSubTest extends RedisTest {
             $redis = new Client("tcp://127.0.0.1:25325");
 
             yield $redis->publish("foo", "bar");
+            yield new Pause(500);
 
             $this->assertEquals("bar", $result1);
             $this->assertEquals("bar", $result2);
 
             $subscription1->cancel();
+
             yield $redis->publish("foo", "xxx");
+            yield new Pause(500);
 
             $this->assertEquals("bar", $result1);
             $this->assertEquals("xxx", $result2);
