@@ -30,6 +30,8 @@ class Connection {
     private $uri;
     /** @var int */
     private $timeout = 1000;
+    /** @var int */
+    private $persistent = 0;
     /** @var resource */
     private $socket;
     /** @var string */
@@ -90,6 +92,8 @@ class Connection {
             $this->uri = $uri;
 
             return;
+        } else {
+            $this->uri = $parts[0];
         }
 
         $query = $parts[1];
@@ -102,12 +106,15 @@ class Connection {
             if (count($keyValue) === 1) {
                 $value = true;
             } else {
-                $value = $keyValue[0];
+                $value = $keyValue[1];
             }
 
             switch ($key) {
                 case "timeout":
                     $this->timeout = (int) $value;
+                    break;
+                case "persistent":// set persistent connection
+                    $this->persistent = (int) $value;
                     break;
             }
         }
@@ -167,7 +174,7 @@ class Connection {
 
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
-        $socketPromise = connect($this->uri, ["timeout" => $this->timeout]);
+        $socketPromise = connect($this->uri, ["timeout" => $this->timeout, "persistent"=>$this->persistent]);
 
         $onWrite = function ($watcherId) {
             if ($this->outputBufferLength === 0) {
@@ -249,7 +256,7 @@ class Connection {
         $this->outputBuffer = "";
         $this->outputBufferLength = 0;
 
-        if (is_resource($this->socket)) {
+        if (!$this->persistent && is_resource($this->socket)) {
             @fclose($this->socket);
         }
 

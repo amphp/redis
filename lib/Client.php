@@ -48,7 +48,7 @@ class Client extends Redis {
         $this->applyUri($uri);
 
         $this->promisors = [];
-        $this->connection = new Connection($this->uri);
+        $this->connection = new Connection($uri);
 
         $this->connection->addEventHandler("response", function ($response) {
             $promisor = array_shift($this->promisors);
