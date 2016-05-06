@@ -30,8 +30,8 @@ class Connection {
     private $uri;
     /** @var int */
     private $timeout = 1000;
-    /** @var int */
-    private $persistent = 0;
+    /** @var bool */
+    private $persistent = false;
     /** @var resource */
     private $socket;
     /** @var string */
