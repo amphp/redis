@@ -90,6 +90,8 @@ class Connection {
             $this->uri = $uri;
 
             return;
+        } else {
+            $this->uri = $parts[0];
         }
 
         $query = $parts[1];
@@ -102,7 +104,7 @@ class Connection {
             if (count($keyValue) === 1) {
                 $value = true;
             } else {
-                $value = $keyValue[0];
+                $value = $keyValue[1];
             }
 
             switch ($key) {
