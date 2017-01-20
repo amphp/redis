@@ -3,19 +3,19 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use Amp\Promise;
-use Amp\Promisor;
-use DomainException;
+use Amp\Stream;
+use AsyncInterop\Promise;
 use Exception;
+use Amp\Emitter;
 use function Amp\all;
 
 class SubscribeClient {
-    /** @var Promisor */
+    /** @var Deferred */
     private $authPromisor;
-    /** @var Promisor[][] */
-    private $promisors;
-    /** @var Promisor[][] */
-    private $patternPromisors;
+    /** @var Emitter[][] */
+    private $emitters;
+    /** @var Emitter[][] */
+    private $patternEmitters;
     /** @var Connection */
     private $connection;
     /** @var string */
@@ -44,8 +44,8 @@ class SubscribeClient {
 
         $this->applyUri($uri);
 
-        $this->promisors = [];
-        $this->patternPromisors = [];
+        $this->emitters = [];
+        $this->patternEmitters = [];
 
         $this->connection = new Connection($this->uri);
         $this->connection->addEventHandler("response", function ($response) {
@@ -53,7 +53,7 @@ class SubscribeClient {
                 if ($response instanceof Exception) {
                     $this->authPromisor->fail($response);
                 } else {
-                    $this->authPromisor->succeed($response);
+                    $this->authPromisor->resolve($response);
                 }
 
                 $this->authPromisor = null;
@@ -63,14 +63,14 @@ class SubscribeClient {
 
             switch ($response[0]) {
                 case "message":
-                    foreach ($this->promisors[$response[1]] as $promisor) {
-                        $promisor->update($response[2]);
+                    foreach ($this->emitters[$response[1]] as $emitter) {
+                        $emitter->emit($response[2]);
                     }
 
                     break;
                 case "pmessage":
-                    foreach ($this->patternPromisors[$response[1]] as $promisor) {
-                        $promisor->update([$response[3], $response[2]]);
+                    foreach ($this->patternEmitters[$response[1]] as $emitter) {
+                        $emitter->emit([$response[3], $response[2]]);
                     }
 
                     break;
@@ -79,8 +79,8 @@ class SubscribeClient {
                         break;
                     }
 
-                    foreach ($this->promisors[$response[1]] as $promisor) {
-                        $promisor->succeed();
+                    foreach ($this->emitters[$response[1]] as $emitter) {
+                        $emitter->resolve();
                     }
 
                     break;
@@ -89,8 +89,8 @@ class SubscribeClient {
                         break;
                     }
 
-                    foreach ($this->patternPromisors[$response[1]] as $promisor) {
-                        $promisor->succeed();
+                    foreach ($this->patternEmitters[$response[1]] as $emitter) {
+                        $emitter->resolve();
                     }
 
                     break;
@@ -106,21 +106,23 @@ class SubscribeClient {
                     $this->authPromisor->fail($error);
                 }
 
-                while ($this->promisors) {
-                    $promisorGroup = array_shift($this->promisors);
+                while ($this->emitters) {
+                    /** @var Emitter[] $emitterGroup */
+                    $emitterGroup = array_shift($this->emitters);
 
-                    while ($promisorGroup) {
-                        $promisor = array_shift($promisorGroup);
-                        $promisor->fail($error);
+                    while ($emitterGroup) {
+                        $emitter = array_shift($emitterGroup);
+                        $emitter->fail($error);
                     }
                 }
 
-                while ($this->patternPromisors) {
-                    $promisorGroup = array_shift($this->patternPromisors);
+                while ($this->patternEmitters) {
+                    /** @var Emitter[] $emitterGroup */
+                    $emitterGroup = array_shift($this->patternEmitters);
 
-                    while ($promisorGroup) {
-                        $promisor = array_shift($promisorGroup);
-                        $promisor->fail($error);
+                    while ($emitterGroup) {
+                        $emitter = array_shift($emitterGroup);
+                        $emitter->fail($error);
                     }
                 }
             }
@@ -169,22 +171,22 @@ class SubscribeClient {
      * @return Promise
      */
     public function close() {
-        $promises = [];
+        $streams = [];
 
-        foreach ($this->promisors as $promisorGroup) {
-            foreach ($promisorGroup as $promisor) {
-                $promises[] = $promisor->promise();
+        foreach ($this->emitters as $emitterGroup) {
+            foreach ($emitterGroup as $emitter) {
+                $streams[] = $emitter->stream();
             }
         }
 
-        foreach ($this->patternPromisors as $promisorGroup) {
-            foreach ($promisorGroup as $promisor) {
-                $promises[] = $promisor->promise();
+        foreach ($this->patternEmitters as $emitterGroup) {
+            foreach ($emitterGroup as $emitter) {
+                $streams[] = $emitter->stream();
             }
         }
 
         /** @var Promise $promise */
-        $promise = all($promises);
+        $promise = all($streams);
 
         $promise->when(function () {
             $this->connection->close();
@@ -198,46 +200,46 @@ class SubscribeClient {
 
     /**
      * @param string $channel
-     * @return Promise
+     * @return Stream
      */
     public function subscribe($channel) {
-        $promisor = new Deferred;
+        $emitter = new Emitter();
 
         $promise = $this->connection->send(["subscribe", $channel]);
-        $promise->when(function ($error) use ($channel, $promisor) {
+        $promise->when(function ($error) use ($channel, $emitter) {
             if ($error) {
-                $promisor->fail($error);
+                $emitter->fail($error);
             } else {
-                $this->promisors[$channel][] = $promisor;
-                $promisor->promise()->when(function () use ($channel) {
-                    array_shift($this->promisors[$channel]);
+                $this->emitters[$channel][] = $emitter;
+                $emitter->stream()->when(function () use ($channel) {
+                    array_shift($this->emitters[$channel]);
                 });
             }
         });
 
-        return $promisor->promise();
+        return $emitter->stream();
     }
 
     /**
      * @param string $pattern
-     * @return Promise
+     * @return Stream
      */
     public function pSubscribe($pattern) {
-        $promisor = new Deferred;
+        $emitter = new Emitter();
 
         $promise = $this->connection->send(["psubscribe", $pattern]);
-        $promise->when(function ($error) use ($pattern, $promisor) {
+        $promise->when(function ($error) use ($pattern, $emitter) {
             if ($error) {
-                $promisor->fail($error);
+                $emitter->fail($error);
             } else {
-                $this->patternPromisors[$pattern][] = $promisor;
-                $promisor->promise()->when(function () use ($pattern) {
-                    array_shift($this->patternPromisors[$pattern]);
+                $this->patternEmitters[$pattern][] = $emitter;
+                $emitter->stream()->when(function () use ($pattern) {
+                    array_shift($this->patternEmitters[$pattern]);
                 });
             }
         });
 
-        return $promisor->promise();
+        return $emitter->stream();
     }
 
     /**

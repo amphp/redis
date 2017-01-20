@@ -3,15 +3,13 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use Amp\Promise;
-use Amp\Promisor;
+use AsyncInterop\Promise;
 use Exception;
 use function Amp\all;
 use function Amp\pipe;
-use function Amp\promises;
 
 class Client extends Redis {
-    /** @var Promisor[] */
+    /** @var Deferred[] */
     private $promisors;
     /** @var Connection */
     private $connection;
@@ -56,7 +54,7 @@ class Client extends Redis {
             if ($response instanceof Exception) {
                 $promisor->fail($response);
             } else {
-                $promisor->succeed($response);
+                $promisor->resolve($response);
             }
         });
 
@@ -134,7 +132,10 @@ class Client extends Redis {
      */
     public function close() {
         /** @var Promise $promise */
-        $promise = all(promises($this->promisors));
+        $promise = all(array_map(function (Deferred $promisor) {
+            return $promisor->promise();
+        }, $this->promisors));
+
         $promise->when(function () {
             $this->connection->close();
         });

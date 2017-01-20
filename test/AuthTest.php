@@ -2,9 +2,7 @@
 
 namespace Amp\Redis;
 
-use function Amp\driver;
-use function Amp\reactor;
-use function Amp\run;
+use AsyncInterop\Loop;
 
 class AuthTest extends \PHPUnit_Framework_TestCase {
     static function setUpBeforeClass() {
@@ -26,10 +24,10 @@ class AuthTest extends \PHPUnit_Framework_TestCase {
      * @test
      */
     function ping() {
-        reactor(driver())->run(function () {
+        Loop::execute(\Amp\wrap(function () {
             $redis = new Client("tcp://127.0.0.1:25325?password=secret");
             $this->assertEquals("PONG", (yield $redis->ping()));
             $redis->close();
-        });
+        }));
     }
 }
