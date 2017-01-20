@@ -21,13 +21,17 @@
         "issues": "https://github.com/amphp/redis/issues"
     },
     "require": {
-        "amphp/amp": "^1",
-        "amphp/socket": "^0.9"
+        "php": ">=7.0",
+        "amphp/amp": "dev-master as 2.0",
+        "amphp/socket": "dev-amp_v2 as 1.0"
     },
     "require-dev": {
+        "amphp/loop": "dev-master",
         "phpunit/phpunit": "^4.8|^5.2",
         "fabpot/php-cs-fixer": "^1.9"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\Redis\\": "lib"

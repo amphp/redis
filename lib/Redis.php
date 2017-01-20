@@ -3,9 +3,8 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use Amp\Promise;
+use AsyncInterop\Promise;
 use BadMethodCallException;
-use function Amp\reactor;
 
 /**
  * @method Deferred echo (string $text)

@@ -5,13 +5,14 @@ namespace Amp\Redis;
 use function Amp\driver;
 use function Amp\reactor;
 use function Amp\run;
+use AsyncInterop\Loop;
 
 class TransactionTest extends RedisTest {
     /**
      * @test
      */
     function success() {
-        reactor(driver())->run(function () {
+        Loop::execute(\Amp\wrap(function () {
             $_1 = new Client("tcp://127.0.0.1:25325");
             yield $_1->set("key", "1");
 
@@ -24,7 +25,7 @@ class TransactionTest extends RedisTest {
             $transaction->exec();
 
             $this->assertEquals("2", (yield $_1->get("key")));
-        });
+        }));
     }
 
     /**
@@ -32,7 +33,7 @@ class TransactionTest extends RedisTest {
      * @expectedException \Amp\Redis\RedisException
      */
     function failure() {
-        reactor(driver())->run(function () {
+        Loop::execute(\Amp\wrap(function () {
             $_1 = new Client("tcp://127.0.0.1:25325");
             $_2 = new Client("tcp://127.0.0.1:25325");
 
@@ -47,6 +48,6 @@ class TransactionTest extends RedisTest {
 
             yield $_2->set("key", "3");
             yield $transaction->exec();
-        });
+        }));
     }
 }

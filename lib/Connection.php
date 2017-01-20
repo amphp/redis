@@ -3,16 +3,11 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use Amp\Promise;
-use Amp\Promisor;
+use AsyncInterop\Loop;
+use AsyncInterop\Promise;
 use Amp\Success;
 use DomainException;
 use Exception;
-use function Amp\cancel;
-use function Amp\disable;
-use function Amp\enable;
-use function Amp\onReadable;
-use function Amp\onWritable;
 use function Amp\pipe;
 use function Amp\Socket\connect;
 
@@ -21,7 +16,7 @@ class Connection {
     const STATE_CONNECTING = 1;
     const STATE_CONNECTED = 2;
 
-    /** @var Promisor */
+    /** @var Deferred */
     private $connectPromisor;
     /** @var RespParser */
     private $parser;
@@ -151,7 +146,7 @@ class Connection {
             $this->outputBufferLength += strlen($payload);
 
             if ($this->writeWatcher !== null) {
-                enable($this->writeWatcher);
+                Loop::enable($this->writeWatcher);
             }
         });
     }
@@ -173,7 +168,7 @@ class Connection {
 
         $onWrite = function ($watcherId) {
             if ($this->outputBufferLength === 0) {
-                disable($watcherId);
+                Loop::disable($watcherId);
 
                 return;
             }
@@ -214,7 +209,7 @@ class Connection {
                 }
             }
 
-            $this->readWatcher = onReadable($this->socket, function () {
+            $this->readWatcher = Loop::onReadable($this->socket, function () {
                 $read = fread($this->socket, 8192);
 
                 if ($read != "") {
@@ -225,8 +220,8 @@ class Connection {
                 }
             });
 
-            $this->writeWatcher = onWritable($this->socket, $onWrite, ["enable" => !empty($this->outputBuffer)]);
-            $connectPromisor->succeed();
+            $this->writeWatcher = Loop::onWritable($this->socket, $onWrite, ["enable" => !empty($this->outputBuffer)]);
+            $connectPromisor->resolve();
         });
 
         return $this->connectPromisor->promise();
@@ -241,8 +236,8 @@ class Connection {
     }
 
     private function closeSocket() {
-        cancel($this->readWatcher);
-        cancel($this->writeWatcher);
+        Loop::cancel($this->readWatcher);
+        Loop::cancel($this->writeWatcher);
 
         $this->readWatcher = null;
         $this->writeWatcher = null;

@@ -54,7 +54,7 @@ class ReflectionCase extends BenchCase {
     }
 }
 
-Amp\run(function () {
+AsyncInterop\Loop::execute(function () {
     $test = new AnonymousFunctionCase;
     printf("anon function: %f\n", $test->bench());
 
