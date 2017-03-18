@@ -14,7 +14,7 @@
 **Installation**
 
 ```bash
-$ composer require amphp/redis dev-master
+$ composer require amphp/redis
 ```
 
 ## Known Bugs
@@ -22,7 +22,7 @@ $ composer require amphp/redis dev-master
 ### PubSub
 
 The following example will fail, because `subscribe` immediately assigns
-and return a promise, but `unsubscribe` will delete all promises of a given channel.
+and returns a promise, but `unsubscribe` will delete all promises of a given channel.
 
 If you have a good solution for this, please send a PR. It's considered an edge case,
 that shouldn't appear in real applications.
