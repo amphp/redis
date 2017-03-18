@@ -1,6 +1,8 @@
 <?php
 
-Amp\run(function () {
+require dirname(__DIR__) . "/vendor/autoload.php";
+
+Amp\Loop::run(function () {
     $client = new \Amp\Redis\Client("tcp://localhost:6379");
 
     yield $client->set("foo", "21");

@@ -26,7 +26,6 @@
         "amphp/socket": "dev-amp_v2 as 1.0"
     },
     "require-dev": {
-        "amphp/loop": "dev-master",
         "phpunit/phpunit": "^4.8|^5.2",
         "fabpot/php-cs-fixer": "^1.9"
     },

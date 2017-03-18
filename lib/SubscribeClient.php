@@ -4,10 +4,9 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Stream;
-use AsyncInterop\Promise;
-use Exception;
+use Amp\Promise;
 use Amp\Emitter;
-use function Amp\all;
+use Exception;
 
 class SubscribeClient {
     /** @var Deferred */
@@ -185,8 +184,7 @@ class SubscribeClient {
             }
         }
 
-        /** @var Promise $promise */
-        $promise = all($streams);
+        $promise = Promise\all($streams);
 
         $promise->when(function () {
             $this->connection->close();

@@ -3,7 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use AsyncInterop\Promise;
+use Amp\Promise;
 use BadMethodCallException;
 
 /**

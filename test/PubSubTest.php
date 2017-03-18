@@ -2,17 +2,14 @@
 
 namespace Amp\Redis;
 
-use function Amp\driver;
-use function Amp\reactor;
-use function Amp\run;
-use AsyncInterop\Loop;
+use Amp\Loop;
 
 class PubSubTest extends RedisTest {
     /**
      * @test
      */
     function basic() {
-        Loop::execute(\Amp\wrap(function () {
+        Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
             $promise = $subscriber->subscribe("foo");
 
@@ -28,6 +25,6 @@ class PubSubTest extends RedisTest {
             yield $subscriber->unsubscribe("foo");
 
             $this->assertEquals("bar", $result);
-        }));
+        });
     }
 }

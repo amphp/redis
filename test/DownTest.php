@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use AsyncInterop\Loop;
+use Amp\Loop;
 
 class DownTest extends \PHPUnit_Framework_TestCase {
     /**
@@ -10,9 +10,9 @@ class DownTest extends \PHPUnit_Framework_TestCase {
      * @expectedException \Amp\Redis\ConnectException
      */
     function ping() {
-        Loop::execute(\Amp\wrap(function () {
+        Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             yield $redis->ping();
-        }));
+        });
     }
 }

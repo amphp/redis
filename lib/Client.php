@@ -3,10 +3,8 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use AsyncInterop\Promise;
+use Amp\Promise;
 use Exception;
-use function Amp\all;
-use function Amp\pipe;
 
 class Client extends Redis {
     /** @var Deferred[] */
@@ -131,8 +129,7 @@ class Client extends Redis {
      * @return Promise
      */
     public function close() {
-        /** @var Promise $promise */
-        $promise = all(array_map(function (Deferred $promisor) {
+        $promise = Promise\all(array_map(function (Deferred $promisor) {
             return $promisor->promise();
         }, $this->promisors));
 
@@ -154,7 +151,7 @@ class Client extends Redis {
         $this->promisors[] = $promisor;
 
         return $transform
-            ? pipe($promisor->promise(), $transform)
+            ? Promise\pipe($promisor->promise(), $transform)
             : $promisor->promise();
     }
 

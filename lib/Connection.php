@@ -3,12 +3,11 @@
 namespace Amp\Redis;
 
 use Amp\Deferred;
-use AsyncInterop\Loop;
-use AsyncInterop\Promise;
+use Amp\Loop;
+use Amp\Promise;
 use Amp\Success;
 use DomainException;
 use Exception;
-use function Amp\pipe;
 use function Amp\Socket\connect;
 
 class Connection {
@@ -133,7 +132,7 @@ class Connection {
             }
         }
 
-        return pipe($this->connect(), function () use ($strings) {
+        return Promise\pipe($this->connect(), function () use ($strings) {
             $payload = "";
 
             foreach ($strings as $string) {
@@ -236,8 +235,12 @@ class Connection {
     }
 
     private function closeSocket() {
-        Loop::cancel($this->readWatcher);
-        Loop::cancel($this->writeWatcher);
+        if ($this->readWatcher) {
+            Loop::cancel($this->readWatcher);
+        }
+        if ($this->writeWatcher) {
+            Loop::cancel($this->writeWatcher);
+        }
 
         $this->readWatcher = null;
         $this->writeWatcher = null;
