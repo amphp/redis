@@ -4,7 +4,7 @@ require __DIR__ . "/../vendor/autoload.php";
 
 Amp\Loop::run(function () {
     $pushClient = new Amp\Redis\Client("tcp://localhost:6379");
-    $pushClient->blpop("foobar-list")->when(function ($error, $value) {
+    $pushClient->blpop("foobar-list")->onResolve(function ($error, $value) {
         if ($error) {
             print "Error: " . $error->getMessage() . PHP_EOL;
         } else {
