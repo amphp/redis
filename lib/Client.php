@@ -133,7 +133,7 @@ class Client extends Redis {
             return $promisor->promise();
         }, $this->promisors));
 
-        $promise->when(function () {
+        $promise->onResolve(function () {
             $this->connection->close();
         });
 

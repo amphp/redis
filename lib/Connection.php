@@ -183,7 +183,7 @@ class Connection {
             }
         };
 
-        $socketPromise->when(function ($error, $socket) use ($onWrite) {
+        $socketPromise->onResolve(function ($error, $socket) use ($onWrite) {
             $connectPromisor = $this->connectPromisor;
             $this->connectPromisor = null;
 

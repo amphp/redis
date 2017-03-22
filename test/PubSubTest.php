@@ -15,7 +15,7 @@ class PubSubTest extends RedisTest {
 
             $result = null;
 
-            $promise->listen(function ($response) use (&$result) {
+            $promise->onEmit(function ($response) use (&$result) {
                 $result = $response;
             });
 

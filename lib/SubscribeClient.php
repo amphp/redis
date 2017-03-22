@@ -186,7 +186,7 @@ class SubscribeClient {
 
         $promise = Promise\all($streams);
 
-        $promise->when(function () {
+        $promise->onResolve(function () {
             $this->connection->close();
         });
 
@@ -204,12 +204,12 @@ class SubscribeClient {
         $emitter = new Emitter();
 
         $promise = $this->connection->send(["subscribe", $channel]);
-        $promise->when(function ($error) use ($channel, $emitter) {
+        $promise->onResolve(function ($error) use ($channel, $emitter) {
             if ($error) {
                 $emitter->fail($error);
             } else {
                 $this->emitters[$channel][] = $emitter;
-                $emitter->stream()->when(function () use ($channel) {
+                $emitter->stream()->onResolve(function () use ($channel) {
                     array_shift($this->emitters[$channel]);
                 });
             }
@@ -226,12 +226,12 @@ class SubscribeClient {
         $emitter = new Emitter();
 
         $promise = $this->connection->send(["psubscribe", $pattern]);
-        $promise->when(function ($error) use ($pattern, $emitter) {
+        $promise->onResolve(function ($error) use ($pattern, $emitter) {
             if ($error) {
                 $emitter->fail($error);
             } else {
                 $this->patternEmitters[$pattern][] = $emitter;
-                $emitter->stream()->when(function () use ($pattern) {
+                $emitter->stream()->onResolve(function () use ($pattern) {
                     array_shift($this->patternEmitters[$pattern]);
                 });
             }
