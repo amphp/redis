@@ -26,7 +26,7 @@
         "amphp/socket": "dev-amp_v2 as 1.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^4.8|^5.2",
+        "phpunit/phpunit": "^6.0",
         "friendsofphp/php-cs-fixer": "^1.9"
     },
     "minimum-stability": "dev",

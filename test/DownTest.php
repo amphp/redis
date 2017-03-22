@@ -3,8 +3,9 @@
 namespace Amp\Redis;
 
 use Amp\Loop;
+use PHPUnit\Framework\TestCase;
 
-class DownTest extends \PHPUnit_Framework_TestCase {
+class DownTest extends TestCase {
     /**
      * @test
      * @expectedException \Amp\Redis\ConnectException

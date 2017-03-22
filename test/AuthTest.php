@@ -3,8 +3,9 @@
 namespace Amp\Redis;
 
 use Amp\Loop;
+use PHPUnit\Framework\TestCase;
 
-class AuthTest extends \PHPUnit_Framework_TestCase {
+class AuthTest extends TestCase {
     static function setUpBeforeClass() {
         print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret`;
         sleep(2);

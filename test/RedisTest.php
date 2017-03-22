@@ -2,7 +2,9 @@
 
 namespace Amp\Redis;
 
-abstract class RedisTest extends \PHPUnit_Framework_TestCase {
+use PHPUnit\Framework\TestCase;
+
+abstract class RedisTest extends TestCase {
     static function setUpBeforeClass() {
         print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid`;
         sleep(2);
