@@ -5,10 +5,10 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Loop;
 use Amp\Promise;
+use function Amp\Socket\rawConnect;
 use Amp\Success;
 use DomainException;
 use Exception;
-use function Amp\Socket\connect;
 
 class Connection {
     const STATE_DISCONNECTED = 0;
@@ -163,7 +163,7 @@ class Connection {
 
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
-        $socketPromise = connect($this->uri, ["timeout" => $this->timeout]);
+        $socketPromise = rawConnect($this->uri, ["timeout" => $this->timeout]);
 
         $onWrite = function ($watcherId) {
             if ($this->outputBufferLength === 0) {
