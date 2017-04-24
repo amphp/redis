@@ -189,9 +189,11 @@ class Connection {
 
             if ($error) {
                 $this->state = self::STATE_DISCONNECTED;
-                $connectPromisor->fail(new ConnectException(
+                $connectException = new ConnectException(
                     "Connection attempt failed", $code = 0, $error
-                ));
+                );
+                $this->onError($connectException);
+                $connectPromisor->fail($connectException);
 
                 return;
             }
