@@ -12,7 +12,7 @@ matrix:
     - php: nightly
   fast_finish: true
 
-after_script:
+install:
   - php vendor/bin/coveralls -v
 
   # --ignore-platform-reqs, because https://github.com/FriendsOfPHP/PHP-CS-Fixer/pull/2722
