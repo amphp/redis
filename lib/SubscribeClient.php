@@ -2,11 +2,11 @@
 
 namespace Amp\Redis;
 
-use function Amp\call;
 use Amp\Deferred;
 use Amp\Emitter;
 use Amp\Promise;
 use Exception;
+use function Amp\call;
 
 class SubscribeClient {
     /** @var Deferred */

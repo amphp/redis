@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Deferred;
+use Amp\Promise;
 use Amp\Success;
 use DomainException;
 
@@ -20,8 +20,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Deferred
-     * @yield string
+     * @return Promise
      */
     public function discard() {
         $this->commands = [];
@@ -34,17 +33,16 @@ class Transaction extends Redis {
     public function send(array $strings, callable $transform = null) {
         if (!$this->inTransaction) {
             return $this->client->send($strings, $transform);
-        } else {
-            $this->commands[] = $strings;
-            $this->transforms[] = $transform;
-
-            return new Success($this);
         }
+
+        $this->commands[] = $strings;
+        $this->transforms[] = $transform;
+
+        return new Success($this);
     }
 
     /**
-     * @return Deferred
-     * @yield string
+     * @return Promise
      */
     public function exec() {
         // sending happens sync here, no need to concatenate these strings before
@@ -76,8 +74,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Deferred
-     * @yield string
+     * @return Promise
      */
     public function multi() {
         if ($this->inTransaction) {
@@ -90,8 +87,7 @@ class Transaction extends Redis {
     }
 
     /**
-     * @return Deferred
-     * @yield string
+     * @return Promise
      */
     public function unwatch() {
         return $this->send(["unwatch"]);
@@ -100,8 +96,8 @@ class Transaction extends Redis {
     /**
      * @param string|string[] $key
      * @param string          ...$keys
-     * @return Deferred
-     * @yield string
+     *
+     * @return Promise
      */
     public function watch($key, ...$keys) {
         return $this->send(array_merge(["watch"], (array) $key, $keys));

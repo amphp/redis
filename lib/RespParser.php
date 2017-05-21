@@ -64,7 +64,7 @@ class RespParser {
                     break;
 
                 default:
-                    throw new ParserException (
+                    throw new ParserException(
                         sprintf("unknown resp data type: %s", $type)
                     );
             }
@@ -115,11 +115,11 @@ class RespParser {
                     $this->currentSize = array_pop($this->arraySizes);
                     unset($this->arrayStack[$key]);
                 }
-            } else if ($type === self::TYPE_ARRAY) { // start new array response
+            } elseif ($type === self::TYPE_ARRAY) { // start new array response
                 if ($payload > 0) {
                     $this->currentSize = $payload;
                     $this->arrayStack = $this->arraySizes = $this->currentResponse = [];
-                } else if ($payload === 0) {
+                } elseif ($payload === 0) {
                     $cb = $this->responseCallback;
                     $cb([]);
                 } else {

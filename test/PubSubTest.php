@@ -9,7 +9,7 @@ class PubSubTest extends RedisTest {
     /**
      * @test
      */
-    function basic() {
+    public function basic() {
         Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
 

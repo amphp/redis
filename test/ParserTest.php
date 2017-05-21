@@ -8,7 +8,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function bulkString() {
+    public function bulkString() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -21,7 +21,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function integer() {
+    public function integer() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -34,7 +34,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function simpleString() {
+    public function simpleString() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -47,7 +47,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function error() {
+    public function error() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -60,20 +60,20 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function stringNull() {
+    public function stringNull() {
         $result = false;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("$-1\r\n");
 
-        $this->assertSame(null, $result);
+        $this->assertNull($result);
     }
 
     /**
      * @test
      */
-    function pipeline() {
+    public function pipeline() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -86,7 +86,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function latency() {
+    public function latency() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -102,20 +102,20 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function arrayNull() {
+    public function arrayNull() {
         $result = false;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*-1\r\n");
 
-        $this->assertSame(null, $result);
+        $this->assertNull($result);
     }
 
     /**
      * @test
      */
-    function arrayEmpty() {
+    public function arrayEmpty() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -128,7 +128,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function arraySingle() {
+    public function arraySingle() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -141,7 +141,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function arrayMultiple() {
+    public function arrayMultiple() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -154,7 +154,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function arrayComplex() {
+    public function arrayComplex() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -167,7 +167,7 @@ class ParserTest extends TestCase {
     /**
      * @test
      */
-    function arrayInnerEmpty() {
+    public function arrayInnerEmpty() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -181,7 +181,7 @@ class ParserTest extends TestCase {
      * @test
      * @see https://github.com/amphp/redis/commit/a495189735412c8962b219b6633685ddca84040c
      */
-    function arrayPipeline() {
+    public function arrayPipeline() {
         $result = null;
         $parser = new RespParser(function ($resp) use (&$result) {
             $result = $resp;
@@ -195,7 +195,7 @@ class ParserTest extends TestCase {
      * @test
      * @expectedException \Amp\Redis\ParserException
      */
-    function unknownType() {
+    public function unknownType() {
         $parser = new RespParser(function ($resp) {
         });
         $parser->append("3$\r\nfoo\r\n");

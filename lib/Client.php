@@ -2,10 +2,10 @@
 
 namespace Amp\Redis;
 
-use function Amp\call;
 use Amp\Deferred;
 use Amp\Promise;
 use Exception;
+use function Amp\call;
 
 class Client extends Redis {
     /** @var Deferred[] */

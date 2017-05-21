@@ -30,7 +30,7 @@ abstract class Redis {
         return $this->send(array_merge(["del"], (array) $key, $keys));
     }
 
-    protected abstract function send(array $strings, callable $transform = null);
+    abstract protected function send(array $strings, callable $transform = null);
 
     /**
      * @param string $key
@@ -339,9 +339,9 @@ abstract class Redis {
     public function decr($key, $decrement = 1) {
         if ($decrement === 1) {
             return $this->send(["decr", $key]);
-        } else {
-            return $this->send(["decrby", $key, $decrement]);
         }
+
+        return $this->send(["decrby", $key, $decrement]);
     }
 
     /**
@@ -393,9 +393,9 @@ abstract class Redis {
     public function incr($key, $increment = 1) {
         if ($increment === 1) {
             return $this->send(["incr", $key]);
-        } else {
-            return $this->send(["incrby", $key, $increment]);
         }
+
+        return $this->send(["incrby", $key, $increment]);
     }
 
     /**
@@ -1195,9 +1195,9 @@ abstract class Redis {
                 }
 
                 return $result;
-            } else {
-                return $response;
             }
+
+            return $response;
         });
     }
 
@@ -1312,9 +1312,9 @@ abstract class Redis {
                 }
 
                 return $result;
-            } else {
-                return $response;
             }
+
+            return $response;
         });
     }
 
@@ -1857,9 +1857,9 @@ abstract class Redis {
                 }
 
                 return $result;
-            } else {
-                return $response;
             }
+
+            return $response;
         });
     }
 

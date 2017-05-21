@@ -2,13 +2,13 @@
 
 namespace Amp\Redis;
 
-use function Amp\call;
 use Amp\Deferred;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 use DomainException;
 use Exception;
+use function Amp\call;
 use function Amp\Socket\rawConnect;
 
 class Connection {
@@ -85,9 +85,9 @@ class Connection {
             $this->uri = $uri;
 
             return;
-        } else {
-            $this->uri = $parts[0];
         }
+
+        $this->uri = $parts[0];
 
         $query = $parts[1];
         $params = explode("&", $query);
@@ -246,7 +246,7 @@ class Connection {
         if ($idle) {
             Loop::unreference($this->readWatcher);
             Loop::unreference($this->writeWatcher);
-        } else if ($this->readWatcher !== null) {
+        } elseif ($this->readWatcher !== null) {
             Loop::reference($this->readWatcher);
             Loop::reference($this->writeWatcher);
         }

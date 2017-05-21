@@ -9,7 +9,7 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
-    function connect() {
+    public function connect() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $this->assertEquals("PONG", (yield $redis->ping()));
@@ -19,7 +19,7 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
-    function longPayload() {
+    public function longPayload() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $payload = str_repeat("a", 6000000);
@@ -32,7 +32,7 @@ class BasicTest extends RedisTest {
      * @test
      * @expectedException \InvalidArgumentException
      */
-    function acceptsOnlyScalars() {
+    public function acceptsOnlyScalars() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $redis->set("foobar", ["abc"]);
@@ -42,7 +42,7 @@ class BasicTest extends RedisTest {
     /**
      * @test
      */
-    function multiCommand() {
+    public function multiCommand() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $redis->echo("1");
@@ -54,7 +54,7 @@ class BasicTest extends RedisTest {
      * @test
      * @medium
      */
-    function timeout() {
+    public function timeout() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             yield $redis->echo("1");
