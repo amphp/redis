@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\Delayed;
 use Amp\Iterator;
 use Amp\Loop;
 
@@ -25,6 +26,7 @@ class PubSubTest extends RedisTest {
             $redis = new Client("tcp://127.0.0.1:25325");
 
             yield $redis->publish("foo", "bar");
+            yield new Delayed(1000);
             yield $subscriber->unsubscribe("foo");
 
             $this->assertEquals("bar", $result);
