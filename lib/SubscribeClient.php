@@ -2,60 +2,47 @@
 
 namespace Amp\Redis;
 
+use function Amp\call;
 use Amp\Deferred;
-use Amp\Stream;
-use Amp\Promise;
 use Amp\Emitter;
+use Amp\Promise;
 use Exception;
 
 class SubscribeClient {
     /** @var Deferred */
-    private $authPromisor;
+    private $authDeferred;
+
     /** @var Emitter[][] */
-    private $emitters;
+    private $emitters = [];
+
     /** @var Emitter[][] */
-    private $patternEmitters;
+    private $patternEmitters = [];
+
     /** @var Connection */
     private $connection;
+
     /** @var string */
     private $uri;
+
     /** @var string */
     private $password;
 
     /**
      * @param string $uri
-     * @param array  $options
      */
-    public function __construct($uri, array $options = null) {
-        if (is_array($options) || func_num_args() === 2) {
-            trigger_error(
-                "Using the options array is deprecated and will be removed in the next version. " .
-                "Please use the URI to pass options like that: tcp://localhost:6379?database=3&password=abc",
-                E_USER_DEPRECATED
-            );
-
-            $options = $options ?: [];
-
-            if (isset($options["password"])) {
-                $this->password = $options["password"];
-            }
-        }
-
+    public function __construct($uri) {
         $this->applyUri($uri);
-
-        $this->emitters = [];
-        $this->patternEmitters = [];
 
         $this->connection = new Connection($this->uri);
         $this->connection->addEventHandler("response", function ($response) {
-            if ($this->authPromisor) {
+            if ($this->authDeferred) {
                 if ($response instanceof Exception) {
-                    $this->authPromisor->fail($response);
+                    $this->authDeferred->fail($response);
                 } else {
-                    $this->authPromisor->resolve($response);
+                    $this->authDeferred->resolve($response);
                 }
 
-                $this->authPromisor = null;
+                $this->authDeferred = null;
 
                 return;
             }
@@ -67,32 +54,14 @@ class SubscribeClient {
                     }
 
                     break;
+
                 case "pmessage":
                     foreach ($this->patternEmitters[$response[1]] as $emitter) {
                         $emitter->emit([$response[3], $response[2]]);
                     }
 
                     break;
-                case "unsubscribe":
-                    if ($response[1] === null) {
-                        break;
-                    }
 
-                    foreach ($this->emitters[$response[1]] as $emitter) {
-                        $emitter->resolve();
-                    }
-
-                    break;
-                case "punsubscribe":
-                    if ($response[1] === null) {
-                        break;
-                    }
-
-                    foreach ($this->patternEmitters[$response[1]] as $emitter) {
-                        $emitter->resolve();
-                    }
-
-                    break;
                 default:
                     break;
             }
@@ -101,8 +70,8 @@ class SubscribeClient {
         $this->connection->addEventHandler("error", function ($error) {
             if ($error) {
                 // Fail any outstanding promises
-                if ($this->authPromisor) {
-                    $this->authPromisor->fail($error);
+                if ($this->authDeferred) {
+                    $this->authDeferred->fail($error);
                 }
 
                 while ($this->emitters) {
@@ -130,7 +99,7 @@ class SubscribeClient {
         if (!empty($this->password)) {
             $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it here
-                $this->authPromisor = new Deferred;
+                $this->authDeferred = new Deferred;
 
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
             });
@@ -166,82 +135,45 @@ class SubscribeClient {
         }
     }
 
-    /**
-     * @return Promise
-     */
     public function close() {
-        $streams = [];
-
-        foreach ($this->emitters as $emitterGroup) {
-            foreach ($emitterGroup as $emitter) {
-                $streams[] = $emitter->stream();
-            }
-        }
-
-        foreach ($this->patternEmitters as $emitterGroup) {
-            foreach ($emitterGroup as $emitter) {
-                $streams[] = $emitter->stream();
-            }
-        }
-
-        $promise = Promise\all($streams);
-
-        $promise->onResolve(function () {
-            $this->connection->close();
-        });
-
-        $this->unsubscribe();
-        $this->pUnsubscribe();
-
-        return $promise;
+        $this->connection->close();
     }
 
     /**
      * @param string $channel
-     * @return Stream
+     *
+     * @return Promise
      */
     public function subscribe($channel) {
-        $emitter = new Emitter();
+        return call(function () use ($channel) {
+            yield $this->connection->send(["subscribe", $channel]);
 
-        $promise = $this->connection->send(["subscribe", $channel]);
-        $promise->onResolve(function ($error) use ($channel, $emitter) {
-            if ($error) {
-                $emitter->fail($error);
-            } else {
-                $this->emitters[$channel][] = $emitter;
-                $emitter->stream()->onResolve(function () use ($channel) {
-                    array_shift($this->emitters[$channel]);
-                });
-            }
+            $emitter = new Emitter;
+            $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
+
+            return $emitter->iterate();
         });
-
-        return $emitter->stream();
     }
 
     /**
      * @param string $pattern
-     * @return Stream
+     *
+     * @return Promise
      */
     public function pSubscribe($pattern) {
-        $emitter = new Emitter();
+        return call(function () use ($pattern) {
+            yield $this->connection->send(["psubscribe", $pattern]);
 
-        $promise = $this->connection->send(["psubscribe", $pattern]);
-        $promise->onResolve(function ($error) use ($pattern, $emitter) {
-            if ($error) {
-                $emitter->fail($error);
-            } else {
-                $this->patternEmitters[$pattern][] = $emitter;
-                $emitter->stream()->onResolve(function () use ($pattern) {
-                    array_shift($this->patternEmitters[$pattern]);
-                });
-            }
+            $emitter = new Emitter;
+            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+
+            return $emitter->iterate();
         });
-
-        return $emitter->stream();
     }
 
     /**
      * @param string|string[] $channel
+     *
      * @return Promise
      */
     public function unsubscribe($channel = null) {
@@ -257,6 +189,7 @@ class SubscribeClient {
 
     /**
      * @param string|string[] $pattern
+     *
      * @return Promise
      */
     public function pUnsubscribe($pattern = null) {

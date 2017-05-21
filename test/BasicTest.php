@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Pause;
+use Amp\Delayed;
 use Amp\Loop;
 
 class BasicTest extends RedisTest {
@@ -58,7 +58,7 @@ class BasicTest extends RedisTest {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             yield $redis->echo("1");
-            yield new Pause(8000);
+            yield new Delayed(8000);
             $this->assertEquals("2", (yield $redis->echo("2")));
         });
     }

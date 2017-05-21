@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\Iterator;
 use Amp\Loop;
 
 class PubSubTest extends RedisTest {
@@ -11,12 +12,14 @@ class PubSubTest extends RedisTest {
     function basic() {
         Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
-            $promise = $subscriber->subscribe("foo");
+
+            /** @var Iterator $iterator */
+            $iterator = yield $subscriber->subscribe("foo");
 
             $result = null;
 
-            $promise->onEmit(function ($response) use (&$result) {
-                $result = $response;
+            $iterator->advance()->onResolve(function () use (&$result, $iterator) {
+                $result = $iterator->getCurrent();
             });
 
             $redis = new Client("tcp://127.0.0.1:25325");

@@ -2,13 +2,14 @@
 
 namespace Amp\Redis;
 
+use function Amp\call;
 use Amp\Deferred;
 use Amp\Loop;
 use Amp\Promise;
-use function Amp\Socket\rawConnect;
 use Amp\Success;
 use DomainException;
 use Exception;
+use function Amp\Socket\rawConnect;
 
 class Connection {
     const STATE_DISCONNECTED = 0;
@@ -123,6 +124,7 @@ class Connection {
 
     /**
      * @param array $strings
+     *
      * @return Promise
      */
     public function send(array $strings) {
@@ -132,7 +134,11 @@ class Connection {
             }
         }
 
-        return Promise\pipe($this->connect(), function () use ($strings) {
+        return call(function () use ($strings) {
+            $this->setIdle(false);
+
+            yield $this->connect();
+
             $payload = "";
 
             foreach ($strings as $string) {
@@ -234,6 +240,16 @@ class Connection {
         }
 
         $this->closeSocket();
+    }
+
+    public function setIdle(bool $idle) {
+        if ($idle) {
+            Loop::unreference($this->readWatcher);
+            Loop::unreference($this->writeWatcher);
+        } else if ($this->readWatcher !== null) {
+            Loop::reference($this->readWatcher);
+            Loop::reference($this->writeWatcher);
+        }
     }
 
     private function closeSocket() {

@@ -10,4 +10,7 @@
             <directory>lib</directory>
         </whitelist>
     </filter>
+    <listeners>
+        <listener class="Amp\PHPUnit\LoopReset"/>
+    </listeners>
 </phpunit>
