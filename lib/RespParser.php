@@ -26,7 +26,7 @@ class RespParser {
         $this->currentResponse = $this->arrayStack = $this->currentSize = $this->arraySizes = null;
     }
 
-    public function append($str) {
+    public function append(string $str) {
         $this->buffer .= $str;
 
         do {

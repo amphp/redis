@@ -28,7 +28,7 @@ class SubscribeClient {
     /**
      * @param string $uri
      */
-    public function __construct($uri) {
+    public function __construct(string $uri) {
         $this->applyUri($uri);
 
         $this->connection = new Connection($uri);
@@ -196,7 +196,7 @@ class SubscribeClient {
         }
     }
 
-    private function pUnsubscribe($pattern = null) {
+    private function pUnsubscribe(string $pattern = null) {
         if ($pattern === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -207,7 +207,7 @@ class SubscribeClient {
         return $this->connection->send(["punsubscribe", $pattern]);
     }
 
-    public function getConnectionState() {
+    public function getConnectionState(): int {
         return $this->connection->getState();
     }
 }

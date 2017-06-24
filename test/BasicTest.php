@@ -35,7 +35,7 @@ class BasicTest extends RedisTest {
     public function acceptsOnlyScalars() {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
-            $redis->set("foobar", ["abc"]);
+            yield $redis->set("foobar", ["abc"]);
         });
     }
 

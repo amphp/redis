@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use function Amp\asyncCall;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Socket\ClientConnectContext;
@@ -10,6 +9,7 @@ use Amp\Socket\Socket;
 use Amp\Success;
 use Amp\Uri\InvalidUriException;
 use Amp\Uri\Uri;
+use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
 
@@ -47,7 +47,7 @@ class Connection {
             throw new InvalidUriException("URI must start with tcp:// or unix://");
         }
 
-        $this->parseUri($uri);
+        $this->applyUri($uri);
 
         $this->state = self::STATE_DISCONNECTED;
 
@@ -65,7 +65,7 @@ class Connection {
         });
     }
 
-    private function parseUri($uri) {
+    private function applyUri(string $uri) {
         $uri = new Uri($uri);
 
         if ($uri->getScheme() === "tcp") {
@@ -94,7 +94,7 @@ class Connection {
      *
      * @return Promise
      */
-    public function send(array $strings) {
+    public function send(array $strings): Promise {
         foreach ($strings as $string) {
             if (!is_scalar($string)) {
                 throw new \TypeError("All elements must be of type string or scalar and convertible to a string.");
@@ -115,7 +115,7 @@ class Connection {
         });
     }
 
-    private function connect() {
+    private function connect(): Promise {
         // If we're in the process of connecting already return that same promise
         if ($this->connectPromisor) {
             return $this->connectPromisor->promise();
@@ -171,11 +171,13 @@ class Connection {
     }
 
     private function onError(\Throwable $exception) {
-        foreach ($this->handlers["error"] as $handler) {
-            $handler($exception);
+        try {
+            foreach ($this->handlers["error"] as $handler) {
+                $handler($exception);
+            }
+        } finally {
+            $this->close();
         }
-
-        $this->close();
     }
 
     public function setIdle(bool $idle) {
@@ -205,7 +207,7 @@ class Connection {
         $this->state = self::STATE_DISCONNECTED;
     }
 
-    public function getState() {
+    public function getState(): int {
         return $this->state;
     }
 

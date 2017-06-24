@@ -24,7 +24,7 @@ class Client extends Redis {
     /**
      * @param string $uri
      */
-    public function __construct($uri) {
+    public function __construct(string $uri) {
         $this->applyUri($uri);
 
         $this->deferreds = [];
@@ -83,14 +83,14 @@ class Client extends Redis {
     /**
      * @return Transaction
      */
-    public function transaction() {
+    public function transaction(): Transaction {
         return new Transaction($this);
     }
 
     /**
      * @return Promise
      */
-    public function close() {
+    public function close(): Promise {
         $promise = Promise\all(array_map(function (Deferred $deferred) {
             return $deferred->promise();
         }, $this->deferreds));
@@ -108,21 +108,21 @@ class Client extends Redis {
      *
      * @return Promise
      */
-    protected function send(array $args, callable $transform = null) {
-        $promisor = new Deferred;
-        $this->connection->send($args);
-        $this->deferreds[] = $promisor;
+    protected function send(array $args, callable $transform = null): Promise {
+        return call(function () use ($args, $transform) {
+            $deferred = new Deferred;
+            $promise = $deferred->promise();
 
-        if ($transform) {
-            return call(function () use ($promisor, $transform) {
-                return $transform(yield $promisor->promise());
-            });
-        }
+            $this->deferreds[] = $deferred;
 
-        return $promisor->promise();
+            yield $this->connection->send($args);
+            $response = yield $promise;
+
+            return $transform ? $transform($response) : $response;
+        });
     }
 
-    public function getConnectionState() {
+    public function getConnectionState(): int {
         return $this->connection->getState();
     }
 }
