@@ -22,6 +22,7 @@
     "require": {
         "php": ">=7.0",
         "amphp/amp": "^2",
+        "amphp/cache": "^1",
         "amphp/socket": "^0.10"
     },
     "require-dev": {
