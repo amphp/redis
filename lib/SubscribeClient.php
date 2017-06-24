@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Emitter;
 use Amp\Promise;
+use Amp\Uri\Uri;
 use Exception;
 use function Amp\call;
 
@@ -22,9 +23,6 @@ class SubscribeClient {
     private $connection;
 
     /** @var string */
-    private $uri;
-
-    /** @var string */
     private $password;
 
     /**
@@ -33,7 +31,7 @@ class SubscribeClient {
     public function __construct($uri) {
         $this->applyUri($uri);
 
-        $this->connection = new Connection($this->uri);
+        $this->connection = new Connection($uri);
         $this->connection->addEventHandler("response", function ($response) {
             if ($this->authDeferred) {
                 if ($response instanceof Exception) {
@@ -60,9 +58,6 @@ class SubscribeClient {
                         $emitter->emit([$response[3], $response[2]]);
                     }
 
-                    break;
-
-                default:
                     break;
             }
         });
@@ -106,33 +101,10 @@ class SubscribeClient {
         }
     }
 
-    private function applyUri($uri) {
-        $parts = explode("?", $uri, 2);
-        $this->uri = $parts[0];
+    private function applyUri(string $uri) {
+        $uri = new Uri($uri);
 
-        if (count($parts) === 1) {
-            return;
-        }
-
-        $query = $parts[1];
-        $params = explode("&", $query);
-
-        foreach ($params as $param) {
-            $keyValue = explode("=", $param, 2);
-            $key = urldecode($keyValue[0]);
-
-            if (count($keyValue) === 1) {
-                $value = true;
-            } else {
-                $value = urldecode($keyValue[1]);
-            }
-
-            switch ($key) {
-                case "password":
-                    $this->password = $value;
-                    break;
-            }
-        }
+        $this->password = $uri->getQueryParameter("password") ?? null;
     }
 
     public function close() {
@@ -142,41 +114,41 @@ class SubscribeClient {
     /**
      * @param string $channel
      *
-     * @return Promise
+     * @return Promise<Subscription>
      */
-    public function subscribe($channel) {
+    public function subscribe(string $channel): Promise {
         return call(function () use ($channel) {
             yield $this->connection->send(["subscribe", $channel]);
 
             $emitter = new Emitter;
             $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
 
-            return $emitter->iterate();
+            return new Subscription($emitter->iterate(), function () use ($emitter, $channel) {
+                $this->unloadEmitter($emitter, $channel);
+            });
         });
     }
 
-    /**
-     * @param string $pattern
-     *
-     * @return Promise
-     */
-    public function pSubscribe($pattern) {
-        return call(function () use ($pattern) {
-            yield $this->connection->send(["psubscribe", $pattern]);
+    private function unloadEmitter(Emitter $emitter, string $channel) {
+        $hash = \spl_object_hash($emitter);
 
-            $emitter = new Emitter;
-            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+        if (isset($this->emitters[$channel][$hash])) {
+            unset($this->emitters[$channel][$hash]);
 
-            return $emitter->iterate();
-        });
+            $emitter->complete();
+
+            if (empty($this->emitters[$channel])) {
+                unset($this->emitters[$channel]);
+                $this->unsubscribe($channel);
+
+                if (!$this->emitters && !$this->patternEmitters) {
+                    $this->connection->setIdle(true);
+                }
+            }
+        }
     }
 
-    /**
-     * @param string|string[] $channel
-     *
-     * @return Promise
-     */
-    public function unsubscribe($channel = null) {
+    private function unsubscribe(string $channel = null): Promise {
         if ($channel === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -188,11 +160,43 @@ class SubscribeClient {
     }
 
     /**
-     * @param string|string[] $pattern
+     * @param string $pattern
      *
-     * @return Promise
+     * @return Promise<Subscription>
      */
-    public function pUnsubscribe($pattern = null) {
+    public function pSubscribe(string $pattern) {
+        return call(function () use ($pattern) {
+            yield $this->connection->send(["psubscribe", $pattern]);
+
+            $emitter = new Emitter;
+            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+
+            return new Subscription($emitter->iterate(), function () use ($emitter, $pattern) {
+                $this->unloadPatternEmitter($emitter, $pattern);
+            });
+        });
+    }
+
+    private function unloadPatternEmitter(Emitter $emitter, string $pattern) {
+        $hash = \spl_object_hash($emitter);
+
+        if (isset($this->patternEmitters[$pattern][$hash])) {
+            unset($this->patternEmitters[$pattern][$hash]);
+
+            $emitter->complete();
+
+            if (empty($this->patternEmitters[$pattern])) {
+                unset($this->patternEmitters[$pattern]);
+                $this->pUnsubscribe($pattern);
+
+                if (!$this->emitters && !$this->patternEmitters) {
+                    $this->connection->setIdle(true);
+                }
+            }
+        }
+    }
+
+    private function pUnsubscribe($pattern = null) {
         if ($pattern === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
