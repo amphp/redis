@@ -30,7 +30,7 @@ class BasicTest extends RedisTest {
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
+     * @expectedException \TypeError
      */
     public function acceptsOnlyScalars() {
         Loop::run(function () {

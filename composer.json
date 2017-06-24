@@ -1,6 +1,6 @@
 {
     "name": "amphp/redis",
-    "description": "Async Redis client.",
+    "description": "A non-blocking Redis client for Amp.",
     "keywords": [
         "amp",
         "amphp",
@@ -21,16 +21,14 @@
     },
     "require": {
         "php": ">=7.0",
-        "amphp/amp": "dev-master as 2.0",
-        "amphp/socket": "dev-amp_v2 as 1.0"
+        "amphp/amp": "^2",
+        "amphp/socket": "^0.10"
     },
     "require-dev": {
-        "amphp/phpunit-util": "dev-master",
+        "amphp/phpunit-util": "^1",
         "phpunit/phpunit": "^6",
         "friendsofphp/php-cs-fixer": "^2.3"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\Redis\\": "lib"

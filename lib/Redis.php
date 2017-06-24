@@ -2,14 +2,8 @@
 
 namespace Amp\Redis;
 
-use Amp\Deferred;
 use Amp\Promise;
-use BadMethodCallException;
 
-/**
- * @method Deferred echo (string $text)
- * @method Deferred eval(string $script, array $keys, array $args)
- */
 abstract class Redis {
     /**
      * @param string|string[] $arg
@@ -1796,21 +1790,12 @@ abstract class Redis {
         return $this->send(["script", "load", $script]);
     }
 
-    public function __call($method, $args) {
-        // work arround for method names which conflict with php reserved keywords
-        if (method_exists($this, "_{$method}")) {
-            return call_user_func_array([$this, "_{$method}"], $args);
-        }
-
-        throw new BadMethodCallException("Method {$method} doesn't exist");
-    }
-
     /**
      * @param string $text
      * @return Promise
      * @yield string
      */
-    private function _echo($text) {
+    public function echo($text) {
         return $this->send(["echo", $text]);
     }
 
@@ -1821,7 +1806,7 @@ abstract class Redis {
      * @return Promise
      * @yield mixed
      */
-    private function _eval($script, $keys, $args) {
+    public function eval($script, $keys, $args) {
         return $this->send(array_merge(["eval", $script, sizeof((array) $keys)], (array) $keys, (array) $args));
     }
 

@@ -23,7 +23,7 @@ class BenchCase {
             $start = microtime(1);
 
             for ($i = 0; $i < 1000000; $i++) {
-                $this->parser->append("*2\r\n$5\r\nHello\r\n:123456789\r\n");
+                $this->parser->append("$5\r\nHello\r\n:123456789\r\n$5\r\nHello\r\n:123456789\r\n$5\r\nHello\r\n:123456789\r\n$5\r\nHello\r\n:123456789\r\n");
             }
 
             $time = min($time, microtime(1) - $start);

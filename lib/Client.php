@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Promise;
+use Amp\Uri\Uri;
 use Exception;
 use function Amp\call;
 
@@ -13,9 +14,6 @@ class Client extends Redis {
 
     /** @var Connection */
     private $connection;
-
-    /** @var string */
-    private $uri;
 
     /** @var string */
     private $password;
@@ -75,37 +73,11 @@ class Client extends Redis {
         }
     }
 
-    private function applyUri($uri) {
-        $parts = explode("?", $uri, 2);
-        $this->uri = $parts[0];
+    private function applyUri(string $uri) {
+        $uri = new Uri($uri);
 
-        if (count($parts) === 1) {
-            return;
-        }
-
-        $query = $parts[1];
-        $params = explode("&", $query);
-
-        foreach ($params as $param) {
-            $keyValue = explode("=", $param, 2);
-            $key = urldecode($keyValue[0]);
-
-            if (count($keyValue) === 1) {
-                $value = true;
-            } else {
-                $value = urldecode($keyValue[1]);
-            }
-
-            switch ($key) {
-                case "database":
-                    $this->database = (int) $value;
-                    break;
-
-                case "password":
-                    $this->password = $value;
-                    break;
-            }
-        }
+        $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
+        $this->password = $uri->getQueryParameter("password") ?? null;
     }
 
     /**
@@ -133,6 +105,7 @@ class Client extends Redis {
     /**
      * @param string[] $args
      * @param callable $transform
+     *
      * @return Promise
      */
     protected function send(array $args, callable $transform = null) {
