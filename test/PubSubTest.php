@@ -3,7 +3,6 @@
 namespace Amp\Redis;
 
 use Amp\Delayed;
-use Amp\Iterator;
 use Amp\Loop;
 
 class PubSubTest extends RedisTest {
