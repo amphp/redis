@@ -128,6 +128,7 @@ class Connection {
 
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
+        $connectPromise = $this->connectPromisor->promise();
         $socketPromise = connect($this->uri, (new ClientConnectContext)->withConnectTimeout($this->timeout));
 
         $socketPromise->onResolve(function ($error, Socket $socket = null) {
@@ -167,7 +168,7 @@ class Connection {
             $connectPromisor->resolve();
         });
 
-        return $this->connectPromisor->promise();
+        return $connectPromise;
     }
 
     private function onError(\Throwable $exception) {
