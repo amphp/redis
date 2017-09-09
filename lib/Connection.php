@@ -138,7 +138,9 @@ class Connection {
             if ($error) {
                 $this->state = self::STATE_DISCONNECTED;
                 $connectException = new ConnectException(
-                    "Connection attempt failed", $code = 0, $error
+                    "Connection attempt failed",
+                    $code = 0,
+                    $error
                 );
                 $this->onError($connectException);
                 $connectPromisor->fail($connectException);
