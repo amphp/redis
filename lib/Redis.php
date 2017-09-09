@@ -657,7 +657,7 @@ abstract class Redis {
      * @yield array
      */
     public function hScan($key, $cursor, $pattern = null, $count = null) {
-        return $this->_scan("hscan", $key, $cursor, $pattern, $cursor, $count);
+        return $this->_scan("hscan", $key, $cursor, $pattern, $count);
     }
 
     /**
