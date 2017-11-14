@@ -1938,6 +1938,8 @@ abstract class Redis {
      *
      * @return Promise
      * @yield mixed
+     *
+     * @deprecated Please use 'eval', which automatically attempts to use 'evalSha'.
      */
     public function evalSha($sha1, $keys = [], $args = []) {
         \trigger_error("'evalSha' is deprecated. Please use 'eval', which automatically attempts to use 'evalSha'.");
