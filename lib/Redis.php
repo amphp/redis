@@ -1752,7 +1752,7 @@ abstract class Redis {
      * @yield mixed
      */
     public function evalSha($sha1, $keys = [], $args = []) {
-        return $this->send(array_merge(["evalsha"], $sha1, sizeof((array) $keys), (array) $keys, (array) $args));
+        return $this->send(array_merge(["evalsha"], [$sha1], [sizeof((array) $keys)], (array) $keys, (array) $args));
     }
 
     /**
