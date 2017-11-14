@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Promise;
+use function Amp\call;
 
 abstract class Redis {
     /**
@@ -1862,18 +1863,6 @@ abstract class Redis {
     }
 
     /**
-     * @param string          $sha1
-     * @param string|string[] $keys
-     * @param string|string[] $args
-     *
-     * @return Promise
-     * @yield mixed
-     */
-    public function evalSha($sha1, $keys = [], $args = []) {
-        return $this->send(array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
-    }
-
-    /**
      * @param string|string[] $script
      * @param string[]        ...$scripts
      *
@@ -1928,8 +1917,32 @@ abstract class Redis {
      * @return Promise
      * @yield mixed
      */
-    public function eval($script, $keys, $args) {
-        return $this->send(array_merge(['eval', $script, \count((array) $keys)], (array) $keys, (array) $args));
+    public function eval($script, $keys = [], $args = []) {
+        return call(function () use ($script, $keys, $args) {
+            try {
+                return yield $this->send(array_merge(['evalsha', \sha1($script), \count((array) $keys)], (array) $keys, (array) $args));
+            } catch (QueryException $e) {
+                if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
+                    return $this->send(array_merge(['eval', $script, \count((array) $keys)], (array) $keys, (array) $args));
+                }
+
+                throw $e;
+            }
+        });
+    }
+
+    /**
+     * @param string          $sha1
+     * @param string|string[] $keys
+     * @param string|string[] $args
+     *
+     * @return Promise
+     * @yield mixed
+     */
+    public function evalSha($sha1, $keys = [], $args = []) {
+        \trigger_error("'evalSha' is deprecated. Please use 'eval', which automatically attempts to use 'evalSha'.");
+
+        return $this->send(array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
     }
 
     private function _scan($command, $key, $cursor, $pattern = null, $count = null) {
