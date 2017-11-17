@@ -1881,6 +1881,8 @@ abstract class Redis {
      * @yield string
      */
     public function scriptFlush() {
+        $this->evalCache = []; // same as internal redis behavior
+
         return $this->send(['script', 'flush']);
     }
 
@@ -1923,7 +1925,8 @@ abstract class Redis {
     public function eval($script, $keys = [], $args = []) {
         return call(function () use ($script, $keys, $args) {
             try {
-                return yield $this->send(array_merge(['evalsha', $this->evalCache($script), \count((array) $keys)], (array) $keys, (array) $args));
+                $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
+                return yield $this->send(array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
             } catch (QueryException $e) {
                 if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
                     return $this->send(array_merge(['eval', $script, \count((array) $keys)], (array) $keys, (array) $args));
@@ -1948,10 +1951,6 @@ abstract class Redis {
         \trigger_error("'evalSha' is deprecated. Please use 'eval', which automatically attempts to use 'evalSha'.");
 
         return $this->send(array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
-    }
-
-    private function evalCache($script) {
-        return isset($this->evalCache[$script]) ? $this->evalCache[$script] : ($this->evalCache[$script] = \sha1($script));
     }
 
     private function _scan($command, $key, $cursor, $pattern = null, $count = null) {
