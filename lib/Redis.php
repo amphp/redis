@@ -1945,6 +1945,8 @@ abstract class Redis {
      * @deprecated Please use 'eval', which automatically attempts to use 'evalSha'.
      */
     public function evalSha($sha1, $keys = [], $args = []) {
+        \trigger_error("'evalSha' is deprecated. Please use 'eval', which automatically attempts to use 'evalSha'.");
+
         return $this->send(array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
     }
 
