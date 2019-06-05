@@ -92,9 +92,9 @@ class ParserTest extends TestCase {
             $result = $resp;
         });
         $parser->append("$3\r");
-        $this->assertEquals(null, $result);
+        $this->assertNull($result);
         $parser->append("\nfoo\r");
-        $this->assertEquals(null, $result);
+        $this->assertNull($result);
         $parser->append("\n");
         $this->assertEquals("foo", $result);
     }

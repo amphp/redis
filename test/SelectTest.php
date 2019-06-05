@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Delayed;
 use Amp\Loop;
 
 class SelectTest extends RedisTest {
