@@ -18,8 +18,10 @@ matrix:
 
 install:
   # --ignore-platform-reqs, because https://github.com/FriendsOfPHP/PHP-CS-Fixer/pull/2722
-  - composer update -n --prefer-dist --ignore-platform-reqs
-  - composer require --dev php-coveralls/php-coveralls --ignore-platform-reqs
+  - composer update -n --prefer-dist
+
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar
+  - chmod +x php-coveralls.phar
 
   - mkdir -p coverage/cov coverage/bin
   - wget https://phar.phpunit.de/phpcov.phar -O coverage/bin/phpcov
@@ -33,7 +35,7 @@ script:
 
 after_script:
   - coverage/bin/phpcov merge --clover build/logs/clover.xml coverage/cov
-  - php vendor/bin/coveralls -v
+  - travis_retry ./php-coveralls.phar -v
 
 cache:
   directories:
