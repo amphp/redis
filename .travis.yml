@@ -5,6 +5,8 @@ language: php
 php:
   - 7.0
   - 7.1
+  - 7.2
+  - 7.3
   - nightly
 
 matrix:
@@ -15,7 +17,7 @@ matrix:
 install:
   # --ignore-platform-reqs, because https://github.com/FriendsOfPHP/PHP-CS-Fixer/pull/2722
   - composer update -n --prefer-dist --ignore-platform-reqs
-  - composer require satooshi/php-coveralls dev-master --ignore-platform-reqs
+  - composer require --dev php-coveralls/php-coveralls --ignore-platform-reqs
 
   - mkdir -p coverage/cov coverage/bin
   - wget https://phar.phpunit.de/phpcov.phar -O coverage/bin/phpcov
