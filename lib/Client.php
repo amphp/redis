@@ -54,21 +54,21 @@ class Client extends Redis {
             }
         });
 
-        if ($this->database !== 0) {
-            $this->connection->addEventHandler("connect", function () {
-                // SELECT must be called for every new connection if another database than 0 is used
-                array_unshift($this->deferreds, new Deferred);
-
-                return "*2\r\n$6\r\rSELECT\r\n$" . strlen($this->database) . "\r\n{$this->database}\r\n";
-            });
-        }
-
         if (!empty($this->password)) {
             $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it last
                 array_unshift($this->deferreds, new Deferred);
 
                 return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
+            });
+        }
+
+        if ($this->database !== 0) {
+            $this->connection->addEventHandler("connect", function () {
+                // SELECT must be called for every new connection if another database than 0 is used
+                array_unshift($this->deferreds, new Deferred);
+
+                return "*2\r\n$6\r\rSELECT\r\n$" . strlen($this->database) . "\r\n{$this->database}\r\n";
             });
         }
     }
