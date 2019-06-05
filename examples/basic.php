@@ -8,5 +8,5 @@ Amp\Loop::run(function () {
     yield $client->set("foo", "21");
     $result = yield $client->incr("foo", 21);
 
-    var_dump($result); // int(42)
+    \var_dump($result); // int(42)
 });

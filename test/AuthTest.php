@@ -5,26 +5,30 @@ namespace Amp\Redis;
 use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 
-class AuthTest extends TestCase {
-    public static function setUpBeforeClass() {
+class AuthTest extends TestCase
+{
+    public static function setUpBeforeClass()
+    {
         print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret`;
-        sleep(2);
+        \sleep(2);
     }
 
-    public static function tearDownAfterClass() {
-        $pid = @file_get_contents("/tmp/amp-redis.pid");
-        @unlink("/tmp/amp-redis.pid");
+    public static function tearDownAfterClass()
+    {
+        $pid = @\file_get_contents("/tmp/amp-redis.pid");
+        @\unlink("/tmp/amp-redis.pid");
 
         if (!empty($pid)) {
             print `kill $pid`;
-            sleep(2);
+            \sleep(2);
         }
     }
 
     /**
      * @test
      */
-    public function ping() {
+    public function ping()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325?password=secret");
             $this->assertEquals("PONG", (yield $redis->ping()));

@@ -8,7 +8,7 @@ Amp\Loop::run(function () {
         if ($error) {
             print "Error: " . $error->getMessage() . PHP_EOL;
         } else {
-            print "Value: " . var_export($value, true) . PHP_EOL;
+            print "Value: " . \var_export($value, true) . PHP_EOL;
         }
 
         Amp\Loop::stop();

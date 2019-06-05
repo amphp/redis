@@ -4,11 +4,13 @@ namespace Amp\Redis;
 
 use Amp\Loop;
 
-class TransactionTest extends RedisTest {
+class TransactionTest extends RedisTest
+{
     /**
      * @test
      */
-    public function success() {
+    public function success()
+    {
         Loop::run(function () {
             $_1 = new Client("tcp://127.0.0.1:25325");
             yield $_1->set("key", "1");
@@ -29,7 +31,8 @@ class TransactionTest extends RedisTest {
      * @test
      * @expectedException \Amp\Redis\RedisException
      */
-    public function failure() {
+    public function failure()
+    {
         Loop::run(function () {
             $_1 = new Client("tcp://127.0.0.1:25325");
             $_2 = new Client("tcp://127.0.0.1:25325");

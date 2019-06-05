@@ -4,11 +4,13 @@ namespace Amp\Redis;
 
 use Amp\Loop;
 
-class KeyTest extends RedisTest {
+class KeyTest extends RedisTest
+{
     /**
      * @test
      */
-    public function keys() {
+    public function keys()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $this->assertEquals([], (yield $redis->keys("*")));
@@ -20,7 +22,8 @@ class KeyTest extends RedisTest {
     /**
      * @test
      */
-    public function exists() {
+    public function exists()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $this->assertTrue((yield $redis->exists("foo")));
@@ -31,7 +34,8 @@ class KeyTest extends RedisTest {
     /**
      * @test
      */
-    public function del() {
+    public function del()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $this->assertTrue((yield $redis->exists("foo")));

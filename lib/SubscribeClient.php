@@ -9,7 +9,8 @@ use Amp\Uri\Uri;
 use Exception;
 use function Amp\call;
 
-class SubscribeClient {
+class SubscribeClient
+{
     /** @var Deferred */
     private $authDeferred;
 
@@ -28,7 +29,8 @@ class SubscribeClient {
     /**
      * @param string $uri
      */
-    public function __construct(string $uri) {
+    public function __construct(string $uri)
+    {
         $this->applyUri($uri);
 
         $this->connection = new Connection($uri);
@@ -71,20 +73,20 @@ class SubscribeClient {
 
                 while ($this->emitters) {
                     /** @var Emitter[] $emitterGroup */
-                    $emitterGroup = array_shift($this->emitters);
+                    $emitterGroup = \array_shift($this->emitters);
 
                     while ($emitterGroup) {
-                        $emitter = array_shift($emitterGroup);
+                        $emitter = \array_shift($emitterGroup);
                         $emitter->fail($error);
                     }
                 }
 
                 while ($this->patternEmitters) {
                     /** @var Emitter[] $emitterGroup */
-                    $emitterGroup = array_shift($this->patternEmitters);
+                    $emitterGroup = \array_shift($this->patternEmitters);
 
                     while ($emitterGroup) {
-                        $emitter = array_shift($emitterGroup);
+                        $emitter = \array_shift($emitterGroup);
                         $emitter->fail($error);
                     }
                 }
@@ -96,18 +98,20 @@ class SubscribeClient {
                 // AUTH must be before any other command, so we unshift it here
                 $this->authDeferred = new Deferred;
 
-                return "*2\r\n$4\r\rAUTH\r\n$" . strlen($this->password) . "\r\n{$this->password}\r\n";
+                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($this->password) . "\r\n{$this->password}\r\n";
             });
         }
     }
 
-    private function applyUri(string $uri) {
+    private function applyUri(string $uri)
+    {
         $uri = new Uri($uri);
 
         $this->password = $uri->getQueryParameter("password") ?? null;
     }
 
-    public function close() {
+    public function close()
+    {
         $this->connection->close();
     }
 
@@ -116,7 +120,8 @@ class SubscribeClient {
      *
      * @return Promise<Subscription>
      */
-    public function subscribe(string $channel): Promise {
+    public function subscribe(string $channel): Promise
+    {
         return call(function () use ($channel) {
             yield $this->connection->send(["subscribe", $channel]);
 
@@ -129,7 +134,8 @@ class SubscribeClient {
         });
     }
 
-    private function unloadEmitter(Emitter $emitter, string $channel) {
+    private function unloadEmitter(Emitter $emitter, string $channel)
+    {
         $hash = \spl_object_hash($emitter);
 
         if (isset($this->emitters[$channel][$hash])) {
@@ -148,7 +154,8 @@ class SubscribeClient {
         }
     }
 
-    private function unsubscribe(string $channel = null): Promise {
+    private function unsubscribe(string $channel = null): Promise
+    {
         if ($channel === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -164,7 +171,8 @@ class SubscribeClient {
      *
      * @return Promise<Subscription>
      */
-    public function pSubscribe(string $pattern) {
+    public function pSubscribe(string $pattern)
+    {
         return call(function () use ($pattern) {
             yield $this->connection->send(["psubscribe", $pattern]);
 
@@ -177,7 +185,8 @@ class SubscribeClient {
         });
     }
 
-    private function unloadPatternEmitter(Emitter $emitter, string $pattern) {
+    private function unloadPatternEmitter(Emitter $emitter, string $pattern)
+    {
         $hash = \spl_object_hash($emitter);
 
         if (isset($this->patternEmitters[$pattern][$hash])) {
@@ -196,7 +205,8 @@ class SubscribeClient {
         }
     }
 
-    private function pUnsubscribe(string $pattern = null) {
+    private function pUnsubscribe(string $pattern = null)
+    {
         if ($pattern === null) {
             // either unsubscribe succeeds and an unsubscribe message
             // will be sent for every channel or promises will fail
@@ -207,7 +217,8 @@ class SubscribeClient {
         return $this->connection->send(["punsubscribe", $pattern]);
     }
 
-    public function getConnectionState(): int {
+    public function getConnectionState(): int
+    {
         return $this->connection->getState();
     }
 }

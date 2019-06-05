@@ -2,5 +2,6 @@
 
 namespace Amp\Redis;
 
-class QueryException extends RedisException {
+class QueryException extends RedisException
+{
 }

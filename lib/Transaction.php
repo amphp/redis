@@ -6,13 +6,15 @@ use Amp\Promise;
 use Amp\Success;
 use DomainException;
 
-class Transaction extends Redis {
+class Transaction extends Redis
+{
     private $client;
     private $commands;
     private $transforms;
     private $inTransaction;
 
-    public function __construct(Client $client) {
+    public function __construct(Client $client)
+    {
         $this->client = $client;
         $this->commands = [];
         $this->transforms = [];
@@ -22,7 +24,8 @@ class Transaction extends Redis {
     /**
      * @return Promise
      */
-    public function discard() {
+    public function discard()
+    {
         $this->commands = [];
         $this->transforms = [];
         $this->inTransaction = false;
@@ -30,7 +33,8 @@ class Transaction extends Redis {
         return $this->send(["discard"]);
     }
 
-    public function send(array $strings, callable $transform = null) {
+    public function send(array $strings, callable $transform = null)
+    {
         if (!$this->inTransaction) {
             return $this->client->send($strings, $transform);
         }
@@ -44,7 +48,8 @@ class Transaction extends Redis {
     /**
      * @return Promise
      */
-    public function exec() {
+    public function exec()
+    {
         // sending happens sync here, no need to concatenate these strings before
         foreach ($this->commands as $strings) {
             $this->client->send($strings);
@@ -57,8 +62,8 @@ class Transaction extends Redis {
         $this->inTransaction = false;
 
         return $this->send(["exec"], function ($response) use ($transforms) {
-            if (is_array($response)) {
-                $count = count($response);
+            if (\is_array($response)) {
+                $count = \count($response);
 
                 for ($i = 0; $i < $count; $i++) {
                     if (isset($transforms[$i])) {
@@ -76,7 +81,8 @@ class Transaction extends Redis {
     /**
      * @return Promise
      */
-    public function multi() {
+    public function multi()
+    {
         if ($this->inTransaction) {
             throw new DomainException("Multi has already been called, discard or exec your transaction first");
         }
@@ -89,7 +95,8 @@ class Transaction extends Redis {
     /**
      * @return Promise
      */
-    public function unwatch() {
+    public function unwatch()
+    {
         return $this->send(["unwatch"]);
     }
 
@@ -99,7 +106,8 @@ class Transaction extends Redis {
      *
      * @return Promise
      */
-    public function watch($key, ...$keys) {
-        return $this->send(array_merge(["watch"], (array) $key, $keys));
+    public function watch($key, ...$keys)
+    {
+        return $this->send(\array_merge(["watch"], (array) $key, $keys));
     }
 }

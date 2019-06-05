@@ -2,5 +2,6 @@
 
 namespace Amp\Redis;
 
-class ConnectException extends RedisException {
+class ConnectException extends RedisException
+{
 }

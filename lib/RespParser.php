@@ -2,7 +2,8 @@
 
 namespace Amp\Redis;
 
-class RespParser {
+class RespParser
+{
     const CRLF = "\r\n";
     const TYPE_SIMPLE_STRING = "+";
     const TYPE_ERROR = "-";
@@ -17,21 +18,24 @@ class RespParser {
     private $currentSize;
     private $arraySizes;
 
-    public function __construct(callable $responseCallback) {
+    public function __construct(callable $responseCallback)
+    {
         $this->responseCallback = $responseCallback;
     }
 
-    public function reset() {
+    public function reset()
+    {
         $this->buffer = "";
         $this->currentResponse = $this->arrayStack = $this->currentSize = $this->arraySizes = null;
     }
 
-    public function append(string $str) {
+    public function append(string $str)
+    {
         $this->buffer .= $str;
 
         do {
             $type = $this->buffer[0];
-            $pos = strpos($this->buffer, self::CRLF);
+            $pos = \strpos($this->buffer, self::CRLF);
 
             if ($pos === false) {
                 return;
@@ -42,22 +46,22 @@ class RespParser {
                 case self::TYPE_INTEGER:
                 case self::TYPE_ARRAY:
                 case self::TYPE_ERROR:
-                    $payload = substr($this->buffer, 1, $pos - 1);
+                    $payload = \substr($this->buffer, 1, $pos - 1);
                     $remove = $pos + 2;
                     break;
 
                 case self::TYPE_BULK_STRING:
-                    $length = (int) substr($this->buffer, 1, $pos);
+                    $length = (int) \substr($this->buffer, 1, $pos);
 
                     if ($length === -1) {
                         $payload = null;
                         $remove = $pos + 2;
                     } else {
-                        if (strlen($this->buffer) < $pos + $length + 4) {
+                        if (\strlen($this->buffer) < $pos + $length + 4) {
                             return;
                         }
 
-                        $payload = substr($this->buffer, $pos + 2, $length);
+                        $payload = \substr($this->buffer, $pos + 2, $length);
                         $remove = $pos + $length + 4;
                     }
 
@@ -65,16 +69,16 @@ class RespParser {
 
                 default:
                     throw new ParserException(
-                        sprintf("unknown resp data type: %s", $type)
+                        \sprintf("unknown resp data type: %s", $type)
                     );
             }
 
-            $this->buffer = substr($this->buffer, $remove);
+            $this->buffer = \substr($this->buffer, $remove);
 
             switch ($type) {
                 case self::TYPE_INTEGER:
                 case self::TYPE_ARRAY:
-                    $payload = intval($payload);
+                    $payload = \intval($payload);
                     break;
 
                 case self::TYPE_ERROR:
@@ -92,7 +96,7 @@ class RespParser {
                         $this->arrayStack[] = &$this->currentResponse;
                         $this->currentSize = $payload + 1;
                         $this->currentResponse[] = [];
-                        $this->currentResponse = &$this->currentResponse[sizeof($this->currentResponse) - 1];
+                        $this->currentResponse = &$this->currentResponse[\sizeof($this->currentResponse) - 1];
                     } else {
                         $this->currentResponse[] = null;
                     }
@@ -101,7 +105,7 @@ class RespParser {
                 }
 
                 while (--$this->currentSize === 0) {
-                    if (sizeof($this->arrayStack) === 0) {
+                    if (\sizeof($this->arrayStack) === 0) {
                         $cb = $this->responseCallback;
                         $cb($this->currentResponse);
                         $this->currentResponse = null;
@@ -109,10 +113,10 @@ class RespParser {
                     }
 
                     // index doesn't start at 0 :(
-                    end($this->arrayStack);
-                    $key = key($this->arrayStack);
+                    \end($this->arrayStack);
+                    $key = \key($this->arrayStack);
                     $this->currentResponse = &$this->arrayStack[$key];
-                    $this->currentSize = array_pop($this->arraySizes);
+                    $this->currentSize = \array_pop($this->arraySizes);
                     unset($this->arrayStack[$key]);
                 }
             } elseif ($type === self::TYPE_ARRAY) { // start new array response

@@ -6,19 +6,22 @@ use Amp\Cache\CacheException;
 use Amp\Promise;
 use function Amp\call;
 
-class Cache implements \Amp\Cache\Cache {
+class Cache implements \Amp\Cache\Cache
+{
     /** @var Client */
     private $client;
 
     /**
      * @param \Amp\Redis\Client $client
      */
-    public function __construct(Client $client) {
+    public function __construct(Client $client)
+    {
         $this->client = $client;
     }
 
     /** @inheritdoc */
-    public function get(string $key): Promise {
+    public function get(string $key): Promise
+    {
         return call(function () use ($key) {
             try {
                 return yield $this->client->get($key);
@@ -29,7 +32,8 @@ class Cache implements \Amp\Cache\Cache {
     }
 
     /** @inheritdoc */
-    public function set(string $key, string $value, int $ttl = null): Promise {
+    public function set(string $key, string $value, int $ttl = null): Promise
+    {
         if ($ttl && $ttl < 0) {
             throw new \Error("Invalid TTL: {$ttl}");
         }
@@ -44,7 +48,8 @@ class Cache implements \Amp\Cache\Cache {
     }
 
     /** @inheritdoc */
-    public function delete(string $key): Promise {
+    public function delete(string $key): Promise
+    {
         return call(function () use ($key) {
             try {
                 return yield $this->client->del($key);

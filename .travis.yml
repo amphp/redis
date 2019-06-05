@@ -7,10 +7,12 @@ php:
   - 7.1
   - 7.2
   - 7.3
+  - 7.4snapshot
   - nightly
 
 matrix:
   allow_failures:
+    - php: 7.4snapshot
     - php: nightly
   fast_finish: true
 
@@ -35,4 +37,6 @@ after_script:
 
 cache:
   directories:
-    - $HOME/.composer/cache/files
+    - $HOME/.composer/cache
+    - $HOME/.php-cs-fixer
+    - $HOME/.local

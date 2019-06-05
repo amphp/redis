@@ -4,16 +4,19 @@ namespace Amp\Redis;
 
 use Amp\Loop;
 
-class SelectTest extends RedisTest {
-    public static function setUpBeforeClass() {
+class SelectTest extends RedisTest
+{
+    public static function setUpBeforeClass()
+    {
         print `redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret`;
-        sleep(2);
+        \sleep(2);
     }
 
     /**
      * @test
      */
-    public function connect() {
+    public function connect()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325?database=1&password=secret");
             $this->assertEquals("PONG", (yield $redis->ping()));
@@ -23,7 +26,8 @@ class SelectTest extends RedisTest {
     /**
      * @test
      */
-    public function select() {
+    public function select()
+    {
         Loop::run(function () {
             $redis1 = new Client("tcp://127.0.0.1:25325?database=1&password=secret");
             $payload = "bar";

@@ -13,7 +13,8 @@ use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
 
-class Connection {
+class Connection
+{
     const STATE_DISCONNECTED = 0;
     const STATE_CONNECTING = 1;
     const STATE_CONNECTED = 2;
@@ -42,8 +43,9 @@ class Connection {
     /**
      * @param string $uri
      */
-    public function __construct(string $uri) {
-        if (strpos($uri, "tcp://") !== 0 && strpos($uri, "unix://") !== 0) {
+    public function __construct(string $uri)
+    {
+        if (\strpos($uri, "tcp://") !== 0 && \strpos($uri, "unix://") !== 0) {
             throw new InvalidUriException("URI must start with tcp:// or unix://");
         }
 
@@ -65,7 +67,8 @@ class Connection {
         });
     }
 
-    private function applyUri(string $uri) {
+    private function applyUri(string $uri)
+    {
         $uri = new Uri($uri);
 
         if ($uri->getScheme() === "tcp") {
@@ -77,7 +80,8 @@ class Connection {
         $this->timeout = $uri->getQueryParameter("timeout") ?? $this->timeout;
     }
 
-    public function addEventHandler($event, callable $callback) {
+    public function addEventHandler($event, callable $callback)
+    {
         $events = (array) $event;
 
         foreach ($events as $event) {
@@ -94,9 +98,10 @@ class Connection {
      *
      * @return Promise
      */
-    public function send(array $strings): Promise {
+    public function send(array $strings): Promise
+    {
         foreach ($strings as $string) {
-            if (!is_scalar($string)) {
+            if (!\is_scalar($string)) {
                 throw new \TypeError("All elements must be of type string or scalar and convertible to a string.");
             }
         }
@@ -106,16 +111,17 @@ class Connection {
 
             $payload = "";
             foreach ($strings as $string) {
-                $payload .= "$" . strlen($string) . "\r\n{$string}\r\n";
+                $payload .= "$" . \strlen($string) . "\r\n{$string}\r\n";
             }
-            $payload = "*" . count($strings) . "\r\n{$payload}";
+            $payload = "*" . \count($strings) . "\r\n{$payload}";
 
             yield $this->connect();
             yield $this->socket->write($payload);
         });
     }
 
-    private function connect(): Promise {
+    private function connect(): Promise
+    {
         // If we're in the process of connecting already return that same promise
         if ($this->connectPromisor) {
             return $this->connectPromisor->promise();
@@ -173,7 +179,8 @@ class Connection {
         return $connectPromise;
     }
 
-    private function onError(\Throwable $exception) {
+    private function onError(\Throwable $exception)
+    {
         try {
             foreach ($this->handlers["error"] as $handler) {
                 $handler($exception);
@@ -183,7 +190,8 @@ class Connection {
         }
     }
 
-    public function setIdle(bool $idle) {
+    public function setIdle(bool $idle)
+    {
         if (!$this->socket) {
             return;
         }
@@ -195,7 +203,8 @@ class Connection {
         }
     }
 
-    public function close() {
+    public function close()
+    {
         $this->parser->reset();
 
         if ($this->socket) {
@@ -210,11 +219,13 @@ class Connection {
         $this->state = self::STATE_DISCONNECTED;
     }
 
-    public function getState(): int {
+    public function getState(): int
+    {
         return $this->state;
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         $this->close();
     }
 }

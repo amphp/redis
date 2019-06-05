@@ -12,5 +12,5 @@ Amp\Loop::run(function () {
     }, 1000));
 
     $value = yield $client->blpop("foobar-list", 5);
-    var_dump($value);
+    \var_dump($value);
 });

@@ -5,8 +5,10 @@ namespace Amp\Redis;
 use Amp\Delayed;
 use Amp\Loop;
 
-class PubSubTest extends RedisTest {
-    public function testBasic() {
+class PubSubTest extends RedisTest
+{
+    public function testBasic()
+    {
         Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
 
@@ -31,7 +33,8 @@ class PubSubTest extends RedisTest {
         });
     }
 
-    public function testDoubleCancel() {
+    public function testDoubleCancel()
+    {
         Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
 
@@ -44,7 +47,8 @@ class PubSubTest extends RedisTest {
         });
     }
 
-    public function testMulti() {
+    public function testMulti()
+    {
         Loop::run(function () {
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
 
@@ -90,7 +94,8 @@ class PubSubTest extends RedisTest {
         });
     }
 
-    public function testStream() {
+    public function testStream()
+    {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
             $subscriber = new SubscribeClient("tcp://127.0.0.1:25325");
