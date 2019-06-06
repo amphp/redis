@@ -12,7 +12,6 @@ use Amp\Uri\Uri;
 use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
-use Exception;
 
 class Connection
 {
