@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Promise;
-use Amp\Uri\Uri;
+use Amp\Uri\InvalidUriException;
 use Exception;
 use function Amp\call;
 
@@ -16,19 +16,12 @@ class Client extends Redis
     /** @var Connection */
     private $connection;
 
-    /** @var string */
-    private $password;
-
-    /** @var int */
-    private $database = 0;
-
     /**
      * @param string $uri
+     * @throws InvalidUriException
      */
     public function __construct(string $uri)
     {
-        $this->applyUri($uri);
-
         $this->deferreds = [];
         $this->connection = new Connection($uri);
 
@@ -56,31 +49,25 @@ class Client extends Redis
             }
         });
 
-        if (!empty($this->password)) {
+        if (!empty($this->connection->getPassword())) {
             $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it last
                 \array_unshift($this->deferreds, new Deferred);
+                $password = $this->connection->getPassword();
 
-                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($this->password) . "\r\n{$this->password}\r\n";
+                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($password) . "\r\n{$password}\r\n";
             });
         }
 
-        if ($this->database !== 0) {
+        if ($this->connection->getDatabase() !== 0) {
             $this->connection->addEventHandler("connect", function () {
                 // SELECT must be called for every new connection if another database than 0 is used
                 \array_unshift($this->deferreds, new Deferred);
+                $database = $this->connection->getDatabase();
 
-                return "*2\r\n$6\r\rSELECT\r\n$" . \strlen($this->database) . "\r\n{$this->database}\r\n";
+                return "*2\r\n$6\r\rSELECT\r\n$" . \strlen($database) . "\r\n{$database}\r\n";
             });
         }
-    }
-
-    private function applyUri(string $uri)
-    {
-        $uri = new Uri($uri);
-
-        $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-        $this->password = $uri->getQueryParameter("password") ?? null;
     }
 
     /**
