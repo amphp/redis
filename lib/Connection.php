@@ -90,7 +90,6 @@ class Connection
      * @link http://www.iana.org/assignments/uri-schemes/prov/redis
      *
      * @param string $uri URI string.
-     * 
      * @throws InvalidUriException
      */
     private function applyUri(string $uri)
