@@ -8,36 +8,22 @@ use Amp\Socket\ClientConnectContext;
 use Amp\Socket\Socket;
 use Amp\Success;
 use Amp\Uri\InvalidUriException;
-use Amp\Uri\Uri;
 use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
+use Exception;
 
 class Connection
 {
     const STATE_DISCONNECTED = 0;
     const STATE_CONNECTING = 1;
     const STATE_CONNECTED = 2;
-    const DEFAULT_HOST = "localhost";
-    const DEFAULT_PORT = "6379";
 
     /** @var Deferred */
     private $connectPromisor;
 
     /** @var RespParser */
     private $parser;
-
-    /** @var string */
-    private $uri;
-
-    /** @var string */
-    private $password = '';
-
-    /** @var int */
-    private $database = 0;
-
-    /** @var int */
-    private $timeout = 5000;
 
     /** @var Socket */
     private $socket;
@@ -48,21 +34,19 @@ class Connection
     /** @var int */
     private $state;
 
+    /** @var ConnectionConfig */
+    private $config;
+
+    /** @var Deferred[] */
+    private $deferreds;
+
     /**
-     * @param string $uri
-     * @throws InvalidUriException
+     * @param ConnectionConfig $config
      */
-    public function __construct(string $uri)
+    public function __construct(ConnectionConfig $config)
     {
-        if (\strpos($uri, "tcp://") !== 0 &&
-            \strpos($uri, "unix://") !== 0 &&
-            \strpos($uri, "redis://") !== 0
-        ) {
-            throw new InvalidUriException("URI must start with tcp://, unix:// or redis://");
-        }
-
-        $this->applyUri($uri);
-
+        $this->deferreds = [];
+        $this->config = $config;
         $this->state = self::STATE_DISCONNECTED;
 
         $this->handlers = [
@@ -77,57 +61,50 @@ class Connection
                 $handler($response);
             }
         });
-    }
 
-    /**
-     * When using the "redis" schemes the URI is parsed according
-     * to the rules defined by the provisional registration documents approved
-     * by IANA. If the URI has a password in its "user-information" part or a
-     * database number in the "path" part these values override the values of
-     * "password" and "database" if they are present in the "query" part.
-     *
-     * @link http://www.iana.org/assignments/uri-schemes/prov/redis
-     *
-     * @param string $uri URI string.
-     * @throws InvalidUriException
-     */
-    private function applyUri(string $uri)
-    {
-        $uri = new Uri($uri);
+        $this->addEventHandler("response", function ($response) {
+            $deferred = \array_shift($this->deferreds);
 
-        switch ($uri->getScheme()) {
-            case "tcp":
-                $this->uri = "tcp://" . $uri->getHost() . ":" . $uri->getPort();
-                $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-                $this->password = $uri->getQueryParameter("password") ?? "";
-                break;
+            if (empty($this->deferreds)) {
+                $this->setIdle(true);
+            }
 
-            case "unix":
-                $this->uri = "unix://" . $uri->getPath();
-                $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-                $this->password = $uri->getQueryParameter("password") ?? "";
-                break;
+            if ($response instanceof Exception) {
+                $deferred->fail($response);
+            } else {
+                $deferred->resolve($response);
+            }
+        });
 
-            case "redis":
-                $this->uri = \sprintf(
-                    "tcp://%s:%d",
-                    $uri->getHost() ?? self::DEFAULT_HOST,
-                    $uri->getPort() ?? self::DEFAULT_PORT
-                );
-                if ($uri->getPath() !== "/") {
-                    $this->database = (int) \ltrim($uri->getPath(), "/");
-                } else {
-                    $this->database = (int) ($uri->getQueryParameter("db") ?? 0);
+        $this->addEventHandler(["close", "error"], function ($error = null) {
+            if ($error) {
+                // Fail any outstanding promises
+                while ($this->deferreds) {
+                    $deferred = \array_shift($this->deferreds);
+                    $deferred->fail($error);
                 }
-                if (!empty($uri->getPass())) {
-                    $this->password = $uri->getPass();
-                } else {
-                    $this->password = $uri->getQueryParameter("password") ?? "";
-                }
-                break;
+            }
+        });
+
+        if ($this->config->hasPassword()) {
+            $this->addEventHandler("connect", function () {
+                // AUTH must be before any other command, so we unshift it last
+                \array_unshift($this->deferreds, new Deferred);
+                $password = $this->config->getPassword();
+
+                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($password) . "\r\n{$password}\r\n";
+            });
         }
 
-        $this->timeout = $uri->getQueryParameter("timeout") ?? $this->timeout;
+        if ($this->config->getDatabase() !== 0) {
+            $this->addEventHandler("connect", function () {
+                // SELECT must be called for every new connection if another database than 0 is used
+                \array_unshift($this->deferreds, new Deferred);
+                $database = $this->config->getDatabase();
+
+                return "*2\r\n$6\r\rSELECT\r\n$" . \strlen($database) . "\r\n{$database}\r\n";
+            });
+        }
     }
 
     public function addEventHandler($event, callable $callback)
@@ -150,13 +127,16 @@ class Connection
      */
     public function send(array $strings): Promise
     {
+        $deferred = new Deferred;
+        $this->deferreds[] = $deferred;
+
         foreach ($strings as $string) {
             if (!\is_scalar($string)) {
                 throw new \TypeError("All elements must be of type string or scalar and convertible to a string.");
             }
         }
 
-        return call(function () use ($strings) {
+        call(function () use ($strings, $deferred) {
             $this->setIdle(false);
 
             $payload = "";
@@ -168,6 +148,8 @@ class Connection
             yield $this->connect();
             yield $this->socket->write($payload);
         });
+
+        return $deferred->promise();
     }
 
     private function connect(): Promise
@@ -185,7 +167,10 @@ class Connection
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
         $connectPromise = $this->connectPromisor->promise();
-        $socketPromise = connect($this->uri, (new ClientConnectContext)->withConnectTimeout($this->timeout));
+        $socketPromise = connect(
+            $this->config->getUri(),
+            (new ClientConnectContext)->withConnectTimeout($this->config->getTimeout())
+        );
 
         $socketPromise->onResolve(function ($error, Socket $socket = null) {
             $connectPromisor = $this->connectPromisor;
@@ -255,38 +240,31 @@ class Connection
 
     public function close()
     {
-        $this->parser->reset();
+        $promise = Promise\all(\array_map(function (Deferred $deferred) {
+            return $deferred->promise();
+        }, $this->deferreds));
 
-        if ($this->socket) {
-            $this->socket->close();
-            $this->socket = null;
-        }
+        $promise->onResolve(function () {
+            $this->parser->reset();
 
-        foreach ($this->handlers["close"] as $handler) {
-            $handler();
-        }
+            if ($this->socket) {
+                $this->socket->close();
+                $this->socket = null;
+            }
 
-        $this->state = self::STATE_DISCONNECTED;
+            foreach ($this->handlers["close"] as $handler) {
+                $handler();
+            }
+
+            $this->state = self::STATE_DISCONNECTED;
+        });
+
+        return $promise;
     }
 
     public function getState(): int
     {
         return $this->state;
-    }
-
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function hasPassword(): bool
-    {
-        return (bool) \strlen($this->database);
-    }
-
-    public function getDatabase(): int
-    {
-        return $this->database;
     }
 
     public function __destruct()

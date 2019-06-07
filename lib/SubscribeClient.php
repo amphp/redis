@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Emitter;
 use Amp\Promise;
+use Amp\Uri\InvalidUriException;
 use Amp\Uri\Uri;
 use Exception;
 use function Amp\call;
@@ -28,12 +29,13 @@ class SubscribeClient
 
     /**
      * @param string $uri
+     * @throws InvalidUriException
      */
     public function __construct(string $uri)
     {
         $this->applyUri($uri);
 
-        $this->connection = new Connection($uri);
+        $this->connection = new Connection(ConnectionConfig::parse($uri));
         $this->connection->addEventHandler("response", function ($response) {
             if ($this->authDeferred) {
                 if ($response instanceof Exception) {
