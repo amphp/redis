@@ -279,6 +279,11 @@ class Connection
         return $this->password;
     }
 
+    public function hasPassword(): bool
+    {
+        return (bool) \strlen($this->database);
+    }
+
     public function getDatabase(): int
     {
         return $this->database;

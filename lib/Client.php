@@ -49,7 +49,7 @@ class Client extends Redis
             }
         });
 
-        if (!empty($this->connection->getPassword())) {
+        if ($this->connection->hasPassword()) {
             $this->connection->addEventHandler("connect", function () {
                 // AUTH must be before any other command, so we unshift it last
                 \array_unshift($this->deferreds, new Deferred);
