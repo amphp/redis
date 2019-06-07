@@ -2,19 +2,13 @@
 
 namespace Amp\Redis;
 
-use Amp\Deferred;
 use Amp\Emitter;
 use Amp\Promise;
 use Amp\Uri\InvalidUriException;
-use Amp\Uri\Uri;
-use Exception;
 use function Amp\call;
 
 class SubscribeClient
 {
-    /** @var Deferred */
-    private $authDeferred;
-
     /** @var Emitter[][] */
     private $emitters = [];
 
@@ -24,31 +18,14 @@ class SubscribeClient
     /** @var Connection */
     private $connection;
 
-    /** @var string */
-    private $password;
-
     /**
      * @param string $uri
      * @throws InvalidUriException
      */
     public function __construct(string $uri)
     {
-        $this->applyUri($uri);
-
         $this->connection = new Connection(ConnectionConfig::parse($uri));
         $this->connection->addEventHandler("response", function ($response) {
-            if ($this->authDeferred) {
-                if ($response instanceof Exception) {
-                    $this->authDeferred->fail($response);
-                } else {
-                    $this->authDeferred->resolve($response);
-                }
-
-                $this->authDeferred = null;
-
-                return;
-            }
-
             switch ($response[0]) {
                 case "message":
                     foreach ($this->emitters[$response[1]] as $emitter) {
@@ -68,11 +45,6 @@ class SubscribeClient
 
         $this->connection->addEventHandler("error", function ($error) {
             if ($error) {
-                // Fail any outstanding promises
-                if ($this->authDeferred) {
-                    $this->authDeferred->fail($error);
-                }
-
                 while ($this->emitters) {
                     /** @var Emitter[] $emitterGroup */
                     $emitterGroup = \array_shift($this->emitters);
@@ -94,22 +66,6 @@ class SubscribeClient
                 }
             }
         });
-
-        if (!empty($this->password)) {
-            $this->connection->addEventHandler("connect", function () {
-                // AUTH must be before any other command, so we unshift it here
-                $this->authDeferred = new Deferred;
-
-                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($this->password) . "\r\n{$this->password}\r\n";
-            });
-        }
-    }
-
-    private function applyUri(string $uri)
-    {
-        $uri = new Uri($uri);
-
-        $this->password = $uri->getQueryParameter("password") ?? null;
     }
 
     public function close()

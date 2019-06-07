@@ -123,5 +123,4 @@ class ConnectionConfig
     {
         return $this->database;
     }
-
 }

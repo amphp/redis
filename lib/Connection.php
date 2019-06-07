@@ -7,11 +7,10 @@ use Amp\Promise;
 use Amp\Socket\ClientConnectContext;
 use Amp\Socket\Socket;
 use Amp\Success;
-use Amp\Uri\InvalidUriException;
+use Exception;
 use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
-use Exception;
 
 class Connection
 {
@@ -67,6 +66,9 @@ class Connection
 
             if (empty($this->deferreds)) {
                 $this->setIdle(true);
+            }
+            if (!$deferred instanceof Deferred) {
+                return;
             }
 
             if ($response instanceof Exception) {
