@@ -138,7 +138,7 @@ class Connection
             }
         }
 
-        call(function () use ($strings, $deferred) {
+        call(function () use ($strings) {
             $this->setIdle(false);
 
             $payload = "";
