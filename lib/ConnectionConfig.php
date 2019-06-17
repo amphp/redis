@@ -30,8 +30,13 @@ class ConnectionConfig
      */
     public static function parse(string $uri): self
     {
+        if (stripos($uri, 'unix://') === 0) {
+            // parse_url() can parse unix:/path/to/sock so we do not need the
+            // unix:///path/to/sock hack
+            $uri = str_ireplace('unix://', 'unix:', $uri);
+        }
         if (\strpos($uri, "tcp://") !== 0 &&
-            \strpos($uri, "unix://") !== 0 &&
+            \strpos($uri, "unix:") !== 0 &&
             \strpos($uri, "redis://") !== 0
         ) {
             throw new InvalidUriException("URI must start with tcp://, unix:// or redis://");
@@ -65,21 +70,30 @@ class ConnectionConfig
      */
     private function applyUri(string $uri)
     {
+        if ($uri === "redis://") {
+            // Amp/Uri/Uri fails when no host neither a port passed,
+            // although this is still valid RedisURL
+            $uri = \sprintf("redis://%s:%d", self::DEFAULT_HOST, self::DEFAULT_PORT);
+        }
         $uri = new Uri($uri);
 
         switch ($uri->getScheme()) {
             case "tcp":
                 $this->uri = "tcp://" . $uri->getHost() . ":" . $uri->getPort();
-                $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
                 if ($uri->hasQueryParameter("database")) {
+                    $this->setDatabase($uri->getQueryParameter("database"));
+                }
+                if ($uri->hasQueryParameter("password")) {
                     $this->setPassword($uri->getQueryParameter("password"));
                 }
                 break;
 
             case "unix":
-                $this->uri = "unix://" . $uri->getPath();
-                $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
+                $this->uri = "unix:" . $uri->getPath();
                 if ($uri->hasQueryParameter("database")) {
+                    $this->setDatabase($uri->getQueryParameter("database"));
+                }
+                if ($uri->hasQueryParameter("password")) {
                     $this->setPassword($uri->getQueryParameter("password"));
                 }
                 break;
@@ -88,20 +102,20 @@ class ConnectionConfig
                 $this->uri = \sprintf(
                     "tcp://%s:%d",
                     $uri->getHost() ?? self::DEFAULT_HOST,
-                    $uri->getPort() ?? self::DEFAULT_PORT
+                    $uri->getPort() ? $uri->getPort() : self::DEFAULT_PORT
                 );
 
                 $databaseInPath = false;
-                if ($uri->getPath() !== "/") {
-                    $this->database = (int) \ltrim($uri->getPath(), "/");
+                if ($uri->getPath() !== "") {
+                    $this->setDatabase(\ltrim($uri->getPath(), "/"));
                     $databaseInPath = true;
                 }
-                if (!$databaseInPath && $uri->hasQueryParameter("db")) {
-                    $this->database = (int) ($uri->getQueryParameter("db") ?? 0);
-                } else {
+                if ($databaseInPath && $uri->hasQueryParameter("db")) {
                     throw new ConnectionConfigException(
                         "Passing a database name in path and query is not allowed"
                     );
+                } elseif ($uri->hasQueryParameter("db")) {
+                    $this->setDatabase($uri->getQueryParameter("db"));
                 }
 
                 if ($uri->getPass() !== "") {
@@ -117,13 +131,28 @@ class ConnectionConfig
                 }
                 break;
         }
-
-        $this->timeout = $uri->getQueryParameter("timeout") ?? $this->timeout;
+        if ($uri->hasQueryParameter("timeout")) {
+            $this->setTimeout($uri->getQueryParameter("timeout"));
+        }
     }
 
     public function getUri(): string
     {
         return $this->uri;
+    }
+
+    /**
+     * @param string $timeout
+     * @throws ConnectionConfigException
+     */
+    private function setTimeout(string $timeout)
+    {
+        if (!\is_numeric($timeout) || (int) $timeout < 0) {
+            throw new ConnectionConfigException(
+                "Timeout has to be positive integer"
+            );
+        }
+        $this->timeout = (int) $timeout;
     }
 
     public function getTimeout(): int
@@ -137,7 +166,7 @@ class ConnectionConfig
      */
     private function setPassword(string $password)
     {
-        if (empty($password)) {
+        if ($password === "") {
             throw new ConnectionConfigException("Password cannot be an empty string");
         }
         $this->password = $password;
@@ -151,6 +180,20 @@ class ConnectionConfig
     public function hasPassword(): bool
     {
         return $this->password !== null;
+    }
+
+    /**
+     * @param string $database
+     * @throws ConnectionConfigException
+     */
+    private function setDatabase(string $database)
+    {
+        if (!\is_numeric($database) || (int) $database < 0) {
+            throw new ConnectionConfigException(
+                "Database name should be integer 0-9"
+            );
+        }
+        $this->database = (int) $database;
     }
 
     public function getDatabase(): int
