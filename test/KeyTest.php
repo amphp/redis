@@ -13,9 +13,9 @@ class KeyTest extends RedisTest
     {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325");
-            $this->assertEquals([], (yield $redis->keys("*")));
+            $this->assertEquals([], yield $redis->keys("*"));
             $redis->set("foo", 42);
-            $this->assertEquals(["foo"], (yield $redis->keys("*")));
+            $this->assertEquals(["foo"], yield $redis->keys("*"));
         });
     }
 

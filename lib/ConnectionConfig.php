@@ -13,8 +13,8 @@ class ConnectionConfig
     /** @var string */
     private $uri;
 
-    /** @var string */
-    private $password = '';
+    /** @var string|null */
+    private $password;
 
     /** @var int */
     private $database = 0;
@@ -26,6 +26,7 @@ class ConnectionConfig
      * @param string $uri
      * @return ConnectionConfig
      * @throws InvalidUriException
+     * @throws ConnectionConfigException
      */
     public static function parse(string $uri): self
     {
@@ -42,6 +43,7 @@ class ConnectionConfig
     /**
      * @param string $uri
      * @throws InvalidUriException
+     * @throws ConnectionConfigException
      */
     public function __construct(string $uri)
     {
@@ -59,6 +61,7 @@ class ConnectionConfig
      *
      * @param string $uri URI string.
      * @throws InvalidUriException
+     * @throws ConnectionConfigException
      */
     private function applyUri(string $uri)
     {
@@ -68,13 +71,17 @@ class ConnectionConfig
             case "tcp":
                 $this->uri = "tcp://" . $uri->getHost() . ":" . $uri->getPort();
                 $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-                $this->password = $uri->getQueryParameter("password") ?? "";
+                if ($uri->hasQueryParameter("database")) {
+                    $this->setPassword($uri->getQueryParameter("password"));
+                }
                 break;
 
             case "unix":
                 $this->uri = "unix://" . $uri->getPath();
                 $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-                $this->password = $uri->getQueryParameter("password") ?? "";
+                if ($uri->hasQueryParameter("database")) {
+                    $this->setPassword($uri->getQueryParameter("password"));
+                }
                 break;
 
             case "redis":
@@ -83,15 +90,30 @@ class ConnectionConfig
                     $uri->getHost() ?? self::DEFAULT_HOST,
                     $uri->getPort() ?? self::DEFAULT_PORT
                 );
+
+                $databaseInPath = false;
                 if ($uri->getPath() !== "/") {
                     $this->database = (int) \ltrim($uri->getPath(), "/");
-                } else {
-                    $this->database = (int) ($uri->getQueryParameter("db") ?? 0);
+                    $databaseInPath = true;
                 }
-                if (!empty($uri->getPass())) {
-                    $this->password = $uri->getPass();
+                if (!$databaseInPath && $uri->hasQueryParameter("db")) {
+                    $this->database = (int) ($uri->getQueryParameter("db") ?? 0);
                 } else {
-                    $this->password = $uri->getQueryParameter("password") ?? "";
+                    throw new ConnectionConfigException(
+                        "Passing a database name in path and query is not allowed"
+                    );
+                }
+
+                if (!empty($uri->getPass())) {
+                    $this->setPassword($uri->getPass());
+                }
+                if ($this->hasPassword() && $uri->hasQueryParameter("password")) {
+                    throw new ConnectionConfigException(
+                        "Passing a password in user-info and query is not allowed"
+                    );
+                }
+                if (!$this->hasPassword() && $uri->hasQueryParameter("password")) {
+                    $this->setPassword($uri->getQueryParameter("password"));
                 }
                 break;
         }
@@ -109,6 +131,17 @@ class ConnectionConfig
         return $this->timeout;
     }
 
+    /**
+     * @throws ConnectionConfigException
+     */
+    private function setPassword(string $password)
+    {
+        if (empty($password)) {
+            throw new ConnectionConfigException("Password cannot be an empty string");
+        }
+        $this->password = $password;
+    }
+
     public function getPassword(): string
     {
         return $this->password;
@@ -116,7 +149,7 @@ class ConnectionConfig
 
     public function hasPassword(): bool
     {
-        return (bool) \strlen($this->password);
+        return $this->password !== null;
     }
 
     public function getDatabase(): int

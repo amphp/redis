@@ -19,7 +19,7 @@ class SelectTest extends RedisTest
     {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325?database=1&password=secret");
-            $this->assertEquals("PONG", (yield $redis->ping()));
+            $this->assertEquals("PONG", yield $redis->ping());
         });
     }
 
@@ -30,7 +30,7 @@ class SelectTest extends RedisTest
     {
         Loop::run(function () {
             $redis = new Client("redis://:secret@127.0.0.1:25325/1");
-            $this->assertEquals("PONG", (yield $redis->ping()));
+            $this->assertEquals("PONG", yield $redis->ping());
         });
     }
 
@@ -43,10 +43,10 @@ class SelectTest extends RedisTest
             $redis1 = new Client("tcp://127.0.0.1:25325?database=1&password=secret");
             $payload = "bar";
             yield $redis1->set("foobar", $payload);
-            $this->assertEquals($payload, (yield $redis1->get("foobar")));
+            $this->assertEquals($payload, yield $redis1->get("foobar"));
 
             $redis0 = new Client("tcp://127.0.0.1:25325?password=secret");
-            $this->assertNotEquals($payload, (yield $redis0->get("foobar")));
+            $this->assertNotEquals($payload, yield $redis0->get("foobar"));
         });
     }
 
@@ -59,10 +59,10 @@ class SelectTest extends RedisTest
             $redis1 = new Client("redis://:secret@127.0.0.1:25325/1");
             $payload = "bar";
             yield $redis1->set("foobar", $payload);
-            $this->assertEquals($payload, (yield $redis1->get("foobar")));
+            $this->assertEquals($payload, yield $redis1->get("foobar"));
 
             $redis0 = new Client("tcp://127.0.0.1:25325?password=secret");
-            $this->assertNotEquals($payload, (yield $redis0->get("foobar")));
+            $this->assertNotEquals($payload, yield $redis0->get("foobar"));
         });
     }
 }

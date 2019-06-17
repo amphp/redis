@@ -17,13 +17,13 @@ class TransactionTest extends RedisTest
 
             $transaction = $_1->transaction();
             $transaction->watch("key");
-            $cnt = (yield $transaction->get("key"));
+            $cnt = yield $transaction->get("key");
             $cnt = $cnt + 1;
             $transaction->multi();
             $transaction->set("key", $cnt);
             $transaction->exec();
 
-            $this->assertEquals("2", (yield $_1->get("key")));
+            $this->assertEquals("2", yield $_1->get("key"));
         });
     }
 
@@ -41,7 +41,7 @@ class TransactionTest extends RedisTest
 
             $transaction = $_1->transaction();
             $transaction->watch("key");
-            $cnt = (yield $transaction->get("key"));
+            $cnt = yield $transaction->get("key");
             $cnt = $cnt + 1;
             $transaction->multi();
             $transaction->set("key", $cnt);

@@ -31,7 +31,7 @@ class AuthTest extends TestCase
     {
         Loop::run(function () {
             $redis = new Client("tcp://127.0.0.1:25325?password=secret");
-            $this->assertEquals("PONG", (yield $redis->ping()));
+            $this->assertEquals("PONG", yield $redis->ping());
             $redis->close();
         });
     }

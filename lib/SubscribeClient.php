@@ -21,6 +21,7 @@ class SubscribeClient
     /**
      * @param string $uri
      * @throws InvalidUriException
+     * @throws ConnectionConfigException
      */
     public function __construct(string $uri)
     {
