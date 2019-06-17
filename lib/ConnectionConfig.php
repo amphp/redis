@@ -104,7 +104,7 @@ class ConnectionConfig
                     );
                 }
 
-                if (!empty($uri->getPass())) {
+                if ($uri->getPass() !== "") {
                     $this->setPassword($uri->getPass());
                 }
                 if ($this->hasPassword() && $uri->hasQueryParameter("password")) {
@@ -132,6 +132,7 @@ class ConnectionConfig
     }
 
     /**
+     * @param string $password
      * @throws ConnectionConfigException
      */
     private function setPassword(string $password)
