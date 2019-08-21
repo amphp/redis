@@ -6,13 +6,13 @@ use Amp\Cache\CacheException;
 use Amp\Promise;
 use function Amp\call;
 
-class Cache implements \Amp\Cache\Cache
+final class Cache implements \Amp\Cache\Cache
 {
     /** @var Client */
     private $client;
 
     /**
-     * @param \Amp\Redis\Client $client
+     * @param Client $client
      */
     public function __construct(Client $client)
     {
@@ -26,7 +26,7 @@ class Cache implements \Amp\Cache\Cache
             try {
                 return yield $this->client->get($key);
             } catch (RedisException $e) {
-                throw new CacheException("Fetching from cache failed", 0, $e);
+                throw new CacheException('Fetching from cache failed', 0, $e);
             }
         });
     }
@@ -40,9 +40,9 @@ class Cache implements \Amp\Cache\Cache
 
         return call(function () use ($key, $value, $ttl) {
             try {
-                return yield $this->client->set($key, $value, $ttl === null ? 0 : $ttl);
+                return yield $this->client->set($key, $value, $ttl ?? 0);
             } catch (RedisException $e) {
-                throw new CacheException("Storing to cache failed", 0, $e);
+                throw new CacheException('Storing to cache failed', 0, $e);
             }
         });
     }
@@ -54,7 +54,7 @@ class Cache implements \Amp\Cache\Cache
             try {
                 return yield $this->client->del($key);
             } catch (RedisException $e) {
-                throw new CacheException("Deleting from cache failed", 0, $e);
+                throw new CacheException('Deleting from cache failed', 0, $e);
             }
         });
     }

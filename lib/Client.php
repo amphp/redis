@@ -31,7 +31,7 @@ class Client extends Redis
         $this->deferreds = [];
         $this->connection = new Connection($uri);
 
-        $this->connection->addEventHandler("response", function ($response) {
+        $this->connection->addEventHandler('response', function ($response) {
             $deferred = \array_shift($this->deferreds);
 
             if (empty($this->deferreds)) {
@@ -45,7 +45,7 @@ class Client extends Redis
             }
         });
 
-        $this->connection->addEventHandler(["close", "error"], function ($error = null) {
+        $this->connection->addEventHandler(['close', 'error'], function ($error = null) {
             if ($error) {
                 // Fail any outstanding promises
                 while ($this->deferreds) {
@@ -56,7 +56,7 @@ class Client extends Redis
         });
 
         if (!empty($this->password)) {
-            $this->connection->addEventHandler("connect", function () {
+            $this->connection->addEventHandler('connect', function () {
                 // AUTH must be before any other command, so we unshift it last
                 \array_unshift($this->deferreds, new Deferred);
 
@@ -65,7 +65,7 @@ class Client extends Redis
         }
 
         if ($this->database !== 0) {
-            $this->connection->addEventHandler("connect", function () {
+            $this->connection->addEventHandler('connect', function () {
                 // SELECT must be called for every new connection if another database than 0 is used
                 \array_unshift($this->deferreds, new Deferred);
 
@@ -74,7 +74,7 @@ class Client extends Redis
         }
     }
 
-    private function applyUri(string $uri)
+    private function applyUri(string $uri): void
     {
         $pairs = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
 
@@ -95,7 +95,7 @@ class Client extends Redis
      */
     public function close(): Promise
     {
-        $promise = Promise\all(\array_map(function (Deferred $deferred) {
+        $promise = Promise\all(\array_map(static function (Deferred $deferred) {
             return $deferred->promise();
         }, $this->deferreds));
 

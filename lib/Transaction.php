@@ -6,7 +6,7 @@ use Amp\Promise;
 use Amp\Success;
 use DomainException;
 
-class Transaction extends Redis
+final class Transaction extends Redis
 {
     private $client;
     private $commands;
@@ -21,16 +21,13 @@ class Transaction extends Redis
         $this->inTransaction = false;
     }
 
-    /**
-     * @return Promise
-     */
-    public function discard()
+    public function discard(): Promise
     {
         $this->commands = [];
         $this->transforms = [];
         $this->inTransaction = false;
 
-        return $this->send(["discard"]);
+        return $this->send(['discard']);
     }
 
     public function send(array $strings, callable $transform = null)
@@ -45,10 +42,7 @@ class Transaction extends Redis
         return new Success($this);
     }
 
-    /**
-     * @return Promise
-     */
-    public function exec()
+    public function exec(): Promise
     {
         // sending happens sync here, no need to concatenate these strings before
         foreach ($this->commands as $strings) {
@@ -61,7 +55,7 @@ class Transaction extends Redis
         $this->transforms = [];
         $this->inTransaction = false;
 
-        return $this->send(["exec"], function ($response) use ($transforms) {
+        return $this->send(['exec'], static function ($response) use ($transforms) {
             if (\is_array($response)) {
                 $count = \count($response);
 
@@ -74,40 +68,28 @@ class Transaction extends Redis
                 return $response;
             }
 
-            throw new RedisException("Transaction failed");
+            throw new RedisException('Transaction failed');
         });
     }
 
-    /**
-     * @return Promise
-     */
-    public function multi()
+    public function multi(): Promise
     {
         if ($this->inTransaction) {
-            throw new DomainException("Multi has already been called, discard or exec your transaction first");
+            throw new DomainException('Multi has already been called, discard or exec your transaction first');
         }
 
         $this->inTransaction = true;
 
-        return $this->send(["multi"]);
+        return $this->send(['multi']);
     }
 
-    /**
-     * @return Promise
-     */
-    public function unwatch()
+    public function unwatch(): Promise
     {
-        return $this->send(["unwatch"]);
+        return $this->send(['unwatch']);
     }
 
-    /**
-     * @param string|string[] $key
-     * @param string          ...$keys
-     *
-     * @return Promise
-     */
-    public function watch($key, ...$keys)
+    public function watch($key, ...$keys): Promise
     {
-        return $this->send(\array_merge(["watch"], (array) $key, $keys));
+        return $this->send(\array_merge(['watch'], (array) $key, $keys));
     }
 }

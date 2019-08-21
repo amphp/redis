@@ -16,7 +16,7 @@ abstract class Redis
      *
      * @return Promise
      */
-    public function query($arg, ...$args)
+    public function query($arg, ...$args): Promise
     {
         return $this->send(\array_merge((array) $arg, $args));
     }
@@ -28,7 +28,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function del($key, ...$keys)
+    public function del($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['del'], (array) $key, $keys));
     }
@@ -41,7 +41,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function dump($key)
+    public function dump($key): Promise
     {
         return $this->send(['dump', $key]);
     }
@@ -52,9 +52,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function exists($key)
+    public function exists($key): Promise
     {
-        return $this->send(['exists', $key], function ($response) {
+        return $this->send(['exists', $key], static function ($response) {
             return (bool) $response;
         });
     }
@@ -67,11 +67,11 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function expire($key, $seconds, $inMillis = false)
+    public function expire($key, $seconds, $inMillis = false): Promise
     {
         $cmd = $inMillis ? 'pexpire' : 'expire';
 
-        return $this->send([$cmd, $key, $seconds], function ($response) {
+        return $this->send([$cmd, $key, $seconds], static function ($response) {
             return (bool) $response;
         });
     }
@@ -84,11 +84,11 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function expireAt($key, $timestamp, $inMillis = false)
+    public function expireAt($key, $timestamp, $inMillis = false): Promise
     {
         $cmd = $inMillis ? 'pexpireat' : 'expireat';
 
-        return $this->send([$cmd, $key, $timestamp], function ($response) {
+        return $this->send([$cmd, $key, $timestamp], static function ($response) {
             return (bool) $response;
         });
     }
@@ -99,7 +99,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function keys($pattern)
+    public function keys($pattern): Promise
     {
         return $this->send(['keys', $pattern]);
     }
@@ -111,9 +111,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function move($key, $db)
+    public function move($key, $db): Promise
     {
-        return $this->send(['move', $key, $db], function ($response) {
+        return $this->send(['move', $key, $db], static function ($response) {
             return (bool) $response;
         });
     }
@@ -124,7 +124,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function objectRefcount($key)
+    public function objectRefcount($key): Promise
     {
         return $this->send(['object', 'refcount', $key]);
     }
@@ -135,7 +135,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function objectEncoding($key)
+    public function objectEncoding($key): Promise
     {
         return $this->send(['object', 'encoding', $key]);
     }
@@ -146,7 +146,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function objectIdletime($key)
+    public function objectIdletime($key): Promise
     {
         return $this->send(['object', 'idletime', $key]);
     }
@@ -157,9 +157,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function persist($key)
+    public function persist($key): Promise
     {
-        return $this->send(['persist', $key], function ($response) {
+        return $this->send(['persist', $key], static function ($response) {
             return (bool) $response;
         });
     }
@@ -168,7 +168,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function randomKey()
+    public function randomKey(): Promise
     {
         return $this->send(['randomkey']);
     }
@@ -181,11 +181,11 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function rename($key, $replacement, $existingOnly = false)
+    public function rename($key, $replacement, $existingOnly = false): Promise
     {
         $cmd = $existingOnly ? 'renamenx' : 'rename';
 
-        return $this->send([$cmd, $key, $replacement], function ($response) use ($existingOnly) {
+        return $this->send([$cmd, $key, $replacement], static function ($response) use ($existingOnly) {
             return $existingOnly || (bool) $response;
         });
     }
@@ -198,7 +198,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function restore($key, $serializedValue, $ttlMillis = 0)
+    public function restore($key, $serializedValue, $ttlMillis = 0): Promise
     {
         return $this->send(['restore', $key, $ttlMillis, $serializedValue]);
     }
@@ -211,7 +211,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function scan($cursor, $pattern = null, $count = null)
+    public function scan($cursor, $pattern = null, $count = null): Promise
     {
         $payload = ['scan', $cursor];
 
@@ -241,7 +241,7 @@ abstract class Redis
      * @return Promise
      * @yield array|int
      */
-    public function sort($key, $pattern = null, $direction = null, $get = null, $offset = null, $count = null, $alpha = false, $store = null)
+    public function sort($key, $pattern = null, $direction = null, $get = null, $offset = null, $count = null, $alpha = false, $store = null): Promise
     {
         $payload = ['sort', $key];
 
@@ -287,7 +287,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function ttl($key, $millis = false)
+    public function ttl($key, $millis = false): Promise
     {
         $cmd = $millis ? 'pttl' : 'ttl';
 
@@ -300,7 +300,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function type($key)
+    public function type($key): Promise
     {
         return $this->send(['type', $key]);
     }
@@ -312,7 +312,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function append($key, $value)
+    public function append($key, $value): Promise
     {
         return $this->send(['append', $key, $value]);
     }
@@ -324,7 +324,7 @@ abstract class Redis
      *
      * @return Promise
      */
-    public function bitCount($key, $start = null, $end = null)
+    public function bitCount($key, $start = null, $end = null): Promise
     {
         $cmd = ['bitcount', $key];
 
@@ -345,7 +345,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function bitOp($operation, $destination, $key, ...$keys)
+    public function bitOp($operation, $destination, $key, ...$keys): Promise
     {
         return $this->send(\array_merge(['bitop', $operation, $destination], (array) $key, $keys));
     }
@@ -359,7 +359,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function bitPos($key, $bit, $start = null, $end = null)
+    public function bitPos($key, $bit, $start = null, $end = null): Promise
     {
         $payload = ['bitpos', $key, $bit];
 
@@ -381,7 +381,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function decr($key, $decrement = 1)
+    public function decr($key, $decrement = 1): Promise
     {
         if ($decrement === 1) {
             return $this->send(['decr', $key]);
@@ -396,7 +396,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function get($key)
+    public function get($key): Promise
     {
         return $this->send(['get', $key]);
     }
@@ -408,7 +408,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function getBit($key, $offset)
+    public function getBit($key, $offset): Promise
     {
         return $this->send(['getbit', $key, $offset]);
     }
@@ -421,7 +421,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function getRange($key, $start = 0, $end = -1)
+    public function getRange($key, $start = 0, $end = -1): Promise
     {
         return $this->send(['getrange', $key, $start, $end]);
     }
@@ -433,7 +433,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function getSet($key, $value)
+    public function getSet($key, $value): Promise
     {
         return $this->send(['getset', $key, $value]);
     }
@@ -445,7 +445,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function incr($key, $increment = 1)
+    public function incr($key, $increment = 1): Promise
     {
         if ($increment === 1) {
             return $this->send(['incr', $key]);
@@ -461,9 +461,9 @@ abstract class Redis
      * @return Promise
      * @yield float
      */
-    public function incrByFloat($key, $increment)
+    public function incrByFloat($key, $increment): Promise
     {
-        return $this->send(['incrbyfloat', $key, $increment], function ($response) {
+        return $this->send(['incrbyfloat', $key, $increment], static function ($response) {
             return (float) $response;
         });
     }
@@ -475,7 +475,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function mGet($key, ...$keys)
+    public function mGet($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['mget'], (array) $key, $keys));
     }
@@ -487,7 +487,7 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function mSet(array $data, $onlyIfNoneExists = false)
+    public function mSet(array $data, $onlyIfNoneExists = false): Promise
     {
         $payload = [$onlyIfNoneExists ? 'msetnx' : 'mset'];
 
@@ -496,7 +496,7 @@ abstract class Redis
             $payload[] = $value;
         }
 
-        return $this->send($payload, function ($response) use ($onlyIfNoneExists) {
+        return $this->send($payload, static function ($response) use ($onlyIfNoneExists) {
             return !$onlyIfNoneExists || (bool) $response;
         });
     }
@@ -508,7 +508,7 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function setNx($key, $value)
+    public function setNx($key, $value): Promise
     {
         return $this->set($key, $value, 0, false, 'NX');
     }
@@ -523,7 +523,7 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function set($key, $value, $expire = 0, $useMillis = false, $existOption = null)
+    public function set($key, $value, $expire = 0, $useMillis = false, $existOption = null): Promise
     {
         $payload = ['set', $key, $value];
 
@@ -536,7 +536,7 @@ abstract class Redis
             $payload[] = $existOption;
         }
 
-        return $this->send($payload, function ($response) {
+        return $this->send($payload, static function ($response) {
             return (bool) $response;
         });
     }
@@ -548,7 +548,7 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function setXx($key, $value)
+    public function setXx($key, $value): Promise
     {
         return $this->set($key, $value, 0, false, 'XX');
     }
@@ -561,7 +561,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function setBit($key, $offset, $value)
+    public function setBit($key, $offset, $value): Promise
     {
         return $this->send(['setbit', $key, $offset, (int) $value]);
     }
@@ -574,7 +574,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function setRange($key, $offset, $value)
+    public function setRange($key, $offset, $value): Promise
     {
         return $this->send(['setrange', $key, $offset, $value]);
     }
@@ -585,7 +585,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function strlen($key)
+    public function strlen($key): Promise
     {
         return $this->send(['strlen', $key]);
     }
@@ -598,7 +598,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function hDel($key, $field, ...$fields)
+    public function hDel($key, $field, ...$fields): Promise
     {
         return $this->send(\array_merge(['hdel', $key], (array) $field, $fields));
     }
@@ -610,9 +610,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function hExists($key, $field)
+    public function hExists($key, $field): Promise
     {
-        return $this->send(['hexists', $key, $field], function ($response) {
+        return $this->send(['hexists', $key, $field], static function ($response) {
             return (bool) $response;
         });
     }
@@ -624,7 +624,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function hGet($key, $field)
+    public function hGet($key, $field): Promise
     {
         return $this->send(['hget', $key, $field]);
     }
@@ -635,9 +635,9 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function hGetAll($key)
+    public function hGetAll($key): Promise
     {
-        return $this->send(['hgetall', $key], function ($response) {
+        return $this->send(['hgetall', $key], static function ($response) {
             if ($response === null) {
                 return null;
             }
@@ -661,7 +661,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function hIncrBy($key, $field, $increment = 1)
+    public function hIncrBy($key, $field, $increment = 1): Promise
     {
         return $this->send(['hincrby', $key, $field, $increment]);
     }
@@ -674,9 +674,9 @@ abstract class Redis
      * @return Promise
      * @yield float
      */
-    public function hIncrByFloat($key, $field, $increment)
+    public function hIncrByFloat($key, $field, $increment): Promise
     {
-        return $this->send(['hincrbyfloat', $key, $field, $increment], function ($response) {
+        return $this->send(['hincrbyfloat', $key, $field, $increment], static function ($response) {
             return (float) $response;
         });
     }
@@ -687,7 +687,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function hKeys($key)
+    public function hKeys($key): Promise
     {
         return $this->send(['hkeys', $key]);
     }
@@ -698,7 +698,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function hLen($key)
+    public function hLen($key): Promise
     {
         return $this->send(['hlen', $key]);
     }
@@ -711,9 +711,9 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function hmGet($key, $field, ...$fields)
+    public function hmGet($key, $field, ...$fields): Promise
     {
-        return $this->send(\array_merge(['hmget', $key], (array) $field, $fields), function ($response) {
+        return $this->send(\array_merge(['hmget', $key], (array) $field, $fields), static function ($response) {
             if ($response === null) {
                 return null;
             }
@@ -736,7 +736,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function hmSet($key, array $data)
+    public function hmSet($key, array $data): Promise
     {
         $array = ['hmset', $key];
 
@@ -757,7 +757,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function hScan($key, $cursor, $pattern = null, $count = null)
+    public function hScan($key, $cursor, $pattern = null, $count = null): Promise
     {
         return $this->_scan('hscan', $key, $cursor, $pattern, $count);
     }
@@ -771,11 +771,11 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function hSet($key, $field, $value, $notExistingOnly = false)
+    public function hSet($key, $field, $value, $notExistingOnly = false): Promise
     {
         $cmd = $notExistingOnly ? 'hsetnx' : 'hset';
 
-        return $this->send([$cmd, $key, $field, $value], function ($response) {
+        return $this->send([$cmd, $key, $field, $value], static function ($response) {
             return (bool) $response;
         });
     }
@@ -787,7 +787,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function lIndex($key, $index)
+    public function lIndex($key, $index): Promise
     {
         return $this->send(['lindex', $key, $index]);
     }
@@ -801,7 +801,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lInsert($key, $relativePosition, $pivot, $value)
+    public function lInsert($key, $relativePosition, $pivot, $value): Promise
     {
         $relativePosition = \strtolower($relativePosition);
 
@@ -820,7 +820,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lLen($key)
+    public function lLen($key): Promise
     {
         return $this->send(['llen', $key]);
     }
@@ -832,7 +832,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function blPop($keys, $timeout = 0)
+    public function blPop($keys, $timeout = 0): Promise
     {
         return $this->send(\array_merge(['blpop'], (array) $keys, [$timeout]));
     }
@@ -844,7 +844,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function brPop($keys, $timeout = 0)
+    public function brPop($keys, $timeout = 0): Promise
     {
         return $this->send(\array_merge(['brpop'], (array) $keys, [$timeout]));
     }
@@ -857,7 +857,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function brPoplPush($source, $destination, $timeout = 0)
+    public function brPoplPush($source, $destination, $timeout = 0): Promise
     {
         return $this->send(['brpoplpush', $source, $destination, $timeout]);
     }
@@ -869,7 +869,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function lPop($key, ...$keys)
+    public function lPop($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['lpop'], (array) $key, $keys));
     }
@@ -882,7 +882,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lPush($key, $value, ...$values)
+    public function lPush($key, $value, ...$values): Promise
     {
         return $this->send(\array_merge(['lpush', $key], (array) $value, $values));
     }
@@ -895,7 +895,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lPushX($key, $value, ...$values)
+    public function lPushX($key, $value, ...$values): Promise
     {
         return $this->send(\array_merge(['lpushx', $key], (array) $value, $values));
     }
@@ -908,7 +908,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function lRange($key, $start = 0, $end = -1)
+    public function lRange($key, $start = 0, $end = -1): Promise
     {
         return $this->send(['lrange', $key, $start, $end]);
     }
@@ -921,7 +921,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lRem($key, $value, $count = 0)
+    public function lRem($key, $value, $count = 0): Promise
     {
         return $this->send(['lrem', $key, $count, $value]);
     }
@@ -934,7 +934,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function lSet($key, $index, $value)
+    public function lSet($key, $index, $value): Promise
     {
         return $this->send(['lset', $key, $index, $value]);
     }
@@ -947,7 +947,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function lTrim($key, $start = 0, $stop = -1)
+    public function lTrim($key, $start = 0, $stop = -1): Promise
     {
         return $this->send(['ltrim', $key, $start, $stop]);
     }
@@ -959,7 +959,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function rPop($key, ...$keys)
+    public function rPop($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['rpop'], (array) $key, $keys));
     }
@@ -971,7 +971,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function rPoplPush($source, $destination)
+    public function rPoplPush($source, $destination): Promise
     {
         return $this->send(['rpoplpush', $source, $destination]);
     }
@@ -984,7 +984,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function rPush($key, $value, ...$values)
+    public function rPush($key, $value, ...$values): Promise
     {
         return $this->send(\array_merge(['rpush', $key], (array) $value, $values));
     }
@@ -997,7 +997,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function rPushX($key, $value, ...$values)
+    public function rPushX($key, $value, ...$values): Promise
     {
         return $this->send(\array_merge(['rpushx', $key], (array) $value, $values));
     }
@@ -1010,7 +1010,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sAdd($key, $member, ...$members)
+    public function sAdd($key, $member, ...$members): Promise
     {
         return $this->send(\array_merge(['sadd', $key], (array) $member, $members));
     }
@@ -1021,7 +1021,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sCard($key)
+    public function sCard($key): Promise
     {
         return $this->send(['scard', $key]);
     }
@@ -1033,7 +1033,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function sDiff($key, ...$keys)
+    public function sDiff($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sdiff'], (array) $key, $keys));
     }
@@ -1046,7 +1046,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sDiffStore($destination, $key, ...$keys)
+    public function sDiffStore($destination, $key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sdiffstore', $destination], (array) $key, $keys));
     }
@@ -1058,7 +1058,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function sInter($key, ...$keys)
+    public function sInter($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sinter'], (array) $key, $keys));
     }
@@ -1071,7 +1071,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sInterStore($destination, $key, ...$keys)
+    public function sInterStore($destination, $key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sinterstore', $destination], (array) $key, $keys));
     }
@@ -1083,9 +1083,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function sIsMember($key, $member)
+    public function sIsMember($key, $member): Promise
     {
-        return $this->send(['sismember', $key, $member], function ($response) {
+        return $this->send(['sismember', $key, $member], static function ($response) {
             return (bool) $response;
         });
     }
@@ -1096,7 +1096,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function sMembers($key)
+    public function sMembers($key): Promise
     {
         return $this->send(['smembers', $key]);
     }
@@ -1109,9 +1109,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function sMove($source, $destination, $member)
+    public function sMove($source, $destination, $member): Promise
     {
-        return $this->send(['smove', $source, $destination, $member], function ($response) {
+        return $this->send(['smove', $source, $destination, $member], static function ($response) {
             return (bool) $response;
         });
     }
@@ -1122,7 +1122,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function sPop($key)
+    public function sPop($key): Promise
     {
         return $this->send(['spop', $key]);
     }
@@ -1135,7 +1135,7 @@ abstract class Redis
      * @return Promise
      * @yield string|string[]
      */
-    public function sRandMember($key, $count = null, $distinctOnly = true)
+    public function sRandMember($key, $count = null, $distinctOnly = true): Promise
     {
         $payload = ['srandmember', $key];
 
@@ -1154,7 +1154,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sRem($key, $member, ...$members)
+    public function sRem($key, $member, ...$members): Promise
     {
         return $this->send(\array_merge(['srem', $key], (array) $member, $members));
     }
@@ -1168,7 +1168,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function sScan($key, $cursor, $pattern = null, $count = null)
+    public function sScan($key, $cursor, $pattern = null, $count = null): Promise
     {
         return $this->_scan('sscan', $key, $cursor, $pattern, $count);
     }
@@ -1180,7 +1180,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function sUnion($key, ...$keys)
+    public function sUnion($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sunion'], (array) $key, $keys));
     }
@@ -1193,7 +1193,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function sUnionStore($destination, $key, ...$keys)
+    public function sUnionStore($destination, $key, ...$keys): Promise
     {
         return $this->send(\array_merge(['sunionstore', $destination], (array) $key, $keys));
     }
@@ -1205,7 +1205,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zAdd($key, array $data)
+    public function zAdd($key, array $data): Promise
     {
         $payload = ['zadd', $key];
 
@@ -1223,7 +1223,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zCard($key)
+    public function zCard($key): Promise
     {
         return $this->send(['zcard', $key]);
     }
@@ -1236,7 +1236,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zCount($key, $min, $max)
+    public function zCount($key, $min, $max): Promise
     {
         return $this->send(['zcount', $key, $min, $max]);
     }
@@ -1249,9 +1249,9 @@ abstract class Redis
      * @return Promise
      * @yield float
      */
-    public function zIncrBy($key, $member, $increment = 1)
+    public function zIncrBy($key, $member, $increment = 1): Promise
     {
-        return $this->send(['zincrby', $key, $increment, $member], function ($response) {
+        return $this->send(['zincrby', $key, $increment, $member], static function ($response) {
             return (float) $response;
         });
     }
@@ -1265,7 +1265,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zInterStore($destination, $numkeys, $keys, $aggregate = 'sum')
+    public function zInterStore($destination, $numkeys, $keys, $aggregate = 'sum'): Promise
     {
         $payload = ['zinterstore', $destination, $numkeys];
 
@@ -1307,7 +1307,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zLexCount($key, $min, $max)
+    public function zLexCount($key, $min, $max): Promise
     {
         return $this->send(['zlexcount', $key, $min, $max]);
     }
@@ -1321,7 +1321,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRange($key, $start = 0, $stop = -1, $withScores = false)
+    public function zRange($key, $start = 0, $stop = -1, $withScores = false): Promise
     {
         return $this->_zRange('zrange', $key, $start, $stop, $withScores);
     }
@@ -1336,7 +1336,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRangeByLex($key, $min, $max, $offset = null, $count = null)
+    public function zRangeByLex($key, $min, $max, $offset = null, $count = null): Promise
     {
         return $this->_zRangeByLex('zrangebylex', $key, $min, $max, $offset, $count);
     }
@@ -1352,7 +1352,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRangeByScore($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null)
+    public function zRangeByScore($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null): Promise
     {
         $payload = ['zrangebyscore', $key, $min, $max];
 
@@ -1366,7 +1366,7 @@ abstract class Redis
             $payload[] = $count;
         }
 
-        return $this->send($payload, function ($response) use ($withScores) {
+        return $this->send($payload, static function ($response) use ($withScores) {
             if ($withScores) {
                 $result = [];
 
@@ -1388,7 +1388,7 @@ abstract class Redis
      * @return Promise
      * @yield int|null
      */
-    public function zRank($key, $member)
+    public function zRank($key, $member): Promise
     {
         return $this->send(['zrank', $key, $member]);
     }
@@ -1401,7 +1401,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zRem($key, $member, ...$members)
+    public function zRem($key, $member, ...$members): Promise
     {
         return $this->send(\array_merge(['zrem', $key], (array) $member, $members));
     }
@@ -1414,7 +1414,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zRemRangeByLex($key, $min, $max)
+    public function zRemRangeByLex($key, $min, $max): Promise
     {
         return $this->send(['zremrangebylex', $key, $min, $max]);
     }
@@ -1427,7 +1427,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zRemRangeByRank($key, $start, $stop)
+    public function zRemRangeByRank($key, $start, $stop): Promise
     {
         return $this->send(['zremrangebyrank', $key, $start, $stop]);
     }
@@ -1440,7 +1440,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zRemRangeByScore($key, $min, $max)
+    public function zRemRangeByScore($key, $min, $max): Promise
     {
         return $this->send(['zremrangebyscore', $key, $min, $max]);
     }
@@ -1454,7 +1454,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRevRange($key, $start = 0, $stop = -1, $withScores = false)
+    public function zRevRange($key, $start = 0, $stop = -1, $withScores = false): Promise
     {
         return $this->_zRange('zrevrange', $key, $start, $stop, $withScores);
     }
@@ -1469,7 +1469,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRevRangeByLex($key, $min, $max, $offset = null, $count = null)
+    public function zRevRangeByLex($key, $min, $max, $offset = null, $count = null): Promise
     {
         return $this->_zRangeByLex('zrevrangebylex', $key, $min, $max, $offset, $count);
     }
@@ -1485,7 +1485,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zRevRangeByScore($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null)
+    public function zRevRangeByScore($key, $min = 0, $max = -1, $withScores = false, $offset = null, $count = null): Promise
     {
         $payload = ['zrangebyscore', $key, $min, $max];
 
@@ -1499,7 +1499,7 @@ abstract class Redis
             $payload[] = $count;
         }
 
-        return $this->send($payload, function ($response) use ($withScores) {
+        return $this->send($payload, static function ($response) use ($withScores) {
             if ($withScores) {
                 $result = [];
 
@@ -1521,7 +1521,7 @@ abstract class Redis
      * @return Promise
      * @yield int|null
      */
-    public function zRevRank($key, $member)
+    public function zRevRank($key, $member): Promise
     {
         return $this->send(['zrevrank', $key, $member]);
     }
@@ -1535,7 +1535,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function zScan($key, $cursor, $pattern = null, $count = null)
+    public function zScan($key, $cursor, $pattern = null, $count = null): Promise
     {
         return $this->_scan('zscan', $key, $cursor, $pattern, $count);
     }
@@ -1547,7 +1547,7 @@ abstract class Redis
      * @return Promise
      * @yield int|null
      */
-    public function zScore($key, $member)
+    public function zScore($key, $member): Promise
     {
         return $this->send(['zscore', $key, $member]);
     }
@@ -1561,7 +1561,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function zUnionStore($destination, $numkeys, $keys, $aggregate = 'sum')
+    public function zUnionStore($destination, $numkeys, $keys, $aggregate = 'sum'): Promise
     {
         $payload = ['zunionstore', $destination, $numkeys];
 
@@ -1603,9 +1603,9 @@ abstract class Redis
      * @return Promise
      * @yield bool
      */
-    public function pfAdd($key, $element, ...$elements)
+    public function pfAdd($key, $element, ...$elements): Promise
     {
-        return $this->send(\array_merge(['pfadd', $key], (array) $element, $elements), function ($response) {
+        return $this->send(\array_merge(['pfadd', $key], (array) $element, $elements), static function ($response) {
             return (bool) $response;
         });
     }
@@ -1617,7 +1617,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function pfCount($key, ...$keys)
+    public function pfCount($key, ...$keys): Promise
     {
         return $this->send(\array_merge(['pfcount'], (array) $key, $keys));
     }
@@ -1630,7 +1630,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function pfMerge($destinationKey, $sourceKey, ...$sourceKeys)
+    public function pfMerge($destinationKey, $sourceKey, ...$sourceKeys): Promise
     {
         return $this->send(\array_merge(['pfmerge', $destinationKey], (array) $sourceKey, $sourceKeys));
     }
@@ -1642,7 +1642,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function publish($channel, $message)
+    public function publish($channel, $message): Promise
     {
         return $this->send(['publish', $channel, $message]);
     }
@@ -1653,7 +1653,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function pubSubChannels($pattern = null)
+    public function pubSubChannels($pattern = null): Promise
     {
         $payload = ['pubsub', 'channels'];
 
@@ -1671,9 +1671,9 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function pubSubNumSub($channel = [], ...$channels)
+    public function pubSubNumSub($channel = [], ...$channels): Promise
     {
-        return $this->send(\array_merge(['pubsub', 'numsub'], (array) $channel, $channels), function ($response) {
+        return $this->send(\array_merge(['pubsub', 'numsub'], (array) $channel, $channels), static function ($response) {
             $result = [];
 
             for ($i = 0, $count = \count($response); $i < $count; $i += 2) {
@@ -1688,7 +1688,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function pubSubNumPat()
+    public function pubSubNumPat(): Promise
     {
         return $this->send(['pubsub', 'numpat']);
     }
@@ -1697,7 +1697,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function ping()
+    public function ping(): Promise
     {
         return $this->send(['ping']);
     }
@@ -1706,7 +1706,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function quit()
+    public function quit(): Promise
     {
         return $this->send(['quit']);
     }
@@ -1715,7 +1715,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function bgRewriteAOF()
+    public function bgRewriteAOF(): Promise
     {
         return $this->send(['bgrewriteaof']);
     }
@@ -1724,7 +1724,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function bgSave()
+    public function bgSave(): Promise
     {
         return $this->send(['bgsave']);
     }
@@ -1733,7 +1733,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function clientGetName()
+    public function clientGetName(): Promise
     {
         return $this->send(['client', 'getname']);
     }
@@ -1744,7 +1744,7 @@ abstract class Redis
      * @return Promise
      * @yield string|int
      */
-    public function clientKill(...$args)
+    public function clientKill(...$args): Promise
     {
         return $this->send(\array_merge(['client', 'kill'], $args));
     }
@@ -1753,9 +1753,9 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function clientList()
+    public function clientList(): Promise
     {
-        return $this->send(['client', 'list'], function ($response) {
+        return $this->send(['client', 'list'], static function ($response) {
             return \explode("\n", $response);
         });
     }
@@ -1766,7 +1766,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function clientPause($timeout)
+    public function clientPause($timeout): Promise
     {
         return $this->send(['client', 'pause', $timeout]);
     }
@@ -1777,7 +1777,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function clientSetName($name)
+    public function clientSetName($name): Promise
     {
         return $this->send(['client', 'setname', $name]);
     }
@@ -1786,7 +1786,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function clusterSlots()
+    public function clusterSlots(): Promise
     {
         return $this->send(['cluster', 'slots']);
     }
@@ -1795,7 +1795,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function command()
+    public function command(): Promise
     {
         return $this->send(['command']);
     }
@@ -1804,7 +1804,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function commandCount()
+    public function commandCount(): Promise
     {
         return $this->send(['command', 'count']);
     }
@@ -1815,7 +1815,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function commandGetKeys(...$args)
+    public function commandGetKeys(...$args): Promise
     {
         return $this->send(\array_merge(['command', 'getkeys'], $args));
     }
@@ -1827,7 +1827,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function commandInfo($command, ...$commands)
+    public function commandInfo($command, ...$commands): Promise
     {
         return $this->send(\array_merge(['command', 'info'], (array) $command, $commands));
     }
@@ -1838,7 +1838,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function configGet($parameter)
+    public function configGet($parameter): Promise
     {
         return $this->send(['config', 'get', $parameter]);
     }
@@ -1847,7 +1847,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function configResetStat()
+    public function configResetStat(): Promise
     {
         return $this->send(['config', 'resetstat']);
     }
@@ -1856,7 +1856,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function configRewrite()
+    public function configRewrite(): Promise
     {
         return $this->send(['config', 'rewrite']);
     }
@@ -1868,7 +1868,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function configSet($parameter, $value)
+    public function configSet($parameter, $value): Promise
     {
         return $this->send(['config', 'set', $parameter, $value]);
     }
@@ -1877,7 +1877,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function dbSize()
+    public function dbSize(): Promise
     {
         return $this->send(['dbsize']);
     }
@@ -1886,7 +1886,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function flushAll()
+    public function flushAll(): Promise
     {
         return $this->send(['flushall']);
     }
@@ -1895,7 +1895,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function flushDB()
+    public function flushDB(): Promise
     {
         return $this->send(['flushdb']);
     }
@@ -1904,7 +1904,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function info()
+    public function info(): Promise
     {
         return $this->send(['info']);
     }
@@ -1913,7 +1913,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function lastSave()
+    public function lastSave(): Promise
     {
         return $this->send(['lastsave']);
     }
@@ -1922,7 +1922,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function role()
+    public function role(): Promise
     {
         return $this->send(['role']);
     }
@@ -1931,7 +1931,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function save()
+    public function save(): Promise
     {
         return $this->send(['save']);
     }
@@ -1942,7 +1942,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function shutdown($modifier = null)
+    public function shutdown($modifier = null): Promise
     {
         $payload = ['shutdown'];
 
@@ -1953,7 +1953,7 @@ abstract class Redis
         return $this->send($payload);
     }
 
-    public function slaveOf($host, $port = null)
+    public function slaveOf($host, $port = null): void
     {
         if ($host === null) {
             $host = 'no';
@@ -1969,7 +1969,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function slowlogGet($count = null)
+    public function slowlogGet($count = null): Promise
     {
         $payload = ['slowlog', 'get'];
 
@@ -1984,7 +1984,7 @@ abstract class Redis
      * @return Promise
      * @yield int
      */
-    public function slowlogLen()
+    public function slowlogLen(): Promise
     {
         return $this->send(['slowlog', 'len']);
     }
@@ -1993,7 +1993,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function slowlogReset()
+    public function slowlogReset(): Promise
     {
         return $this->send(['slowlog', 'reset']);
     }
@@ -2002,7 +2002,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function time()
+    public function time(): Promise
     {
         return $this->send(['time']);
     }
@@ -2014,7 +2014,7 @@ abstract class Redis
      * @return Promise
      * @yield array
      */
-    public function scriptExists($script, ...$scripts)
+    public function scriptExists($script, ...$scripts): Promise
     {
         return $this->send(\array_merge(['script', 'exists'], (array) $script, $scripts));
     }
@@ -2023,7 +2023,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function scriptFlush()
+    public function scriptFlush(): Promise
     {
         $this->evalCache = []; // same as internal redis behavior
 
@@ -2034,7 +2034,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function scriptKill()
+    public function scriptKill(): Promise
     {
         return $this->send(['script', 'kill']);
     }
@@ -2045,7 +2045,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function scriptLoad($script)
+    public function scriptLoad($script): Promise
     {
         return $this->send(['script', 'load', $script]);
     }
@@ -2056,7 +2056,7 @@ abstract class Redis
      * @return Promise
      * @yield string
      */
-    public function echo($text)
+    public function echo($text): Promise
     {
         return $this->send(['echo', $text]);
     }
@@ -2069,7 +2069,7 @@ abstract class Redis
      * @return Promise
      * @yield mixed
      */
-    public function eval($script, $keys = [], $args = [])
+    public function eval($script, $keys = [], $args = []): Promise
     {
         return call(function () use ($script, $keys, $args) {
             try {
@@ -2095,7 +2095,7 @@ abstract class Redis
      *
      * @deprecated Please use 'eval', which automatically attempts to use 'evalSha'.
      */
-    public function evalSha($sha1, $keys = [], $args = [])
+    public function evalSha($sha1, $keys = [], $args = []): Promise
     {
         \trigger_error("'evalSha' is deprecated. Please use 'eval', which automatically attempts to use 'evalSha'.");
 
@@ -2127,7 +2127,7 @@ abstract class Redis
             $payload[] = 'WITHSCORES';
         }
 
-        return $this->send($payload, function ($response) use ($withScores) {
+        return $this->send($payload, static function ($response) use ($withScores) {
             if ($withScores) {
                 $result = [];
 

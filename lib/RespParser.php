@@ -2,18 +2,18 @@
 
 namespace Amp\Redis;
 
-class RespParser
+final class RespParser
 {
-    const CRLF = "\r\n";
-    const TYPE_SIMPLE_STRING = "+";
-    const TYPE_ERROR = "-";
-    const TYPE_ARRAY = "*";
-    const TYPE_BULK_STRING = "$";
-    const TYPE_INTEGER = ":";
+    public const CRLF = "\r\n";
+    public const TYPE_SIMPLE_STRING = '+';
+    public const TYPE_ERROR = '-';
+    public const TYPE_ARRAY = '*';
+    public const TYPE_BULK_STRING = '$';
+    public const TYPE_INTEGER = ':';
 
     private $responseCallback;
-    private $buffer = "";
-    private $currentResponse = null;
+    private $buffer = '';
+    private $currentResponse;
     private $arrayStack;
     private $currentSize;
     private $arraySizes;
@@ -23,13 +23,16 @@ class RespParser
         $this->responseCallback = $responseCallback;
     }
 
-    public function reset()
+    public function reset(): void
     {
-        $this->buffer = "";
-        $this->currentResponse = $this->arrayStack = $this->currentSize = $this->arraySizes = null;
+        $this->buffer = '';
+        $this->currentResponse = null;
+        $this->arrayStack = null;
+        $this->currentSize = null;
+        $this->arraySizes = null;
     }
 
-    public function append(string $str)
+    public function append(string $str): void
     {
         $this->buffer .= $str;
 
@@ -69,7 +72,7 @@ class RespParser
 
                 default:
                     throw new ParserException(
-                        \sprintf("unknown resp data type: %s", $type)
+                        \sprintf('unknown resp data type: %s', $type)
                     );
             }
 
@@ -78,7 +81,7 @@ class RespParser
             switch ($type) {
                 case self::TYPE_INTEGER:
                 case self::TYPE_ARRAY:
-                    $payload = \intval($payload);
+                    $payload = (int) $payload;
                     break;
 
                 case self::TYPE_ERROR:
@@ -105,7 +108,7 @@ class RespParser
                 }
 
                 while (--$this->currentSize === 0) {
-                    if (\sizeof($this->arrayStack) === 0) {
+                    if (\count($this->arrayStack) === 0) {
                         $cb = $this->responseCallback;
                         $cb($this->currentResponse);
                         $this->currentResponse = null;
