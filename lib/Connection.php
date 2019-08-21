@@ -4,11 +4,10 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Promise;
-use Amp\Socket\ClientConnectContext;
+use Amp\Socket\ConnectContext;
 use Amp\Socket\Socket;
 use Amp\Success;
-use Amp\Uri\InvalidUriException;
-use Amp\Uri\Uri;
+use League\Uri;
 use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
@@ -46,7 +45,7 @@ class Connection
     public function __construct(string $uri)
     {
         if (\strpos($uri, "tcp://") !== 0 && \strpos($uri, "unix://") !== 0) {
-            throw new InvalidUriException("URI must start with tcp:// or unix://");
+            throw new \Error("URI must start with tcp:// or unix://");
         }
 
         $this->applyUri($uri);
@@ -69,15 +68,19 @@ class Connection
 
     private function applyUri(string $uri)
     {
-        $uri = new Uri($uri);
+        $parts = Uri\parse($uri);
 
-        if ($uri->getScheme() === "tcp") {
-            $this->uri = $uri->getScheme() . "://" . $uri->getHost() . ":" . $uri->getPort();
+        $scheme = $parts['scheme'] ?? '';
+
+        if ($scheme === "tcp") {
+            $this->uri = $scheme . "://" . ($parts['host'] ?? '') . ":" . ($parts['port'] ?? 0);
         } else {
-            $this->uri = $uri->getScheme() . "://" . $uri->getPath();
+            $this->uri = $scheme . "://" . ($parts['path'] ?? '');
         }
 
-        $this->timeout = $uri->getQueryParameter("timeout") ?? $this->timeout;
+        $pairs = Internal\parseUriQuery($parts['query'] ?? '');
+
+        $this->timeout = $pairs['timeout'] ?? $this->timeout;
     }
 
     public function addEventHandler($event, callable $callback)
@@ -135,7 +138,7 @@ class Connection
         $this->state = self::STATE_CONNECTING;
         $this->connectPromisor = new Deferred;
         $connectPromise = $this->connectPromisor->promise();
-        $socketPromise = connect($this->uri, (new ClientConnectContext)->withConnectTimeout($this->timeout));
+        $socketPromise = connect($this->uri, (new ConnectContext)->withConnectTimeout($this->timeout));
 
         $socketPromise->onResolve(function ($error, Socket $socket = null) {
             $connectPromisor = $this->connectPromisor;

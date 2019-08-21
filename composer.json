@@ -20,10 +20,11 @@
         "issues": "https://github.com/amphp/redis/issues"
     },
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.1",
         "amphp/amp": "^2",
         "amphp/cache": "^1",
-        "amphp/socket": "^0.10"
+        "amphp/socket": "^1 || ^0.10",
+        "league/uri-parser": "^1.4"
     },
     "require-dev": {
         "amphp/phpunit-util": "^1",
@@ -33,7 +34,10 @@
     "autoload": {
         "psr-4": {
             "Amp\\Redis\\": "lib"
-        }
+        },
+        "files": [
+            "lib/Internal/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

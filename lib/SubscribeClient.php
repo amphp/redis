@@ -5,8 +5,7 @@ namespace Amp\Redis;
 use Amp\Deferred;
 use Amp\Emitter;
 use Amp\Promise;
-use Amp\Uri\Uri;
-use Exception;
+use League\Uri;
 use function Amp\call;
 
 class SubscribeClient
@@ -36,7 +35,7 @@ class SubscribeClient
         $this->connection = new Connection($uri);
         $this->connection->addEventHandler("response", function ($response) {
             if ($this->authDeferred) {
-                if ($response instanceof Exception) {
+                if ($response instanceof \Exception) {
                     $this->authDeferred->fail($response);
                 } else {
                     $this->authDeferred->resolve($response);
@@ -105,9 +104,8 @@ class SubscribeClient
 
     private function applyUri(string $uri)
     {
-        $uri = new Uri($uri);
-
-        $this->password = $uri->getQueryParameter("password") ?? null;
+        $parts = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
+        $this->password = $parts['password'] ?? null;
     }
 
     public function close()

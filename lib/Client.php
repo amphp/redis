@@ -4,8 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Deferred;
 use Amp\Promise;
-use Amp\Uri\Uri;
-use Exception;
+use League\Uri;
 use function Amp\call;
 
 class Client extends Redis
@@ -39,7 +38,7 @@ class Client extends Redis
                 $this->connection->setIdle(true);
             }
 
-            if ($response instanceof Exception) {
+            if ($response instanceof \Exception) {
                 $deferred->fail($response);
             } else {
                 $deferred->resolve($response);
@@ -77,10 +76,10 @@ class Client extends Redis
 
     private function applyUri(string $uri)
     {
-        $uri = new Uri($uri);
+        $pairs = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
 
-        $this->database = (int) ($uri->getQueryParameter("database") ?? 0);
-        $this->password = $uri->getQueryParameter("password") ?? null;
+        $this->database = (int) ($pairs['database'] ?? 0);
+        $this->password = $pairs['password'] ?? null;
     }
 
     /**
