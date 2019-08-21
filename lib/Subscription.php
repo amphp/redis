@@ -28,7 +28,7 @@ final class Subscription implements Iterator
         return $this->iterator->getCurrent();
     }
 
-    public function cancel()
+    public function cancel(): void
     {
         ($this->unsubscribeCallback)();
     }
