@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Amp\Redis\Mutex;
 
@@ -6,25 +6,24 @@ use Amp\Delayed;
 use Amp\Loop;
 use Amp\Redis\Client;
 use Amp\Redis\RedisTest;
+use function Amp\call;
+use function Amp\Promise\wait;
 
 class MutexTest extends RedisTest
 {
     public function setUp(): void
     {
-        Loop::run(function () {
-            $client = new Client('tcp://127.0.0.1:6379');
+        wait(call(static function () {
+            $client = new Client('tcp://127.0.0.1:25325');
             yield $client->flushAll();
             yield $client->close();
-        });
+        }));
     }
 
-    /**
-     * @test
-     */
-    public function timeout()
+    public function testTimeout(): void
     {
         Loop::run(function () {
-            $mutex = new Mutex('tcp://127.0.0.1:6379');
+            $mutex = new Mutex('tcp://127.0.0.1:25325');
 
             yield $mutex->lock('foo1', '123456789');
 
@@ -41,18 +40,15 @@ class MutexTest extends RedisTest
         });
     }
 
-    /**
-     * @test
-     */
-    public function free()
+    public function testFree(): void
     {
         Loop::run(function () {
-            $mutex = new Mutex('tcp://127.0.0.1:6379');
+            $mutex = new Mutex('tcp://127.0.0.1:25325');
 
             yield $mutex->lock('foo2', '123456789');
 
             $pause = new Delayed(500);
-            $pause->onResolve(function () use ($mutex) {
+            $pause->onResolve(static function () use ($mutex) {
                 $mutex->unlock('foo2', '123456789');
             });
 
@@ -65,19 +61,16 @@ class MutexTest extends RedisTest
         });
     }
 
-    /**
-     * @test
-     */
-    public function renew()
+    public function testRenew(): void
     {
         Loop::run(function () {
-            $mutex = new Mutex('tcp://127.0.0.1:6379');
+            $mutex = new Mutex('tcp://127.0.0.1:25325');
 
             yield $mutex->lock('foo3', '123456789');
 
             for ($i = 0; $i < 5; $i++) {
                 $pause = new Delayed(500);
-                $pause->onResolve(function () use ($mutex) {
+                $pause->onResolve(static function () use ($mutex) {
                     $mutex->renew('foo3', '123456789');
                 });
 
