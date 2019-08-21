@@ -30,7 +30,7 @@ final class Transaction extends Redis
         return $this->send(['discard']);
     }
 
-    public function send(array $strings, callable $transform = null)
+    public function send(array $strings, callable $transform = null): Promise
     {
         if (!$this->inTransaction) {
             return $this->client->send($strings, $transform);

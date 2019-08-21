@@ -33,7 +33,7 @@ abstract class Redis
         return $this->send(\array_merge(['del'], (array) $key, $keys));
     }
 
-    abstract protected function send(array $strings, callable $transform = null);
+    abstract protected function send(array $strings, callable $transform = null): Promise;
 
     /**
      * @param string $key
@@ -2102,7 +2102,7 @@ abstract class Redis
         return $this->send(\array_merge(['evalsha', $sha1, \count((array) $keys)], (array) $keys, (array) $args));
     }
 
-    private function _scan($command, $key, $cursor, $pattern = null, $count = null)
+    private function _scan($command, $key, $cursor, $pattern = null, $count = null): Promise
     {
         $payload = [$command, $key, $cursor];
 
@@ -2119,7 +2119,7 @@ abstract class Redis
         return $this->send($payload);
     }
 
-    private function _zRange($command, $key, $start = 0, $stop = -1, $withScores = false)
+    private function _zRange($command, $key, $start = 0, $stop = -1, $withScores = false): Promise
     {
         $payload = [$command, $key, $start, $stop];
 
@@ -2142,7 +2142,7 @@ abstract class Redis
         });
     }
 
-    private function _zRangeByLex($command, $key, $min, $max, $offset = null, $count = null)
+    private function _zRangeByLex($command, $key, $min, $max, $offset = null, $count = null): Promise
     {
         $payload = [$command, $key, $min, $max];
 
