@@ -11,26 +11,26 @@ abstract class Redis
     private $evalCache = [];
 
     /**
-     * @param string|string[] $arg
-     * @param string[]        ...$args
+     * @param string $arg
+     * @param string ...$args
      *
      * @return Promise
      */
-    public function query($arg, ...$args): Promise
+    public function query(string $arg, string ...$args): Promise
     {
-        return $this->send(\array_merge((array) $arg, $args));
+        return $this->send(\array_merge([$arg], $args));
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function del($key, ...$keys): Promise
+    public function del(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['del'], (array) $key, $keys));
+        return $this->send(\array_merge(['del'], [$key], $keys));
     }
 
     abstract protected function send(array $strings, callable $transform = null): Promise;
@@ -345,17 +345,17 @@ abstract class Redis
     }
 
     /**
-     * @param string          $operation
-     * @param string          $destination
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $operation
+     * @param string $destination
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function bitOp(string $operation, string $destination, $key, ...$keys): Promise
+    public function bitOp(string $operation, string $destination, string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['bitop', $operation, $destination], (array) $key, $keys));
+        return $this->send(\array_merge(['bitop', $operation, $destination], [$key], $keys));
     }
 
     /**
@@ -477,15 +477,15 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield array
      */
-    public function mGet($key, ...$keys): Promise
+    public function mGet(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['mget'], (array) $key, $keys));
+        return $this->send(\array_merge(['mget'], [$key], $keys));
     }
 
     /**
@@ -575,9 +575,9 @@ abstract class Redis
     }
 
     /**
-     * @param $key
-     * @param $offset
-     * @param $value
+     * @param string $key
+     * @param int    $offset
+     * @param mixed  $value
      *
      * @return Promise
      * @yield int
@@ -599,16 +599,16 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $field
-     * @param string[]        ...$fields
+     * @param string $key
+     * @param string $field
+     * @param string ...$fields
      *
      * @return Promise
      * @yield int
      */
-    public function hDel(string $key, $field, ...$fields): Promise
+    public function hDel(string $key, string $field, string ...$fields): Promise
     {
-        return $this->send(\array_merge(['hdel', $key], (array) $field, $fields));
+        return $this->send(\array_merge(['hdel', $key], [$field], $fields));
     }
 
     /**
@@ -712,16 +712,16 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $field
-     * @param string[]        ...$fields
+     * @param string $key
+     * @param string $field
+     * @param string ...$fields
      *
      * @return Promise
      * @yield array
      */
-    public function hmGet(string $key, $field, ...$fields): Promise
+    public function hmGet(string $key, string $field, string ...$fields): Promise
     {
-        return $this->send(\array_merge(['hmget', $key], (array) $field, $fields), static function ($response) {
+        return $this->send(\array_merge(['hmget', $key], [$field], $fields), static function ($response) {
             if ($response === null) {
                 return null;
             }
@@ -871,41 +871,41 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield string
      */
-    public function lPop($key, ...$keys): Promise
+    public function lPop(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['lpop'], (array) $key, $keys));
+        return $this->send(\array_merge(['lpop'], [$key], $keys));
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $value
-     * @param string[]        ...$values
+     * @param string $key
+     * @param string $value
+     * @param string ...$values
      *
      * @return Promise
      * @yield int
      */
-    public function lPush(string $key, $value, ...$values): Promise
+    public function lPush(string $key, string $value, string ...$values): Promise
     {
-        return $this->send(\array_merge(['lpush', $key], (array) $value, $values));
+        return $this->send(\array_merge(['lpush', $key], [$value], $values));
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $value
-     * @param string[]        ...$values
+     * @param string $key
+     * @param string $value
+     * @param string ...$values
      *
      * @return Promise
      * @yield int
      */
-    public function lPushX(string $key, $value, ...$values): Promise
+    public function lPushX(string $key, string $value, string ...$values): Promise
     {
-        return $this->send(\array_merge(['lpushx', $key], (array) $value, $values));
+        return $this->send(\array_merge(['lpushx', $key], [$value], $values));
     }
 
     /**
@@ -961,15 +961,15 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield string
      */
-    public function rPop($key, ...$keys): Promise
+    public function rPop(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['rpop'], (array) $key, $keys));
+        return $this->send(\array_merge(['rpop'], [$key], $keys));
     }
 
     /**
@@ -985,42 +985,42 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $value
-     * @param string[]        ...$values
+     * @param string $key
+     * @param string $value
+     * @param string ...$values
      *
      * @return Promise
      * @yield int
      */
-    public function rPush(string $key, $value, ...$values): Promise
+    public function rPush(string $key, string $value, string ...$values): Promise
     {
-        return $this->send(\array_merge(['rpush', $key], (array) $value, $values));
+        return $this->send(\array_merge(['rpush', $key], [$value], $values));
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $value
-     * @param string[]        ...$values
+     * @param string $key
+     * @param string $value
+     * @param string ...$values
      *
      * @return Promise
      * @yield int
      */
-    public function rPushX(string $key, $value, ...$values): Promise
+    public function rPushX(string $key, string $value, string ...$values): Promise
     {
-        return $this->send(\array_merge(['rpushx', $key], (array) $value, $values));
+        return $this->send(\array_merge(['rpushx', $key], [$value], $values));
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $member
-     * @param string[]        ...$members
+     * @param string $key
+     * @param string $member
+     * @param string ...$members
      *
      * @return Promise
      * @yield int
      */
-    public function sAdd(string $key, $member, ...$members): Promise
+    public function sAdd(string $key, string $member, string ...$members): Promise
     {
-        return $this->send(\array_merge(['sadd', $key], (array) $member, $members));
+        return $this->send(\array_merge(['sadd', $key], [$member], $members));
     }
 
     /**
@@ -1035,53 +1035,53 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield array
      */
-    public function sDiff($key, ...$keys): Promise
+    public function sDiff(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sdiff'], (array) $key, $keys));
+        return $this->send(\array_merge(['sdiff'], [$key], $keys));
     }
 
     /**
-     * @param string          $destination
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $destination
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function sDiffStore(string $destination, $key, ...$keys): Promise
+    public function sDiffStore(string $destination, string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sdiffstore', $destination], (array) $key, $keys));
+        return $this->send(\array_merge(['sdiffstore', $destination], [$key], $keys));
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield array
      */
-    public function sInter($key, ...$keys): Promise
+    public function sInter(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sinter'], (array) $key, $keys));
+        return $this->send(\array_merge(['sinter'], [$key], $keys));
     }
 
     /**
-     * @param string          $destination
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $destination
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function sInterStore(string $destination, $key, ...$keys): Promise
+    public function sInterStore(string $destination, string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sinterstore', $destination], (array) $key, $keys));
+        return $this->send(\array_merge(['sinterstore', $destination], [$key], $keys));
     }
 
     /**
@@ -1155,16 +1155,16 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $member
-     * @param string[]        ...$members
+     * @param string $key
+     * @param string $member
+     * @param string ...$members
      *
      * @return Promise
      * @yield int
      */
-    public function sRem(string $key, $member, ...$members): Promise
+    public function sRem(string $key, string $member, string ...$members): Promise
     {
-        return $this->send(\array_merge(['srem', $key], (array) $member, $members));
+        return $this->send(\array_merge(['srem', $key], [$member], $members));
     }
 
     /**
@@ -1182,28 +1182,28 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield array
      */
-    public function sUnion($key, ...$keys): Promise
+    public function sUnion(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sunion'], (array) $key, $keys));
+        return $this->send(\array_merge(['sunion'], [$key], $keys));
     }
 
     /**
-     * @param string          $destination
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $destination
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function sUnionStore(string $destination, $key, ...$keys): Promise
+    public function sUnionStore(string $destination, string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['sunionstore', $destination], (array) $key, $keys));
+        return $this->send(\array_merge(['sunionstore', $destination], [$key], $keys));
     }
 
     /**
@@ -1402,16 +1402,16 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $member
-     * @param string[]        ...$members
+     * @param string $key
+     * @param string $member
+     * @param string ...$members
      *
      * @return Promise
      * @yield int
      */
-    public function zRem(string $key, $member, ...$members): Promise
+    public function zRem(string $key, string $member, string ...$members): Promise
     {
-        return $this->send(\array_merge(['zrem', $key], (array) $member, $members));
+        return $this->send(\array_merge(['zrem', $key], [$member], $members));
     }
 
     /**
@@ -1604,43 +1604,43 @@ abstract class Redis
     }
 
     /**
-     * @param string          $key
-     * @param string|string[] $element
-     * @param string[]        ...$elements
+     * @param string $key
+     * @param string $element
+     * @param string ...$elements
      *
      * @return Promise
      * @yield bool
      */
-    public function pfAdd(string $key, $element, ...$elements): Promise
+    public function pfAdd(string $key, string $element, string ...$elements): Promise
     {
-        return $this->send(\array_merge(['pfadd', $key], (array) $element, $elements), static function ($response) {
+        return $this->send(\array_merge(['pfadd', $key], [$element], $elements), static function ($response) {
             return (bool) $response;
         });
     }
 
     /**
-     * @param string|string[] $key
-     * @param string[]        ...$keys
+     * @param string $key
+     * @param string ...$keys
      *
      * @return Promise
      * @yield int
      */
-    public function pfCount($key, ...$keys): Promise
+    public function pfCount(string $key, string ...$keys): Promise
     {
-        return $this->send(\array_merge(['pfcount'], (array) $key, $keys));
+        return $this->send(\array_merge(['pfcount'], [$key], $keys));
     }
 
     /**
-     * @param string          $destinationKey
-     * @param string|string[] $sourceKey
-     * @param string[]        ...$sourceKeys
+     * @param string $destinationKey
+     * @param string $sourceKey
+     * @param string ...$sourceKeys
      *
      * @return Promise
      * @yield string
      */
-    public function pfMerge(string $destinationKey, $sourceKey, ...$sourceKeys): Promise
+    public function pfMerge(string $destinationKey, string $sourceKey, string ...$sourceKeys): Promise
     {
-        return $this->send(\array_merge(['pfmerge', $destinationKey], (array) $sourceKey, $sourceKeys));
+        return $this->send(\array_merge(['pfmerge', $destinationKey], [$sourceKey], $sourceKeys));
     }
 
     /**
@@ -1673,15 +1673,14 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $channel
-     * @param string[]        ...$channels
+     * @param string ...$channels
      *
      * @return Promise
      * @yield array
      */
-    public function pubSubNumSub($channel = [], ...$channels): Promise
+    public function pubSubNumSub(string ...$channels): Promise
     {
-        return $this->send(\array_merge(['pubsub', 'numsub'], (array) $channel, $channels), static function ($response) {
+        return $this->send(\array_merge(['pubsub', 'numsub'], $channels), static function ($response) {
             $result = [];
 
             for ($i = 0, $count = \count($response); $i < $count; $i += 2) {
@@ -1747,12 +1746,12 @@ abstract class Redis
     }
 
     /**
-     * @param string[] ...$args
+     * @param string ...$args
      *
      * @return Promise
      * @yield string|int
      */
-    public function clientKill(...$args): Promise
+    public function clientKill(string ...$args): Promise
     {
         return $this->send(\array_merge(['client', 'kill'], $args));
     }
@@ -1829,15 +1828,15 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $command
-     * @param string[]        ...$commands
+     * @param string $command
+     * @param string ...$commands
      *
      * @return Promise
      * @yield array
      */
-    public function commandInfo($command, ...$commands): Promise
+    public function commandInfo(string $command, string ...$commands): Promise
     {
-        return $this->send(\array_merge(['command', 'info'], (array) $command, $commands));
+        return $this->send(\array_merge(['command', 'info'], [$command], $commands));
     }
 
     /**
@@ -2016,15 +2015,15 @@ abstract class Redis
     }
 
     /**
-     * @param string|string[] $script
-     * @param string[]        ...$scripts
+     * @param string $script
+     * @param string ...$scripts
      *
      * @return Promise
      * @yield array
      */
-    public function scriptExists($script, ...$scripts): Promise
+    public function scriptExists(string $script, string ...$scripts): Promise
     {
-        return $this->send(\array_merge(['script', 'exists'], (array) $script, $scripts));
+        return $this->send(\array_merge(['script', 'exists'], [$script], $scripts));
     }
 
     /**
@@ -2099,7 +2098,7 @@ abstract class Redis
      * @param string|string[] $args
      *
      * @return Promise
-     * @yield mixed
+     * @yield      mixed
      *
      * @deprecated Please use 'eval', which automatically attempts to use 'evalSha'.
      */
