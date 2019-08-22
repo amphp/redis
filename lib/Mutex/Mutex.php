@@ -165,10 +165,10 @@ RENEW;
 
                 return $this->std->eval(self::TOKEN, ["lock:{$id}"], [$token, $this->ttl]);
             } finally {
-                $hash = spl_object_hash($connection);
+                $hash = \spl_object_hash($connection);
                 $key = $this->busyConnectionMap[$hash] ?? null;
                 unset($this->busyConnections[$key], $this->busyConnectionMap[$hash]);
-                $this->readyConnections[] = [time(), $connection];
+                $this->readyConnections[] = [\time(), $connection];
             }
         });
     }
@@ -261,11 +261,11 @@ RENEW;
      */
     protected function getReadyConnection(): Client
     {
-        $connection = array_pop($this->readyConnections);
+        $connection = \array_pop($this->readyConnections);
         $connection = $connection[1] ?? null;
 
         if (!$connection) {
-            if ($this->maxConnections && count($this->busyConnections) + 1 === $this->maxConnections) {
+            if ($this->maxConnections && \count($this->busyConnections) + 1 === $this->maxConnections) {
                 throw new ConnectionLimitException;
             }
 
@@ -275,10 +275,10 @@ RENEW;
         }
 
         $this->busyConnections[] = $connection;
-        end($this->busyConnections);
+        \end($this->busyConnections);
 
-        $hash = spl_object_hash($connection);
-        $this->busyConnectionMap[$hash] = key($this->busyConnections);
+        $hash = \spl_object_hash($connection);
+        $this->busyConnectionMap[$hash] = \key($this->busyConnections);
 
         return $connection;
     }
