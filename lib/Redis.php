@@ -245,7 +245,7 @@ abstract class Redis
         string $key,
         ?string $pattern = null,
         ?string $direction = null,
-        ?string $get = null,
+        $get = null,
         ?int $offset = null,
         ?int $count = null,
         bool $alpha = false,
