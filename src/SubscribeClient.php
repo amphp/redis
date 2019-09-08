@@ -8,7 +8,7 @@ use Amp\Promise;
 use League\Uri;
 use function Amp\call;
 
-class SubscribeClient
+final class SubscribeClient
 {
     /** @var Deferred */
     private $authDeferred;
@@ -102,12 +102,6 @@ class SubscribeClient
         }
     }
 
-    private function applyUri(string $uri): void
-    {
-        $parts = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
-        $this->password = $parts['password'] ?? null;
-    }
-
     public function close(): void
     {
         $this->connection->close();
@@ -130,6 +124,36 @@ class SubscribeClient
                 $this->unloadEmitter($emitter, $channel);
             });
         });
+    }
+
+    /**
+     * @param string $pattern
+     *
+     * @return Promise<Subscription>
+     */
+    public function pSubscribe(string $pattern): Promise
+    {
+        return call(function () use ($pattern) {
+            yield $this->connection->send(['psubscribe', $pattern]);
+
+            $emitter = new Emitter;
+            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+
+            return new Subscription($emitter->iterate(), function () use ($emitter, $pattern) {
+                $this->unloadPatternEmitter($emitter, $pattern);
+            });
+        });
+    }
+
+    public function getConnectionState(): int
+    {
+        return $this->connection->getState();
+    }
+
+    private function applyUri(string $uri): void
+    {
+        $parts = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
+        $this->password = $parts['password'] ?? null;
     }
 
     private function unloadEmitter(Emitter $emitter, string $channel): void
@@ -164,25 +188,6 @@ class SubscribeClient
         return $this->connection->send(['unsubscribe', $channel]);
     }
 
-    /**
-     * @param string $pattern
-     *
-     * @return Promise<Subscription>
-     */
-    public function pSubscribe(string $pattern): Promise
-    {
-        return call(function () use ($pattern) {
-            yield $this->connection->send(['psubscribe', $pattern]);
-
-            $emitter = new Emitter;
-            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
-
-            return new Subscription($emitter->iterate(), function () use ($emitter, $pattern) {
-                $this->unloadPatternEmitter($emitter, $pattern);
-            });
-        });
-    }
-
     private function unloadPatternEmitter(Emitter $emitter, string $pattern): void
     {
         $hash = \spl_object_hash($emitter);
@@ -213,10 +218,5 @@ class SubscribeClient
         }
 
         return $this->connection->send(['punsubscribe', $pattern]);
-    }
-
-    public function getConnectionState(): int
-    {
-        return $this->connection->getState();
     }
 }

@@ -12,7 +12,7 @@ use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\Socket\connect;
 
-class Connection
+final class Connection
 {
     public const STATE_DISCONNECTED = 0;
     public const STATE_CONNECTING = 1;

@@ -33,10 +33,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Amp\\Redis\\": "lib"
+            "Amp\\Redis\\": "src"
         },
         "files": [
-            "lib/Internal/functions.php"
+            "src/functions.php",
+            "src/Internal/functions.php"
         ]
     },
     "autoload-dev": {

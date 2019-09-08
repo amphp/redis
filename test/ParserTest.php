@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Amp\Redis;
 
@@ -6,27 +6,21 @@ use PHPUnit\Framework\TestCase;
 
 class ParserTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function bulkString()
+    public function testBulkString(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("$3\r\nfoo\r\n");
 
-        $this->assertEquals("foo", $result);
+        $this->assertEquals('foo', $result);
     }
 
-    /**
-     * @test
-     */
-    public function integer()
+    public function testInteger(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append(":42\r\n");
@@ -34,41 +28,32 @@ class ParserTest extends TestCase
         $this->assertEquals(42, $result);
     }
 
-    /**
-     * @test
-     */
-    public function simpleString()
+    public function testSimpleString(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("+foo\r\n");
 
-        $this->assertEquals("foo", $result);
+        $this->assertEquals('foo', $result);
     }
 
-    /**
-     * @test
-     */
-    public function error()
+    public function testError(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("-ERR something went wrong :(\r\n");
 
-        $this->assertInstanceOf("Amp\\Redis\\QueryException", $result);
+        $this->assertInstanceOf(QueryException::class, $result);
     }
 
-    /**
-     * @test
-     */
-    public function stringNull()
+    public function testStringNull(): void
     {
         $result = false;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("$-1\r\n");
@@ -76,27 +61,21 @@ class ParserTest extends TestCase
         $this->assertNull($result);
     }
 
-    /**
-     * @test
-     */
-    public function pipeline()
+    public function testPipeline(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("+foo\r\n+bar\r\n");
 
-        $this->assertEquals("bar", $result);
+        $this->assertEquals('bar', $result);
     }
 
-    /**
-     * @test
-     */
-    public function latency()
+    public function testLatency(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("$3\r");
@@ -104,16 +83,13 @@ class ParserTest extends TestCase
         $parser->append("\nfoo\r");
         $this->assertNull($result);
         $parser->append("\n");
-        $this->assertEquals("foo", $result);
+        $this->assertEquals('foo', $result);
     }
 
-    /**
-     * @test
-     */
-    public function arrayNull()
+    public function testArrayNull(): void
     {
         $result = false;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*-1\r\n");
@@ -121,13 +97,10 @@ class ParserTest extends TestCase
         $this->assertNull($result);
     }
 
-    /**
-     * @test
-     */
-    public function arrayEmpty()
+    public function testArrayEmpty(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*0\r\n");
@@ -135,55 +108,43 @@ class ParserTest extends TestCase
         $this->assertEquals([], $result);
     }
 
-    /**
-     * @test
-     */
-    public function arraySingle()
+    public function testArraySingle(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*1\r\n+foo\r\n");
 
-        $this->assertEquals(["foo"], $result);
+        $this->assertEquals(['foo'], $result);
     }
 
-    /**
-     * @test
-     */
-    public function arrayMultiple()
+    public function testArrayMultiple(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*3\r\n+foo\r\n:42\r\n$11\r\nHello World\r\n");
 
-        $this->assertEquals(["foo", 42, "Hello World"], $result);
+        $this->assertEquals(['foo', 42, 'Hello World'], $result);
     }
 
-    /**
-     * @test
-     */
-    public function arrayComplex()
+    public function testArrayComplex(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*3\r\n*1\r\n+foo\r\n:42\r\n*2\r\n+bar\r\n$3\r\nbaz\r\n");
 
-        $this->assertEquals([["foo"], 42, ["bar", "baz"]], $result);
+        $this->assertEquals([['foo'], 42, ['bar', 'baz']], $result);
     }
 
-    /**
-     * @test
-     */
-    public function arrayInnerEmpty()
+    public function testArrayInnerEmpty(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*1\r\n*-1\r\n");
@@ -192,28 +153,27 @@ class ParserTest extends TestCase
     }
 
     /**
-     * @test
      * @see https://github.com/amphp/redis/commit/a495189735412c8962b219b6633685ddca84040c
      */
-    public function arrayPipeline()
+    public function testArrayPipeline(): void
     {
         $result = null;
-        $parser = new RespParser(function ($resp) use (&$result) {
+        $parser = new RespParser(static function ($resp) use (&$result) {
             $result = $resp;
         });
         $parser->append("*1\r\n+foo\r\n*1\r\n+bar\r\n");
 
-        $this->assertEquals(["bar"], $result);
+        $this->assertEquals(['bar'], $result);
     }
 
-    /**
-     * @test
-     * @expectedException \Amp\Redis\ParserException
-     */
-    public function unknownType()
+    public function testUnknownType(): void
     {
-        $parser = new RespParser(function ($resp) {
+        $this->expectException(ParserException::class);
+
+        $parser = new RespParser(static function ($resp) {
+            // do nothing
         });
+
         $parser->append("3$\r\nfoo\r\n");
     }
 }

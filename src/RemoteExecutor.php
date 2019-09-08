@@ -7,7 +7,7 @@ use Amp\Promise;
 use League\Uri;
 use function Amp\call;
 
-class Client extends Redis
+final class RemoteExecutor implements QueryExecutor
 {
     /** @var Deferred[] */
     private $deferreds;
@@ -74,22 +74,6 @@ class Client extends Redis
         }
     }
 
-    private function applyUri(string $uri): void
-    {
-        $pairs = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
-
-        $this->database = (int) ($pairs['database'] ?? 0);
-        $this->password = $pairs['password'] ?? null;
-    }
-
-    /**
-     * @return Transaction
-     */
-    public function transaction(): Transaction
-    {
-        return new Transaction($this);
-    }
-
     /**
      * @return Promise
      */
@@ -106,15 +90,22 @@ class Client extends Redis
         return $promise;
     }
 
+    public function getConnectionState(): int
+    {
+        return $this->connection->getState();
+    }
+
     /**
      * @param string[] $args
      * @param callable $transform
      *
      * @return Promise
      */
-    protected function send(array $args, callable $transform = null): Promise
+    public function execute(array $args, callable $transform = null): Promise
     {
         return call(function () use ($args, $transform) {
+            $command = \strtolower($args[0] ?? '');
+
             $deferred = new Deferred;
             $promise = $deferred->promise();
 
@@ -123,12 +114,21 @@ class Client extends Redis
             yield $this->connection->send($args);
             $response = yield $promise;
 
+            if ($command === 'select') {
+                $this->database = (int) $args[1];
+            } elseif ($command === 'quit') {
+                $this->connection->close();
+            }
+
             return $transform ? $transform($response) : $response;
         });
     }
 
-    public function getConnectionState(): int
+    private function applyUri(string $uri): void
     {
-        return $this->connection->getState();
+        $pairs = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
+
+        $this->database = (int) ($pairs['database'] ?? 0);
+        $this->password = $pairs['password'] ?? null;
     }
 }

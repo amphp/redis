@@ -4,7 +4,7 @@ namespace Amp\Redis\Mutex;
 
 final class MutexOptions
 {
-    private $connectionLimit = 1000;
+    private $connectionLimit = 64;
     private $ttl = 1000;
     private $timeout = 3;
 

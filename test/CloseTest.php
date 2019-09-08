@@ -2,20 +2,13 @@
 
 namespace Amp\Redis;
 
-use Amp\Loop;
-
-class CloseTest extends RedisTest
+class CloseTest extends IntegrationTest
 {
-    /**
-     * @test
-     */
-    public function reconnect()
+    public function testReconnect(): \Generator
     {
-        Loop::run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325");
-            $this->assertEquals("PONG", (yield $redis->ping()));
-            yield $redis->close();
-            $this->assertEquals("PONG", (yield $redis->ping()));
-        });
+        $redis = $this->createInstance();
+        $this->assertEquals('PONG', yield $redis->echo('PONG'));
+        yield $redis->quit();
+        $this->assertEquals('PONG', yield $redis->echo('PONG'));
     }
 }

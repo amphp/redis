@@ -2,20 +2,15 @@
 
 namespace Amp\Redis;
 
-use Amp\Loop;
-use PHPUnit\Framework\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 
-class DownTest extends TestCase
+class DownTest extends AsyncTestCase
 {
-    /**
-     * @test
-     * @expectedException \Amp\Redis\ConnectException
-     */
-    public function ping()
+    public function test(): \Generator
     {
-        Loop::run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325");
-            yield $redis->ping();
-        });
+        $this->expectException(ConnectException::class);
+
+        $redis = new Redis(new RemoteExecutor('tcp://127.0.0.1:25325'));
+        yield $redis->ping();
     }
 }

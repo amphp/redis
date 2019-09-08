@@ -2,45 +2,21 @@
 
 namespace Amp\Redis;
 
-use Amp\Loop;
-
-class KeyTest extends RedisTest
+class KeyTest extends IntegrationTest
 {
-    /**
-     * @test
-     */
-    public function keys()
+    public function testKeys(): \Generator
     {
-        Loop::run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325");
-            $this->assertEquals([], (yield $redis->keys("*")));
-            $redis->set("foo", 42);
-            $this->assertEquals(["foo"], (yield $redis->keys("*")));
-        });
+        $this->assertEquals([], yield $this->redis->getKeys());
+        $this->redis->set('foo', 42);
+        $this->assertEquals(['foo'], yield $this->redis->getKeys());
     }
 
-    /**
-     * @test
-     */
-    public function exists()
+    public function testSetHasDelete(): \Generator
     {
-        Loop::run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325");
-            $this->assertTrue((yield $redis->exists("foo")));
-            $this->assertFalse((yield $redis->exists("bar")));
-        });
-    }
-
-    /**
-     * @test
-     */
-    public function del()
-    {
-        Loop::run(function () {
-            $redis = new Client("tcp://127.0.0.1:25325");
-            $this->assertTrue((yield $redis->exists("foo")));
-            $redis->del("foo");
-            $this->assertFalse((yield $redis->exists("foo")));
-        });
+        $this->assertFalse(yield $this->redis->has('foo'));
+        yield $this->redis->set('foo', 'bar');
+        $this->assertTrue(yield $this->redis->has('foo'));
+        yield $this->redis->delete('foo');
+        $this->assertFalse(yield $this->redis->has('foo'));
     }
 }

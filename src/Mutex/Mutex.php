@@ -5,7 +5,8 @@ namespace Amp\Redis\Mutex;
 use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
-use Amp\Redis\Client;
+use Amp\Redis\QueryExecutorFactory;
+use Amp\Redis\Redis;
 use function Amp\call;
 use function Amp\Promise\all;
 
@@ -58,17 +59,17 @@ else
 end
 RENEW;
 
-    /** @var string */
-    private $uri;
+    /** @var QueryExecutorFactory */
+    private $queryExecutorFactory;
     /** @var MutexOptions */
     private $options;
-    /** @var Client */
-    private $std;
+    /** @var Redis */
+    private $sharedConnection;
     /** @var array */
     private $busyConnectionMap = [];
-    /** @var Client[] */
+    /** @var Redis[] */
     private $busyConnections = [];
-    /** @var Client[] */
+    /** @var Redis[] */
     private $readyConnections = [];
     /** @var string */
     private $watcher;
@@ -76,14 +77,14 @@ RENEW;
     /**
      * Constructs a new Mutex instance. A single instance can be used to create as many locks as you need.
      *
-     * @param string            $uri URI of the Redis server instance, e.g. tcp://localhost:6379
-     * @param MutexOptions|null $options
+     * @param QueryExecutorFactory $queryExecutorFactory
+     * @param MutexOptions|null    $options
      */
-    public function __construct(string $uri, ?MutexOptions $options = null)
+    public function __construct(QueryExecutorFactory $queryExecutorFactory, ?MutexOptions $options = null)
     {
-        $this->uri = $uri;
+        $this->queryExecutorFactory = $queryExecutorFactory;
         $this->options = $options ?? new MutexOptions;
-        $this->std = new Client($uri);
+        $this->sharedConnection = new Redis($queryExecutorFactory->createQueryExecutor());
 
         $readyConnections = &$this->readyConnections;
         $this->watcher = Loop::repeat(5000, static function () use (&$readyConnections) {
@@ -96,7 +97,7 @@ RENEW;
                 }
 
                 unset($readyConnections[$key]);
-                $connection->close();
+                $connection->quit();
             }
         });
 
@@ -125,24 +126,26 @@ RENEW;
     public function lock(string $id, string $token): Promise
     {
         return call(function () use ($id, $token) {
-            $result = yield $this->std->eval(self::LOCK, ["lock:{$id}", "queue:{$id}"], [$token, $this->getTtl()]);
+            $result = yield $this->sharedConnection->eval(self::LOCK, ["lock:{$id}", "queue:{$id}"],
+                [$token, $this->getTtl()]);
 
             if ($result) {
                 return true;
             }
 
-            yield $this->std->expire("queue:{$id}", $this->timeout * 2, true);
+            yield $this->sharedConnection->expireInMillis("queue:{$id}", $this->getTimeout() * 2);
 
             $connection = $this->getReadyConnection();
 
             try {
-                $result = yield $connection->brPoplPush("queue:{$id}", "lock:{$id}", $this->options->getTimeout());
+                $result = yield $connection->getList("queue:{$id}")
+                    ->popTailPushHeadBlocking("lock:{$id}", $this->options->getTimeout());
 
                 if ($result === null) {
                     return new Failure(new LockException);
                 }
 
-                return $this->std->eval(self::TOKEN, ["lock:{$id}"], [$token, $this->options->getTtl()]);
+                return $this->sharedConnection->eval(self::TOKEN, ["lock:{$id}"], [$token, $this->options->getTtl()]);
             } finally {
                 $hash = \spl_object_hash($connection);
                 $key = $this->busyConnectionMap[$hash] ?? null;
@@ -164,7 +167,7 @@ RENEW;
      */
     public function unlock(string $id, string $token): Promise
     {
-        return $this->std->eval(self::UNLOCK, ["lock:{$id}", "queue:{$id}"],
+        return $this->sharedConnection->eval(self::UNLOCK, ["lock:{$id}", "queue:{$id}"],
             [$token, 2 * $this->options->getTimeout()]);
     }
 
@@ -180,7 +183,7 @@ RENEW;
      */
     public function renew(string $id, string $token): Promise
     {
-        return $this->std->eval(self::RENEW, ["lock:{$id}"], [$token, $this->options->getTtl()]);
+        return $this->sharedConnection->eval(self::RENEW, ["lock:{$id}"], [$token, $this->options->getTtl()]);
     }
 
     /**
@@ -194,14 +197,14 @@ RENEW;
     {
         Loop::cancel($this->watcher);
 
-        $promises = [$this->std->close()];
+        $promises = [$this->sharedConnection->quit()];
 
         foreach ($this->busyConnections as $connection) {
-            $promises[] = $connection->close();
+            $promises[] = $connection->quit();
         }
 
         foreach ($this->readyConnections as [$time, $connection]) {
-            $promises[] = $connection->close();
+            $promises[] = $connection->quit();
         }
 
         return all($promises);
@@ -234,12 +237,12 @@ RENEW;
      * used anymore. If there's no connection available, it creates a new one as long as the max. connections limit
      * allows it.
      *
-     * @return Client ready connection to be used for blocking commands.
+     * @return Redis Ready connection to be used for blocking commands.
      *
      * @throws ConnectionLimitException if there's no ready connection and no new connection could be created because of
      * a max. connections limit.
      */
-    protected function getReadyConnection(): Client
+    protected function getReadyConnection(): Redis
     {
         $connection = \array_pop($this->readyConnections);
         $connection = $connection[1] ?? null;
@@ -249,9 +252,7 @@ RENEW;
                 throw new ConnectionLimitException('The number of allowed connections has exceeded the configured limit of ' . $this->options->getConnectionLimit());
             }
 
-            $connection = new Client(
-                $this->uri
-            );
+            $connection = new Redis($this->queryExecutorFactory->createQueryExecutor());
         }
 
         $this->busyConnections[] = $connection;

@@ -2,21 +2,22 @@
 
 namespace Amp\Redis;
 
+use Amp\Cache\Cache as CacheInterface;
 use Amp\Cache\CacheException;
 use Amp\Promise;
 use function Amp\call;
 
-final class Cache implements \Amp\Cache\Cache
+final class Cache implements CacheInterface
 {
-    /** @var Client */
-    private $client;
+    /** @var Redis */
+    private $redis;
 
     /**
-     * @param Client $client
+     * @param Redis $redis
      */
-    public function __construct(Client $client)
+    public function __construct(Redis $redis)
     {
-        $this->client = $client;
+        $this->redis = $redis;
     }
 
     /** @inheritdoc */
@@ -24,7 +25,7 @@ final class Cache implements \Amp\Cache\Cache
     {
         return call(function () use ($key) {
             try {
-                return yield $this->client->get($key);
+                return yield $this->redis->get($key);
             } catch (RedisException $e) {
                 throw new CacheException('Fetching from cache failed', 0, $e);
             }
@@ -40,7 +41,7 @@ final class Cache implements \Amp\Cache\Cache
 
         return call(function () use ($key, $value, $ttl) {
             try {
-                return yield $this->client->set($key, $value, $ttl ?? 0);
+                return yield $this->redis->set($key, $value, (new SetOptions)->withTtl($ttl ?? 0));
             } catch (RedisException $e) {
                 throw new CacheException('Storing to cache failed', 0, $e);
             }
@@ -52,7 +53,7 @@ final class Cache implements \Amp\Cache\Cache
     {
         return call(function () use ($key) {
             try {
-                return yield $this->client->del($key);
+                return yield $this->redis->delete($key);
             } catch (RedisException $e) {
                 throw new CacheException('Deleting from cache failed', 0, $e);
             }
