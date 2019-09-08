@@ -8,7 +8,7 @@ class AuthTest extends AsyncTestCase
 {
     public static function setUpBeforeClass()
     {
-        print shell_exec('redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret');
+        print \shell_exec('redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret');
         \sleep(2);
     }
 
@@ -18,7 +18,7 @@ class AuthTest extends AsyncTestCase
         @\unlink('/tmp/amp-redis.pid');
 
         if (!empty($pid)) {
-            print shell_exec("kill $pid");
+            print \shell_exec("kill $pid");
             \sleep(2);
         }
     }

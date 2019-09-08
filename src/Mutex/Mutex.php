@@ -126,8 +126,11 @@ RENEW;
     public function lock(string $id, string $token): Promise
     {
         return call(function () use ($id, $token) {
-            $result = yield $this->sharedConnection->eval(self::LOCK, ["lock:{$id}", "queue:{$id}"],
-                [$token, $this->getTtl()]);
+            $result = yield $this->sharedConnection->eval(
+                self::LOCK,
+                ["lock:{$id}", "queue:{$id}"],
+                [$token, $this->getTtl()]
+            );
 
             if ($result) {
                 return true;
@@ -167,8 +170,11 @@ RENEW;
      */
     public function unlock(string $id, string $token): Promise
     {
-        return $this->sharedConnection->eval(self::UNLOCK, ["lock:{$id}", "queue:{$id}"],
-            [$token, 2 * $this->options->getTimeout()]);
+        return $this->sharedConnection->eval(
+            self::UNLOCK,
+            ["lock:{$id}", "queue:{$id}"],
+            [$token, 2 * $this->options->getTimeout()]
+        );
     }
 
     /**
