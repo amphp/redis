@@ -9,6 +9,9 @@ php:
   - 7.4snapshot
   - nightly
 
+services:
+  - redis-server
+
 matrix:
   allow_failures:
     - php: 7.4snapshot
