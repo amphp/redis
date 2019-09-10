@@ -39,7 +39,7 @@ final class Config
      *
      * @throws RedisException
      */
-    public function __construct(string $uri)
+    private function __construct(string $uri)
     {
         $this->applyUri($uri);
     }
