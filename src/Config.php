@@ -44,7 +44,7 @@ final class Config
         $this->applyUri($uri);
     }
 
-    public function getUri(): string
+    public function getConnectUri(): string
     {
         return $this->uri;
     }
@@ -67,6 +67,30 @@ final class Config
     public function getDatabase(): int
     {
         return $this->database;
+    }
+
+    public function withTimeout(int $timeout): self
+    {
+        $clone = clone $this;
+        $clone->timeout = $timeout;
+
+        return $clone;
+    }
+
+    public function withPassword(string $password): self
+    {
+        $clone = clone $this;
+        $clone->password = $password;
+
+        return $clone;
+    }
+
+    public function withDatabase(int $database): self
+    {
+        $clone = clone $this;
+        $clone->database = $database;
+
+        return $clone;
     }
 
     /**

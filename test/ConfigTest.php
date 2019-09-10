@@ -18,7 +18,7 @@ class ConfigTest extends TestCase
     ): void {
         $config = Config::fromUri($uri);
 
-        self::assertSame($expectedUri, $config->getUri());
+        self::assertSame($expectedUri, $config->getConnectUri());
         self::assertSame($expectedDatabase, $config->getDatabase());
         self::assertSame($expectedTimeout, $config->getTimeout());
         self::assertSame($expectedPassword, $config->getPassword());

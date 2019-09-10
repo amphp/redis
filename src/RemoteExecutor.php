@@ -84,7 +84,7 @@ final class RemoteExecutor implements QueryExecutor
 
         return $this->connect = call(function () {
             /** @var RespSocket $resp */
-            $resp = yield connect($this->config);
+            $resp = yield connect($this->config->withDatabase($this->database));
 
             asyncCall(function () use ($resp) {
                 try {
@@ -101,7 +101,7 @@ final class RemoteExecutor implements QueryExecutor
                         }
                     }
 
-                    throw new SocketException('Socket to redis instance (' . $this->config->getUri() . ') closed unexpectedly');
+                    throw new SocketException('Socket to redis instance (' . $this->config->getConnectUri() . ') closed unexpectedly');
                 } catch (\Throwable $error) {
                     $queue = $this->queue;
                     $this->queue = [];

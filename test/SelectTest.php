@@ -19,4 +19,16 @@ class SelectTest extends IntegrationTest
 
         $this->assertNotSame($payload, yield $this->redis->get('foobar'));
     }
+
+    public function testSelectOnReconnect(): \Generator
+    {
+        $redis1 = $this->createInstance();
+        yield $redis1->select(1);
+        yield $redis1->quit();
+        $payload = 'bar';
+        yield $redis1->set('foobar', $payload);
+        $this->assertSame($payload, yield $redis1->get('foobar'));
+
+        $this->assertNotSame($payload, yield $this->redis->get('foobar'));
+    }
 }

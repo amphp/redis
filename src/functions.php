@@ -63,10 +63,10 @@ function connect(Config $config): Promise
     return call(static function () use ($config) {
         try {
             $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
-            $resp = new RespSocket(yield Socket\connect($config->getUri(), $connectContext));
+            $resp = new RespSocket(yield Socket\connect($config->getConnectUri(), $connectContext));
         } catch (Socket\SocketException $e) {
             throw new SocketException(
-                'Failed to connect to redis instance (' . $config->getUri() . ')',
+                'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
                 0,
                 $e
             );
@@ -92,7 +92,7 @@ function connect(Config $config): Promise
                     throw $response;
                 }
             } else {
-                throw new RedisException('Failed to connect to redis instance (' . $config->getUri() . ')');
+                throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
             }
         }
 

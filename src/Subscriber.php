@@ -102,7 +102,7 @@ final class Subscriber
                         }
                     }
 
-                    throw new SocketException('Socket to redis instance (' . $this->config->getUri() . ') closed unexpectedly');
+                    throw new SocketException('Socket to redis instance (' . $this->config->getConnectUri() . ') closed unexpectedly');
                 } catch (\Throwable $error) {
                     $emitters = \array_merge($this->emitters, $this->patternEmitters);
 
