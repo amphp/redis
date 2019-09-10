@@ -2,97 +2,31 @@
 
 namespace Amp\Redis;
 
+use Amp\ByteStream\StreamException;
 use Amp\Deferred;
 use Amp\Promise;
-use League\Uri;
+use Amp\Socket;
+use function Amp\asyncCall;
 use function Amp\call;
 
 final class RemoteExecutor implements QueryExecutor
 {
     /** @var Deferred[] */
-    private $deferreds;
+    private $queue = [];
 
-    /** @var Connection */
-    private $connection;
-
-    /** @var string */
-    private $password;
+    /** @var Config */
+    private $config;
 
     /** @var int */
-    private $database = 0;
+    private $database;
 
-    /**
-     * @param string $uri
-     */
-    public function __construct(string $uri)
+    /** @var Promise|null */
+    private $connect;
+
+    public function __construct(Config $config)
     {
-        $this->applyUri($uri);
-
-        $this->deferreds = [];
-        $this->connection = new Connection($uri);
-
-        $this->connection->addEventHandler('response', function ($response) {
-            $deferred = \array_shift($this->deferreds);
-
-            if (empty($this->deferreds)) {
-                $this->connection->setIdle(true);
-            }
-
-            if ($response instanceof \Exception) {
-                $deferred->fail($response);
-            } else {
-                $deferred->resolve($response);
-            }
-        });
-
-        $this->connection->addEventHandler(['close', 'error'], function ($error = null) {
-            if ($error) {
-                // Fail any outstanding promises
-                while ($this->deferreds) {
-                    $deferred = \array_shift($this->deferreds);
-                    $deferred->fail($error);
-                }
-            }
-        });
-
-        if (!empty($this->password)) {
-            $this->connection->addEventHandler('connect', function () {
-                // AUTH must be before any other command, so we unshift it last
-                \array_unshift($this->deferreds, new Deferred);
-
-                return "*2\r\n$4\r\rAUTH\r\n$" . \strlen($this->password) . "\r\n{$this->password}\r\n";
-            });
-        }
-
-        if ($this->database !== 0) {
-            $this->connection->addEventHandler('connect', function () {
-                // SELECT must be called for every new connection if another database than 0 is used
-                \array_unshift($this->deferreds, new Deferred);
-
-                return "*2\r\n$6\r\rSELECT\r\n$" . \strlen($this->database) . "\r\n{$this->database}\r\n";
-            });
-        }
-    }
-
-    /**
-     * @return Promise
-     */
-    public function close(): Promise
-    {
-        $promise = Promise\all(\array_map(static function (Deferred $deferred) {
-            return $deferred->promise();
-        }, $this->deferreds));
-
-        $promise->onResolve(function () {
-            $this->connection->close();
-        });
-
-        return $promise;
-    }
-
-    public function getConnectionState(): int
-    {
-        return $this->connection->getState();
+        $this->config = $config;
+        $this->database = $config->getDatabase();
     }
 
     /**
@@ -106,29 +40,83 @@ final class RemoteExecutor implements QueryExecutor
         return call(function () use ($args, $transform) {
             $command = \strtolower($args[0] ?? '');
 
-            $deferred = new Deferred;
-            $promise = $deferred->promise();
+            $connectPromise = $this->connect();
+            if ($command === 'quit') {
+                $this->connect = null;
+            }
 
-            $this->deferreds[] = $deferred;
+            /** @var RespSocket $resp */
+            $resp = yield $connectPromise;
 
-            yield $this->connection->send($args);
-            $response = yield $promise;
+            $response = yield $this->enqueue($resp, ...$args);
 
             if ($command === 'select') {
                 $this->database = (int) $args[1];
-            } elseif ($command === 'quit') {
-                $this->connection->close();
             }
 
             return $transform ? $transform($response) : $response;
         });
     }
 
-    private function applyUri(string $uri): void
+    private function enqueue(RespSocket $resp, string... $args): Promise
     {
-        $pairs = Internal\parseUriQuery(Uri\parse($uri)['query'] ?? '');
+        return call(function () use ($resp, $args) {
+            $deferred = new Deferred;
+            $this->queue[] = $deferred;
 
-        $this->database = (int) ($pairs['database'] ?? 0);
-        $this->password = $pairs['password'] ?? null;
+            $resp->reference();
+
+            try {
+                yield $resp->write(...$args);
+            } catch (Socket\SocketException | StreamException $exception) {
+                throw new SocketException($exception);
+            }
+
+            return $deferred->promise();
+        });
+    }
+
+    private function connect(): Promise
+    {
+        if ($this->connect) {
+            return $this->connect;
+        }
+
+        return $this->connect = call(function () {
+            /** @var RespSocket $resp */
+            $resp = yield connect($this->config);
+
+            asyncCall(function () use ($resp) {
+                try {
+                    while ([$response] = yield $resp->read()) {
+                        $deferred = \array_shift($this->queue);
+                        if (!$this->queue) {
+                            $resp->unreference();
+                        }
+
+                        if ($response instanceof \Throwable) {
+                            $deferred->fail($response);
+                        } else {
+                            $deferred->resolve($response);
+                        }
+                    }
+
+                    throw new SocketException('Socket to redis instance (' . $this->config->getUri() . ') closed unexpectedly');
+                } catch (\Throwable $error) {
+                    $queue = $this->queue;
+                    $this->queue = [];
+                    $this->connect = null;
+
+                    while ($queue) {
+                        $deferred = \array_shift($queue);
+                        $deferred->fail($error);
+                    }
+
+                    throw $error;
+                }
+            });
+
+            return $resp;
+        });
     }
 }

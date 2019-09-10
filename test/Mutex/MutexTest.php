@@ -3,6 +3,7 @@
 namespace Amp\Redis\Mutex;
 
 use Amp\Delayed;
+use Amp\Redis\Config;
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RemoteExecutorFactory;
 
@@ -10,7 +11,7 @@ class MutexTest extends IntegrationTest
 {
     public function testTimeout(): \Generator
     {
-        $mutex = new Mutex(new RemoteExecutorFactory($this->getUri()));
+        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
         yield $mutex->lock('foo1', '123456789');
 
@@ -28,7 +29,7 @@ class MutexTest extends IntegrationTest
 
     public function testFree(): \Generator
     {
-        $mutex = new Mutex(new RemoteExecutorFactory($this->getUri()));
+        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
         yield $mutex->lock('foo2', '123456789');
 
@@ -47,7 +48,7 @@ class MutexTest extends IntegrationTest
 
     public function testRenew(): \Generator
     {
-        $mutex = new Mutex(new RemoteExecutorFactory($this->getUri()));
+        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
         yield $mutex->lock('foo3', '123456789');
 

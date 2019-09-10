@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Amp\Redis;
 
@@ -23,10 +23,20 @@ class AuthTest extends AsyncTestCase
         }
     }
 
-    public function testEcho(): \Generator
+    public function testSuccess(): \Generator
     {
-        $redis = new Redis(new RemoteExecutor('tcp://127.0.0.1:25325?password=secret'));
-        $this->assertEquals('PONG', yield $redis->echo('PONG'));
-        $redis->quit();
+        $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=secret')));
+        $this->assertSame('PONG', yield $redis->echo('PONG'));
+        yield $redis->quit();
+    }
+
+    public function testFailure(): \Generator
+    {
+        $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=wrong')));
+
+        $this->expectException(QueryException::class);
+        $this->expectExceptionMessage('ERR invalid password');
+
+        yield $redis->echo('PONG');
     }
 }

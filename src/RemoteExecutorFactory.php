@@ -4,15 +4,15 @@ namespace Amp\Redis;
 
 final class RemoteExecutorFactory implements QueryExecutorFactory
 {
-    private $uri;
+    private $config;
 
-    public function __construct(string $uri)
+    public function __construct(Config $config)
     {
-        $this->uri = $uri;
+        $this->config = $config;
     }
 
     public function createQueryExecutor(): QueryExecutor
     {
-        return new RemoteExecutor($this->uri);
+        return new RemoteExecutor($this->config);
     }
 }

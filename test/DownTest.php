@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Amp\Redis;
 
@@ -8,9 +8,9 @@ class DownTest extends AsyncTestCase
 {
     public function test(): \Generator
     {
-        $this->expectException(ConnectException::class);
+        $this->expectException(SocketException::class);
 
-        $redis = new Redis(new RemoteExecutor('tcp://127.0.0.1:25325'));
+        $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325')));
         yield $redis->ping();
     }
 }

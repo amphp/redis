@@ -9,7 +9,7 @@ class PubSubTest extends IntegrationTest
 {
     public function testBasic(): \Generator
     {
-        $subscriber = new SubscribeClient($this->getUri());
+        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
         /** @var Subscription $subscription */
         $subscription = yield $subscriber->subscribe('foo');
@@ -31,7 +31,7 @@ class PubSubTest extends IntegrationTest
 
     public function testDoubleCancel(): \Generator
     {
-        $subscriber = new SubscribeClient($this->getUri());
+        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
         /** @var Subscription $subscription */
         $subscription = yield $subscriber->subscribe('foo');
@@ -43,50 +43,36 @@ class PubSubTest extends IntegrationTest
 
     public function testMulti(): \Generator
     {
-        $subscriber = new SubscribeClient($this->getUri());
+        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
         /** @var Subscription $subscription1 */
         $subscription1 = yield $subscriber->subscribe('foo');
         /** @var Subscription $subscription2 */
         $subscription2 = yield $subscriber->subscribe('foo');
 
-        $result1 = $result2 = null;
-
-        $subscription1->advance()->onResolve(function ($error) use (&$result1, $subscription1) {
-            $this->assertNull($error);
-            $result1 = $subscription1->getCurrent();
-        });
-
-        $subscription2->advance()->onResolve(function ($error) use (&$result2, $subscription2) {
-            $this->assertNull($error);
-            $result2 = $subscription2->getCurrent();
-        });
-
         yield $this->redis->publish('foo', 'bar');
-        yield new Delayed(1000);
 
-        $this->assertEquals('bar', $result1);
-        $this->assertEquals('bar', $result2);
+        yield $subscription1->advance();
+        yield $subscription2->advance();
+
+        $this->assertEquals('bar', $subscription1->getCurrent());
+        $this->assertEquals('bar', $subscription2->getCurrent());
 
         $subscription1->cancel();
 
-        $subscription2->advance()->onResolve(function ($error) use (&$result2, $subscription2) {
-            $this->assertNull($error);
-            $result2 = $subscription2->getCurrent();
-        });
-
         yield $this->redis->publish('foo', 'xxx');
-        yield new Delayed(1000);
 
-        $this->assertEquals('bar', $result1);
-        $this->assertEquals('xxx', $result2);
+        yield $subscription2->advance();
+
+        $this->assertEquals('bar', $subscription1->getCurrent());
+        $this->assertEquals('xxx', $subscription2->getCurrent());
 
         $subscription2->cancel();
     }
 
     public function testStream(): \Generator
     {
-        $subscriber = new SubscribeClient($this->getUri());
+        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
         /** @var Subscription $subscription */
         $subscription = yield $subscriber->subscribe('foo');
