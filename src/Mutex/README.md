@@ -15,6 +15,11 @@ This file explains the algorithm design behind the lock implementation in this p
 
 ## Implementation
 
+ - `lock:<key>` holds the token of the current lock holder, the token ensures the lock can be freed safely
+ - `lock-queue:<key>` holds a list of waiting client tokens
+ - `lock-notify:<token>` is used for notifications to waiting clients, which execute `blpop` and will pick up any value pushed to such a key
+ - `lock:<key>` expires after `<lock-time>`, so a stale client holding a lock won't hold it indefinitely
+
 ### Locking
 
 The following operations are assumed to be executed atomically, i.e. either via transactions or Redis scripting.
