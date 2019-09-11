@@ -23,10 +23,14 @@ final class RemoteExecutor implements QueryExecutor
     /** @var Promise|null */
     private $connect;
 
-    public function __construct(Config $config)
+    /** @var Socket\Connector */
+    private $connector;
+
+    public function __construct(Config $config, ?Socket\Connector $connector = null)
     {
         $this->config = $config;
         $this->database = $config->getDatabase();
+        $this->connector = $connector ?? Socket\connector();
     }
 
     /**
@@ -84,7 +88,7 @@ final class RemoteExecutor implements QueryExecutor
 
         return $this->connect = call(function () {
             /** @var RespSocket $resp */
-            $resp = yield connect($this->config->withDatabase($this->database));
+            $resp = yield connect($this->config->withDatabase($this->database), $this->connector);
 
             asyncCall(function () use ($resp) {
                 try {

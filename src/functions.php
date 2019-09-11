@@ -53,17 +53,20 @@ function toNull($response): void
 
 /**
  * @param Config $config
+ * @param Socket\Connector|null $connector
  *
  * @return Promise<RespSocket>
  *
  * @throws RedisException
  */
-function connect(Config $config): Promise
+function connect(Config $config, ?Socket\Connector $connector = null): Promise
 {
-    return call(static function () use ($config) {
+    return call(static function () use ($config, $connector) {
         try {
             $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
-            $resp = new RespSocket(yield Socket\connect($config->getConnectUri(), $connectContext));
+            $resp = new RespSocket(
+                yield ($connector ?? Socket\connector())->connect($config->getConnectUri(), $connectContext)
+            );
         } catch (Socket\SocketException $e) {
             throw new SocketException(
                 'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
