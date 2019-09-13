@@ -86,7 +86,9 @@ final class RespSocket
 
     public function close(): void
     {
-        $this->parser->reset();
+        if ($this->parser) {
+            $this->parser->reset();
+        }
 
         if ($this->socket) {
             $this->socket->close();
