@@ -3,7 +3,8 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 Amp\Loop::run(static function () {
-    $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor('tcp://localhost:6379'));
+    $config = Amp\Redis\Config::fromUri('tcp://localhost:6379');
+    $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
 
     yield $client->delete('foobar-list');
 
