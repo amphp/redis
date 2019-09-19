@@ -5,22 +5,22 @@ namespace Amp\Redis\Mutex;
 final class MutexOptions
 {
     private $connectionLimit = 64;
-    private $ttl = 1000;
-    private $timeout = 3;
+    private $lockRenewInterval = 1000;
+    private $lockExpiration = 3000;
 
     public function getConnectionLimit(): int
     {
         return $this->connectionLimit;
     }
 
-    public function getTimeout(): int
+    public function getLockExpiration(): int
     {
-        return $this->timeout;
+        return $this->lockExpiration;
     }
 
-    public function getTtl(): int
+    public function getLockRenewInterval(): int
     {
-        return $this->ttl;
+        return $this->lockRenewInterval;
     }
 
     public function withConnectionLimit(int $connectionLimit): self
@@ -31,18 +31,18 @@ final class MutexOptions
         return $clone;
     }
 
-    public function withTimeout(int $timeout): self
+    public function withLockExpiration(int $lockExpiration): self
     {
         $clone = clone $this;
-        $clone->timeout = $timeout;
+        $clone->lockExpiration = $lockExpiration;
 
         return $clone;
     }
 
-    public function withTtl(int $ttl): self
+    public function withLockRenewInterval(int $lockRenewInterval): self
     {
         $clone = clone $this;
-        $clone->ttl = $ttl;
+        $clone->lockRenewInterval = $lockRenewInterval;
 
         return $clone;
     }

@@ -27,8 +27,8 @@
         "league/uri-parser": "^1.4"
     },
     "require-dev": {
-        "amphp/phpunit-util": "^1",
-        "phpunit/phpunit": "^6",
+        "amphp/phpunit-util": "^1.1.2",
+        "phpunit/phpunit": "^7 | ^8",
         "amphp/php-cs-fixer-config": "dev-master"
     },
     "autoload": {
