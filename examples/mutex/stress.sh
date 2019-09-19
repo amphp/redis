@@ -11,4 +11,15 @@ done
 
 wait $pids
 
-php stress-check.php
+echo ""
+echo ""
+echo "Expecting a count of 5000:"
+echo ""
+
+redis-cli get foo
+
+echo ""
+echo "Number of locking attempts needed:"
+echo ""
+
+redis-cli get attempts

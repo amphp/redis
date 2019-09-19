@@ -5,6 +5,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 use Amp\Loop;
 use Amp\Redis\Config;
 use Amp\Redis\RemoteExecutorFactory;
+use Amp\Sync\Lock;
 
 Loop::run(static function () {
     $executorFactory = new RemoteExecutorFactory(Config::fromUri('redis://'));
@@ -13,13 +14,13 @@ Loop::run(static function () {
     $mutex = new Amp\Redis\Mutex\Mutex($executorFactory);
 
     for ($i = 0; $i < 100; $i++) {
-        $token = \base64_encode(\random_bytes(16));
-        yield $mutex->lock('test', $token);
+        /** @var Lock $lock */
+        $lock = yield $mutex->acquire('test');
 
         $count = yield $redis->get('foo');
         yield $redis->set('foo', ++$count);
 
-        yield $mutex->unlock('test', $token);
+        $lock->release();
 
         if ($i % 10 === 0) {
             print '.';
