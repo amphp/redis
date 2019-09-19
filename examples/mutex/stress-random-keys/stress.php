@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../../../vendor/autoload.php';
 
 use Amp\Loop;
 use Amp\Redis\Config;
@@ -15,11 +15,7 @@ Loop::run(static function () {
 
     for ($i = 0; $i < 100; $i++) {
         /** @var Lock $lock */
-        $lock = yield $mutex->acquire('test');
-
-        $count = yield $redis->get('foo');
-        yield $redis->set('foo', ++$count);
-
+        $lock = yield $mutex->acquire('test' . \random_int(0, 49));
         $lock->release();
 
         if ($i % 10 === 0) {
