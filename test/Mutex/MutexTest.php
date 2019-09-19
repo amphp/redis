@@ -6,6 +6,8 @@ use Amp\Delayed;
 use Amp\Redis\Config;
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RemoteExecutorFactory;
+use Amp\Sync\Lock;
+use function Amp\delay;
 
 class MutexTest extends IntegrationTest
 {
@@ -13,15 +15,13 @@ class MutexTest extends IntegrationTest
     {
         $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
-        yield $mutex->lock('foo1', '123456789');
+        $lock1 = yield $mutex->acquire('foo1');
 
         try {
-            yield $mutex->lock('foo1', '234567891');
+            $lock2 = yield $mutex->acquire('foo1');
         } catch (\Exception $e) {
             $this->assertTrue(true);
             return;
-        } finally {
-            $mutex->shutdown();
         }
 
         $this->fail('lock must throw');
@@ -31,18 +31,18 @@ class MutexTest extends IntegrationTest
     {
         $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
-        yield $mutex->lock('foo2', '123456789');
+        /** @var Lock $lock1 */
+        $lock1 = yield $mutex->acquire('foo2');
 
         $pause = new Delayed(500);
-        $pause->onResolve(static function () use ($mutex) {
-            $mutex->unlock('foo2', '123456789');
+        $pause->onResolve(static function () use ($lock1) {
+            $lock1->release();
         });
 
         yield $pause;
 
-        yield $mutex->lock('foo2', '234567891');
+        yield $mutex->acquire('foo2');
 
-        $mutex->shutdown();
         $this->assertTrue(true);
     }
 
@@ -50,24 +50,15 @@ class MutexTest extends IntegrationTest
     {
         $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
-        yield $mutex->lock('foo3', '123456789');
+        $lock1 = yield $mutex->acquire('foo3');
 
-        for ($i = 0; $i < 5; $i++) {
-            $pause = new Delayed(500);
-            $pause->onResolve(static function () use ($mutex) {
-                $mutex->renew('foo3', '123456789');
-            });
-
-            yield $pause;
-        }
+        yield delay(5000);
 
         try {
-            yield $mutex->lock('foo3', '234567891');
+            yield $mutex->acquire('foo3');
         } catch (\Exception $e) {
             $this->assertTrue(true);
             return;
-        } finally {
-            $mutex->shutdown();
         }
 
         $this->fail('lock must throw');

@@ -8,6 +8,7 @@ final class MutexOptions
     private $connectionLimit = 64;
     private $lockRenewInterval = 1000;
     private $lockExpiration = 3000;
+    private $lockTimeout = 10000;
 
     public function getKeyPrefix(): string
     {
@@ -27,6 +28,11 @@ final class MutexOptions
     public function getLockRenewInterval(): int
     {
         return $this->lockRenewInterval;
+    }
+
+    public function getLockTimeout(): int
+    {
+        return $this->lockTimeout;
     }
 
     public function withKeyPrefix(string $keyPrefix): self
@@ -57,6 +63,14 @@ final class MutexOptions
     {
         $clone = clone $this;
         $clone->lockRenewInterval = $lockRenewInterval;
+
+        return $clone;
+    }
+
+    public function withLockTimeout(int $lockTimeout): self
+    {
+        $clone = clone $this;
+        $clone->lockTimeout = $lockTimeout;
 
         return $clone;
     }

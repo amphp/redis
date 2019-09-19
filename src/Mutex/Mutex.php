@@ -147,8 +147,11 @@ RENEW;
 
             $token = \base64_encode(\random_bytes(16));
             $prefix = $this->options->getKeyPrefix();
+            $timeLimit = \microtime(true) * 1000 + $this->options->getLockTimeout();
+            $attempts = 0;
 
             do {
+                $attempts++;
                 $this->numberOfAttempts++;
 
                 $result = yield $this->sharedConnection->eval(
@@ -158,6 +161,10 @@ RENEW;
                 );
 
                 if ($result < 1) {
+                    if ($attempts > 2 && \microtime(true) * 1000 > $timeLimit) {
+                        throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() . ' ms');
+                    }
+
                     // A negative integer as reply means we're still in the queue and indicates the queue position.
                     // Making the timing dependent on the queue position greatly reduces CPU usage and locking attempts.
                     yield delay(5 + \min((-$result - 1) * 10, 300));
