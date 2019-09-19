@@ -4,7 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 Amp\Loop::run(static function () {
     $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor(
-        new Amp\Redis\Config('tcp://localhost:6379')
+        Amp\Redis\Config::fromUri('tcp://localhost:6379')
     ));
 
     yield $client->set('foo', '21');
