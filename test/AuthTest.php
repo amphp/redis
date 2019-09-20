@@ -6,13 +6,13 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class AuthTest extends AsyncTestCase
 {
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass(): void
     {
         print \shell_exec('redis-server --daemonize yes --port 25325 --timeout 3 --pidfile /tmp/amp-redis.pid --requirepass secret');
         \sleep(2);
     }
 
-    public static function tearDownAfterClass()
+    public static function tearDownAfterClass(): void
     {
         $pid = @\file_get_contents('/tmp/amp-redis.pid');
         @\unlink('/tmp/amp-redis.pid');

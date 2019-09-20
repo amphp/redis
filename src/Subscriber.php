@@ -34,12 +34,19 @@ final class Subscriber
     public function subscribe(string $channel): Promise
     {
         return call(function () use ($channel) {
-            /** @var RespSocket $resp */
-            $resp = yield $this->connect();
-            yield $resp->write('subscribe', $channel);
-
             $emitter = new Emitter;
             $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
+
+            try {
+                /** @var RespSocket $resp */
+                $resp = yield $this->connect();
+                $resp->reference();
+                yield $resp->write('subscribe', $channel);
+            } catch (\Throwable $e) {
+                $this->unloadEmitter($emitter, $channel);
+
+                throw $e;
+            }
 
             return new Subscription($emitter->iterate(), function () use ($emitter, $channel) {
                 $this->unloadEmitter($emitter, $channel);
@@ -55,12 +62,19 @@ final class Subscriber
     public function subscribeToPattern(string $pattern): Promise
     {
         return call(function () use ($pattern) {
-            /** @var RespSocket $resp */
-            $resp = yield $this->connect();
-            yield $resp->write('psubscribe', $pattern);
-
             $emitter = new Emitter;
             $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+
+            try {
+                /** @var RespSocket $resp */
+                $resp = yield $this->connect();
+                $resp->reference();
+                yield $resp->write('psubscribe', $pattern);
+            } catch (\Throwable $e) {
+                $this->unloadPatternEmitter($emitter, $pattern);
+
+                throw $e;
+            }
 
             return new Subscription($emitter->iterate(), function () use ($emitter, $pattern) {
                 $this->unloadPatternEmitter($emitter, $pattern);
@@ -124,6 +138,11 @@ final class Subscriber
         });
     }
 
+    private function isIdle(): bool
+    {
+        return !$this->emitters && !$this->patternEmitters;
+    }
+
     private function unloadEmitter(Emitter $emitter, string $channel): void
     {
         $hash = \spl_object_hash($emitter);
@@ -140,9 +159,13 @@ final class Subscriber
                     try {
                         /** @var RespSocket $resp */
                         $resp = yield $this->connect();
-                        $resp->write('unsubscribe', $channel);
 
-                        if (!$this->emitters && !$this->patternEmitters) {
+                        if (empty($this->emitters[$channel])) {
+                            $resp->reference();
+                            yield $resp->write('unsubscribe', $channel);
+                        }
+
+                        if ($this->isIdle()) {
                             $resp->unreference();
                         }
                     } catch (RedisException $exception) {
@@ -169,9 +192,13 @@ final class Subscriber
                     try {
                         /** @var RespSocket $resp */
                         $resp = yield $this->connect();
-                        $resp->write('punsubscribe', $pattern);
 
-                        if (!$this->emitters && !$this->patternEmitters) {
+                        if (empty($this->patternEmitters[$pattern])) {
+                            $resp->reference();
+                            yield $resp->write('punsubscribe', $pattern);
+                        }
+
+                        if ($this->isIdle()) {
                             $resp->unreference();
                         }
                     } catch (RedisException $exception) {
