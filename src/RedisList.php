@@ -222,25 +222,25 @@ final class RedisList
      * @param int    $index
      * @param string $value
      *
-     * @return Promise<string>
+     * @return Promise<void>
      *
      * @link https://redis.io/commands/lset
      */
     public function set(int $index, string $value): Promise
     {
-        return $this->queryExecutor->execute(['lset', $this->key, $index, $value]);
+        return $this->queryExecutor->execute(['lset', $this->key, $index, $value], toNull);
     }
 
     /**
      * @param int $start
      * @param int $stop
      *
-     * @return Promise<string>
+     * @return Promise<void>
      *
      * @link https://redis.io/commands/ltrim
      */
     public function trim(int $start = 0, int $stop = -1): Promise
     {
-        return $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop]);
+        return $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop], toNull);
     }
 }
