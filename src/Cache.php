@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\Cache\Cache as CacheInterface;
 use Amp\Cache\CacheException;
 use Amp\Promise;
+use Amp\Success;
 use function Amp\call;
 
 final class Cache implements CacheInterface
@@ -35,13 +36,23 @@ final class Cache implements CacheInterface
     /** @inheritdoc */
     public function set(string $key, string $value, int $ttl = null): Promise
     {
-        if ($ttl && $ttl < 0) {
-            throw new \Error("Invalid TTL: {$ttl}");
+        if ($ttl !== null && $ttl < 0) {
+            throw new \Error('Invalid TTL: ' . $ttl);
+        }
+
+        if ($ttl === 0) {
+            return new Success; // expires immediately
         }
 
         return call(function () use ($key, $value, $ttl) {
             try {
-                return yield $this->redis->set($key, $value, (new SetOptions)->withTtl($ttl ?? 0));
+                $options = new SetOptions;
+
+                if ($ttl !== null) {
+                    $options = $options->withTtl($ttl);
+                }
+
+                return yield $this->redis->set($key, $value, $options);
             } catch (RedisException $e) {
                 throw new CacheException("Storing '{$key}' to cache failed", 0, $e);
             }

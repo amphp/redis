@@ -22,7 +22,7 @@
     "require": {
         "php": ">=7.1",
         "amphp/amp": "^2",
-        "amphp/cache": "^1",
+        "amphp/cache": "^1.2.1",
         "amphp/socket": "^1",
         "league/uri-parser": "^1.4",
         "amphp/sync": "^1.0"
@@ -42,7 +42,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\Redis\\": "test"
+            "Amp\\Redis\\": "test",
+            "Amp\\Cache\\Test\\": "vendor/amphp/cache/test"
         }
     }
 }
