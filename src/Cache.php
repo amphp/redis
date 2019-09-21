@@ -27,7 +27,7 @@ final class Cache implements CacheInterface
             try {
                 return yield $this->redis->get($key);
             } catch (RedisException $e) {
-                throw new CacheException('Fetching from cache failed', 0, $e);
+                throw new CacheException("Fetching '${key}' from cache failed", 0, $e);
             }
         });
     }
@@ -43,7 +43,7 @@ final class Cache implements CacheInterface
             try {
                 return yield $this->redis->set($key, $value, (new SetOptions)->withTtl($ttl ?? 0));
             } catch (RedisException $e) {
-                throw new CacheException('Storing to cache failed', 0, $e);
+                throw new CacheException("Storing '{$key}' to cache failed", 0, $e);
             }
         });
     }
@@ -55,7 +55,7 @@ final class Cache implements CacheInterface
             try {
                 return yield $this->redis->delete($key);
             } catch (RedisException $e) {
-                throw new CacheException('Deleting from cache failed', 0, $e);
+                throw new CacheException("Deleting '{$key}' from cache failed", 0, $e);
             }
         });
     }

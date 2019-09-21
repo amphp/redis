@@ -5,7 +5,6 @@ namespace Amp\Redis\Mutex;
 final class MutexOptions
 {
     private $keyPrefix = '';
-    private $connectionLimit = 64;
     private $lockRenewInterval = 1000;
     private $lockExpiration = 3000;
     private $lockTimeout = 10000;
@@ -13,11 +12,6 @@ final class MutexOptions
     public function getKeyPrefix(): string
     {
         return $this->keyPrefix;
-    }
-
-    public function getConnectionLimit(): int
-    {
-        return $this->connectionLimit;
     }
 
     public function getLockExpiration(): int
@@ -39,14 +33,6 @@ final class MutexOptions
     {
         $clone = clone $this;
         $clone->keyPrefix = $keyPrefix;
-
-        return $clone;
-    }
-
-    public function withConnectionLimit(int $connectionLimit): self
-    {
-        $clone = clone $this;
-        $clone->connectionLimit = $connectionLimit;
 
         return $clone;
     }

@@ -13,6 +13,8 @@ class MutexTest extends IntegrationTest
 {
     public function testTimeout(): \Generator
     {
+        $this->setMinimumRuntime((new MutexOptions)->getLockTimeout());
+
         $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
         $lock1 = yield $mutex->acquire('foo1');
@@ -20,11 +22,10 @@ class MutexTest extends IntegrationTest
         try {
             $lock2 = yield $mutex->acquire('foo1');
         } catch (\Exception $e) {
-            $this->assertTrue(true);
             return;
         }
 
-        $this->fail('lock must throw');
+        $this->fail('acquire() must throw due to a timeout');
     }
 
     public function testFree(): \Generator

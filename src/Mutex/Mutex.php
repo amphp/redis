@@ -232,9 +232,7 @@ RENEW;
     private function createRenewWatcher(): void
     {
         $this->watcher = Loop::repeat($this->options->getLockRenewInterval(), function () {
-            if (empty($this->locks)) {
-                return;
-            }
+            \assert(!empty($this->locks));
 
             $keys = [];
             $arguments = [$this->options->getLockExpiration()];

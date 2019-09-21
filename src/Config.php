@@ -147,7 +147,7 @@ final class Config
 
                 $this->uri = 'tcp://' . $host . ':' . $port;
 
-                if ($parsedUri['path'] !== '/') {
+                if (\ltrim($parsedUri['path'], '/') !== '') {
                     $this->database = (int) \ltrim($parsedUri['path'], '/');
                 } else {
                     $this->database = (int) ($query['db'] ?? 0);
