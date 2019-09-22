@@ -136,9 +136,7 @@ final class RedisList
      */
     public function popHeadBlocking(int $timeout = 0): Promise
     {
-        $query = \array_merge(['blpop', $this->key], [$timeout]);
-
-        return $this->queryExecutor->execute($query, static function ($response) {
+        return $this->queryExecutor->execute(['blpop', $this->key, $timeout], static function ($response) {
             return $response[1];
         });
     }

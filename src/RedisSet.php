@@ -85,7 +85,7 @@ final class RedisSet
      *
      * @return Promise<bool>
      */
-    public function isMember(string $member): Promise
+    public function contains(string $member): Promise
     {
         return $this->queryExecutor->execute(['sismember', $this->key, $member], toBool);
     }
@@ -104,7 +104,7 @@ final class RedisSet
      *
      * @return Promise<bool>
      */
-    public function move(string $destination, string $member): Promise
+    public function moveTo(string $destination, string $member): Promise
     {
         return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], toBool);
     }
@@ -185,7 +185,7 @@ final class RedisSet
             $cursor = 0;
 
             do {
-                $query = ['SSCAN', $cursor];
+                $query = ['SSCAN', $this->key, $cursor];
 
                 if ($pattern !== null) {
                     $query[] = 'MATCH';
@@ -202,7 +202,7 @@ final class RedisSet
                 foreach ($keys as $key) {
                     yield $emit($key);
                 }
-            } while ($cursor !== 0);
+            } while ($cursor !== '0');
         });
     }
 }

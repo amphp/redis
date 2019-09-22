@@ -21,7 +21,7 @@
     },
     "require": {
         "php": ">=7.1",
-        "amphp/amp": "^2",
+        "amphp/amp": "^2.2.1",
         "amphp/cache": "^1.2.1",
         "amphp/socket": "^1",
         "league/uri-parser": "^1.4",

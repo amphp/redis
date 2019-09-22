@@ -299,7 +299,7 @@ final class Redis
                 foreach ($keys as $key) {
                     yield $emit($key);
                 }
-            } while ($cursor !== 0);
+            } while ($cursor !== '0');
         });
     }
 

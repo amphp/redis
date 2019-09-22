@@ -191,7 +191,7 @@ final class RedisSortedSet
             $cursor = 0;
 
             do {
-                $query = ['ZSCAN', $cursor];
+                $query = ['ZSCAN', $this->key, $cursor];
 
                 if ($pattern !== null) {
                     $query[] = 'MATCH';
@@ -205,10 +205,13 @@ final class RedisSortedSet
 
                 [$cursor, $keys] = yield $this->queryExecutor->execute($query);
 
-                foreach ($keys as $key) {
-                    yield $emit($key);
+                $count = \count($keys);
+                \assert($count % 2 === 0);
+
+                for ($i = 0; $i < $count; $i += 2) {
+                    yield $emit([$keys[$i], (float) $keys[$i + 1]]);
                 }
-            } while ($cursor !== 0);
+            } while ($cursor !== '0');
         });
     }
 

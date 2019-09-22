@@ -34,5 +34,17 @@ class RedisListTest extends IntegrationTest
         $this->assertNull(yield $list->trim(0, -2));
         $this->assertSame(2, yield $list->getSize());
         $this->assertSame(['a', 'b'], yield $list->getRange());
+
+        $this->assertSame(3, yield $list->insertAfter('a', 'x'));
+        $this->assertSame(['a', 'x', 'b'], yield $list->getRange());
+
+        $this->assertSame(4, yield $list->insertBefore('a', 'y'));
+        $this->assertSame(['y', 'a', 'x', 'b'], yield $list->getRange());
+
+        $this->assertSame(1, yield $list->remove('a'));
+        $this->assertSame(['y', 'x', 'b'], yield $list->getRange());
+
+        $this->assertSame('y', yield $list->popHeadBlocking());
+        $this->assertSame('b', yield $list->popTailBlocking());
     }
 }

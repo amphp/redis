@@ -27,7 +27,7 @@ final class RedisMap
      *
      * @link https://redis.io/commands/hdel
      */
-    public function delete(string $field, string ...$fields): Promise
+    public function remove(string $field, string ...$fields): Promise
     {
         return $this->queryExecutor->execute(\array_merge(['hdel', $this->key, $field], $fields));
     }
@@ -142,7 +142,7 @@ final class RedisMap
      */
     public function getValues(string $field, string ...$fields): Promise
     {
-        return $this->queryExecutor->execute(\array_merge(['hmget', $this->key, $field], $fields), toMap);
+        return $this->queryExecutor->execute(\array_merge(['hmget', $this->key, $field], $fields));
     }
 
     /**
@@ -197,7 +197,7 @@ final class RedisMap
             $cursor = 0;
 
             do {
-                $query = ['HSCAN', $cursor];
+                $query = ['HSCAN', $this->key, $cursor];
 
                 if ($pattern !== null) {
                     $query[] = 'MATCH';
@@ -211,10 +211,13 @@ final class RedisMap
 
                 [$cursor, $keys] = yield $this->queryExecutor->execute($query);
 
-                foreach ($keys as $key) {
-                    yield $emit($key);
+                $count = \count($keys);
+                \assert($count % 2 === 0);
+
+                for ($i = 0; $i < $count; $i += 2) {
+                    yield $emit([$keys[$i], $keys[$i + 1]]);
                 }
-            } while ($cursor !== 0);
+            } while ($cursor !== '0');
         });
     }
 }
