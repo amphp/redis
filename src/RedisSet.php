@@ -99,12 +99,12 @@ final class RedisSet
     }
 
     /**
-     * @param string $destination
      * @param string $member
+     * @param string $destination
      *
      * @return Promise<bool>
      */
-    public function moveTo(string $destination, string $member): Promise
+    public function move(string $member, string $destination): Promise
     {
         return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], toBool);
     }
