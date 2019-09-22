@@ -2,13 +2,15 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-Amp\Loop::run(static function () {
-    $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor(
-        Amp\Redis\Config::fromUri('tcp://localhost:6379')
-    ));
+use Amp\Redis\Config;
+use Amp\Redis\Redis;
+use Amp\Redis\RemoteExecutor;
 
-    yield $client->set('foo', '21');
-    $result = yield $client->increment('foo', 21);
+Amp\Loop::run(static function () {
+    $redis = new Redis(new RemoteExecutor(Config::fromUri('redis://')));
+
+    yield $redis->set('foo', '21');
+    $result = yield $redis->increment('foo', 21);
 
     \var_dump($result); // int(42)
 });
