@@ -19,8 +19,8 @@ matrix:
   fast_finish: true
 
 install:
-  # --ignore-platform-reqs, because https://github.com/FriendsOfPHP/PHP-CS-Fixer/pull/2722
-  - composer update -n --prefer-dist
+  # --prefer-source for including test directory for amphp/cache
+  - composer update -n --prefer-source
 
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar
   - chmod +x php-coveralls.phar

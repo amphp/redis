@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-
 class RedisListTest extends IntegrationTest
 {
     public function test(): \Generator
