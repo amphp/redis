@@ -101,7 +101,7 @@ final class Redis
      *
      * @link https://redis.io/commands/expire
      */
-    public function expire(string $key, int $seconds): Promise
+    public function expireIn(string $key, int $seconds): Promise
     {
         return $this->queryExecutor->execute(['expire', $key, $seconds], toBool);
     }
@@ -835,7 +835,7 @@ final class Redis
      *
      * @link https://redis.io/commands/client-pause
      */
-    public function pauseInMillis(int $timeInMillis): Promise
+    public function pauseMillis(int $timeInMillis): Promise
     {
         return $this->queryExecutor->execute(['client', 'pause', $timeInMillis], toNull);
     }

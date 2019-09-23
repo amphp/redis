@@ -17,7 +17,18 @@ class MutexTest extends IntegrationTest
 
         $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())));
 
+        $this->assertSame(0, $mutex->getNumberOfLocks());
+        $this->assertSame(0, $mutex->getNumberOfAttempts());
+
         $lock1 = yield $mutex->acquire('foo1');
+
+        $this->assertSame(1, $mutex->getNumberOfLocks());
+        $this->assertSame(1, $mutex->getNumberOfAttempts());
+
+        $mutex->resetStatistics();
+
+        $this->assertSame(0, $mutex->getNumberOfLocks());
+        $this->assertSame(0, $mutex->getNumberOfAttempts());
 
         try {
             $lock2 = yield $mutex->acquire('foo1');
@@ -58,7 +69,9 @@ class MutexTest extends IntegrationTest
         try {
             yield $mutex->acquire('foo3');
         } catch (\Exception $e) {
-            $this->assertTrue(true);
+            $this->assertSame(2, $mutex->getNumberOfLocks());
+            $this->assertGreaterThan(2, $mutex->getNumberOfAttempts());
+
             return;
         }
 

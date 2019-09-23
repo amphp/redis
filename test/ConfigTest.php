@@ -30,6 +30,36 @@ class ConfigTest extends TestCase
         }
     }
 
+    public function testInvalidScheme(): void
+    {
+        $this->expectException(RedisException::class);
+
+        Config::fromUri('test://');
+    }
+
+    public function testInvalidUri(): void
+    {
+        $this->expectException(RedisException::class);
+
+        Config::fromUri('redis://\0/#\0#');
+    }
+
+    public function testWithTimeout(): void
+    {
+        $config = Config::fromUri('redis://');
+
+        $this->assertSame(5000, $config->getTimeout());
+        $this->assertSame(3000, $config->withTimeout(3000)->getTimeout());
+    }
+
+    public function testWithPassword(): void
+    {
+        $config = Config::fromUri('redis://');
+
+        $this->assertSame('', $config->getPassword());
+        $this->assertSame('foobar', $config->withPassword('foobar')->getPassword());
+    }
+
     public function provideData(): array
     {
         return [
