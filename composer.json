@@ -25,7 +25,7 @@
         "amphp/cache": "^1.2.1",
         "amphp/socket": "^1",
         "league/uri-parser": "^1.4",
-        "amphp/sync": "^1.0"
+        "amphp/sync": "^1.1"
     },
     "require-dev": {
         "amphp/phpunit-util": "^1.1.2",

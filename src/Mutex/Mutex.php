@@ -6,7 +6,11 @@ use Amp\Loop;
 use Amp\Promise;
 use Amp\Redis\QueryExecutorFactory;
 use Amp\Redis\Redis;
+use Amp\Redis\RedisException;
+use Amp\Sync\KeyedMutex;
 use Amp\Sync\Lock;
+use Psr\Log\LoggerInterface as PsrLogger;
+use Psr\Log\NullLogger;
 use function Amp\call;
 use function Amp\delay;
 
@@ -15,7 +19,7 @@ use function Amp\delay;
  *
  * @author Niklas Keller <me@kelunik.com>
  */
-final class Mutex
+final class Mutex implements KeyedMutex
 {
     private const LOCK = <<<LOCK
 local lock = KEYS[1]
@@ -74,19 +78,13 @@ LOCK;
 
     private const UNLOCK = <<<UNLOCK
 local lock = KEYS[1]
-local queue = KEYS[2]
-
 local token = ARGV[1]
 
 if redis.call("get", lock) == token then
     redis.call("del", lock)
-    if redis.call("llen", queue) == 0 then
-        return 1
-    else
-        return 2
-    end
+    return 1
 else
-    return 3
+    return 2
 end
 UNLOCK;
 
@@ -106,6 +104,8 @@ RENEW;
     private $locks;
     /** @var string */
     private $watcher;
+    /** @var PsrLogger */
+    private $logger;
 
     private $numberOfLocks = 0;
     private $numberOfAttempts = 0;
@@ -116,10 +116,14 @@ RENEW;
      * @param QueryExecutorFactory $queryExecutorFactory
      * @param MutexOptions|null    $options
      */
-    public function __construct(QueryExecutorFactory $queryExecutorFactory, ?MutexOptions $options = null)
-    {
+    public function __construct(
+        QueryExecutorFactory $queryExecutorFactory,
+        ?MutexOptions $options = null,
+        ?PsrLogger $logger = null
+    ) {
         $this->options = $options ?? new MutexOptions;
         $this->sharedConnection = new Redis($queryExecutorFactory->createQueryExecutor());
+        $this->logger = $logger ?? new NullLogger;
     }
 
     public function __destruct()
@@ -221,11 +225,27 @@ RENEW;
 
             $prefix = $this->options->getKeyPrefix();
 
-            yield $this->sharedConnection->eval(
-                self::UNLOCK,
-                ["{$prefix}lock:{$key}", "{$prefix}queue:{$key}"],
-                [$token]
-            );
+            for ($attempt = 0; $attempt < 2; $attempt++) {
+                try {
+                    $result = yield $this->sharedConnection->eval(
+                        self::UNLOCK,
+                        ["{$prefix}lock:{$key}"],
+                        [$token]
+                    );
+
+                    if ($result === 2) {
+                        $this->logger->warning('Lock was already expired when unlocked', [
+                            'key' => $key,
+                        ]);
+                    }
+
+                    break;
+                } catch (RedisException $e) {
+                    $this->logger->error('Unlock operation failed on attempt ' . ($attempt + 1), [
+                        'exception' => $e,
+                    ]);
+                }
+            }
         });
     }
 
