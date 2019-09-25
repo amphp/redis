@@ -2,13 +2,11 @@
 
 namespace Amp\Redis;
 
-
 use Amp\Iterator;
 use function Amp\delay;
 
 class RedisTest extends IntegrationTest
 {
-
     public function test()
     {
         yield $this->redis->flushAll();
