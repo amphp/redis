@@ -44,12 +44,12 @@ final class RedisHyperLogLog
      * @param string $sourceKey
      * @param string ...$sourceKeys
      *
-     * @return Promise<string>
+     * @return Promise<void>
      *
      * @link https://redis.io/commands/pfmerge
      */
-    public function storeMergeOf(string $sourceKey, string ...$sourceKeys): Promise
+    public function storeUnion(string $sourceKey, string ...$sourceKeys): Promise
     {
-        return $this->queryExecutor->execute(\array_merge(['pfmerge', $this->key, $sourceKey], $sourceKeys));
+        return $this->queryExecutor->execute(\array_merge(['pfmerge', $this->key, $sourceKey], $sourceKeys), toNull);
     }
 }
