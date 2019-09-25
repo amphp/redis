@@ -3,7 +3,7 @@
 Please search existing issues first to make sure this is not a duplicate.
 Every issue report has a cost for the developers required to field it; be
 respectful of others' time and ensure your report isn't spurious prior to
-submission. Please adhere to [sound bug reporting principles](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html).
+submission. Please adhere to [sound bug reporting principles](https://www.chiark.greenend.org.uk/~sgtatham/bugs.html).
 
 ## Development ideology
 
@@ -23,8 +23,4 @@ Truths which we believe to be self-evident:
 
 ## Code style
 
-The amphp project adheres to the PSR-2 style guide with the exception that
-opening braces for classes and methods must appear on the same line as
-the declaration:
-
-https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
+The @amphp project adheres to the [PSR-2 style guide](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md).
