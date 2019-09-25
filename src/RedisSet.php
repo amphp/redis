@@ -132,13 +132,7 @@ final class RedisSet
      */
     public function getRandomMembers(int $count): Promise
     {
-        $payload = ['srandmember', $this->key];
-
-        if ($count !== null) {
-            $payload[] = $count;
-        }
-
-        return $this->queryExecutor->execute($payload);
+        return $this->queryExecutor->execute(['srandmember', $this->key, $count]);
     }
 
     /**
