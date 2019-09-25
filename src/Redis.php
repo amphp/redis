@@ -151,6 +151,8 @@ final class Redis
      * @return Promise<array>
      *
      * @link https://redis.io/commands/keys
+     *
+     * @see Redis::scan()
      */
     public function getKeys(string $pattern = '*'): Promise
     {
@@ -263,7 +265,7 @@ final class Redis
      *
      * @link https://redis.io/commands/restore
      */
-    public function restoreFromDump(string $key, string $serializedValue, int $ttl = 0): Promise
+    public function restore(string $key, string $serializedValue, int $ttl = 0): Promise
     {
         return $this->queryExecutor->execute(['restore', $key, $ttl, $serializedValue], toNull);
     }
@@ -332,7 +334,7 @@ final class Redis
             $payload[] = 'DESC';
         }
 
-        if ($sort->isLexicographically()) {
+        if ($sort->isLexicographicSorting()) {
             $payload[] = 'ALPHA';
         }
 
@@ -346,7 +348,7 @@ final class Redis
      *
      * @link https://redis.io/commands/ttl
      */
-    public function setTtl(string $key): Promise
+    public function getTtl(string $key): Promise
     {
         return $this->queryExecutor->execute(['ttl', $key]);
     }
@@ -358,7 +360,7 @@ final class Redis
      *
      * @link https://redis.io/commands/pttl
      */
-    public function setTtlInMillis(string $key): Promise
+    public function getTtlInMillis(string $key): Promise
     {
         return $this->queryExecutor->execute(['pttl', $key]);
     }
@@ -405,7 +407,7 @@ final class Redis
             $cmd[] = $start;
             $cmd[] = $end;
         } elseif (isset($start) || isset($end)) {
-            throw new QueryException('Start and end must both be set or unset in countBits(), got start = ' . $start . ' and end = ' . $end);
+            throw \Error('Start and end must both be set or unset in countBits(), got start = ' . $start . ' and end = ' . $end);
         }
 
         return $this->queryExecutor->execute($cmd);

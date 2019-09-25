@@ -48,7 +48,7 @@ final class SortOptions
 
     public function getCount(): ?int
     {
-        return $this->offset;
+        return $this->count;
     }
 
     public function hasLimit(): bool
@@ -100,7 +100,7 @@ final class SortOptions
         return $clone;
     }
 
-    public function isLexicographically(): bool
+    public function isLexicographicSorting(): bool
     {
         return $this->lexicographically;
     }

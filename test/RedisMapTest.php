@@ -8,7 +8,7 @@ class RedisMapTest extends IntegrationTest
 {
     public function test(): \Generator
     {
-        $this->redis->flushAll();
+        yield $this->redis->flushAll();
         $map = $this->redis->getMap('map1');
 
         $this->assertSame(0, yield $map->getSize());
