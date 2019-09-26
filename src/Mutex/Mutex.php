@@ -264,7 +264,13 @@ RENEW;
                 $arguments[] = $token;
             }
 
-            $this->sharedConnection->eval(self::RENEW, $keys, $arguments);
+            try {
+                yield $this->sharedConnection->eval(self::RENEW, $keys, $arguments);
+            } catch (RedisException $e) {
+                $this->logger->error('Renew operation failed, locks might expire', [
+                    'exception' => $e,
+                ]);
+            }
         });
     }
 }
