@@ -120,4 +120,30 @@ final class SortOptions
 
         return $clone;
     }
+
+    public function toQuery(): array
+    {
+        $payload = [];
+
+        if ($this->hasPattern()) {
+            $payload[] = 'BY';
+            $payload[] = $this->getPattern();
+        }
+
+        if ($this->hasLimit()) {
+            $payload[] = 'LIMIT';
+            $payload[] = $this->getOffset();
+            $payload[] = $this->getCount();
+        }
+
+        if ($this->isDescending()) {
+            $payload[] = 'DESC';
+        }
+
+        if ($this->isLexicographicSorting()) {
+            $payload[] = 'ALPHA';
+        }
+
+        return $payload;
+    }
 }

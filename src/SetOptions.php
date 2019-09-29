@@ -45,7 +45,7 @@ final class SetOptions
         return $clone;
     }
 
-    public function toSetQuery(): array
+    public function toQuery(): array
     {
         $query = [];
 

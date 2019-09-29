@@ -306,42 +306,6 @@ final class Redis
     }
 
     /**
-     * @param string      $key
-     * @param SortOptions $sort
-     *
-     * @return Promise<array>
-     *
-     * @link https://redis.io/commands/sort
-     */
-    public function getSorted(
-        string $key,
-        SortOptions $sort
-    ): Promise {
-        $payload = ['SORT', $key];
-
-        if ($sort->hasPattern()) {
-            $payload[] = 'BY';
-            $payload[] = $sort->getPattern();
-        }
-
-        if ($sort->hasLimit()) {
-            $payload[] = 'LIMIT';
-            $payload[] = $sort->getOffset();
-            $payload[] = $sort->getCount();
-        }
-
-        if ($sort->isDescending()) {
-            $payload[] = 'DESC';
-        }
-
-        if ($sort->isLexicographicSorting()) {
-            $payload[] = 'ALPHA';
-        }
-
-        return $this->queryExecutor->execute($payload);
-    }
-
-    /**
      * @param string $key
      *
      * @return Promise<int>
@@ -671,7 +635,7 @@ final class Redis
         $query = ['set', $key, $value];
 
         if ($options !== null) {
-            $query = \array_merge($query, $options->toSetQuery());
+            $query = \array_merge($query, $options->toQuery());
         }
 
         return $this->queryExecutor->execute($query, toBool);

@@ -262,4 +262,16 @@ final class RedisSortedSet
 
         return $this->queryExecutor->execute($payload);
     }
+
+    /**
+     * @param SortOptions $sort
+     *
+     * @return Promise<array>
+     *
+     * @link https://redis.io/commands/sort
+     */
+    public function sort(?SortOptions $sort = null): Promise
+    {
+        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new SortOptions)->toQuery()));
+    }
 }

@@ -43,6 +43,8 @@ class RedisListTest extends IntegrationTest
         $this->assertSame(1, yield $list->remove('a'));
         $this->assertSame(['y', 'x', 'b'], yield $list->getRange());
 
+        $this->assertSame(['b', 'x', 'y'], yield $list->sort((new SortOptions)->withLexicographicSorting()));
+
         $this->assertSame('y', yield $list->popHeadBlocking());
         $this->assertSame('b', yield $list->popTailBlocking());
     }

@@ -7,7 +7,7 @@ use function Amp\delay;
 
 class RedisTest extends IntegrationTest
 {
-    public function test()
+    public function test(): \Generator
     {
         yield $this->redis->flushAll();
 
