@@ -27,6 +27,7 @@ local queue = KEYS[2]
 
 local token = ARGV[1]
 local ttl = ARGV[2]
+local queueTtl = ARGV[3]
 
 if redis.call("exists", lock) == 0 then
     if redis.call("llen", queue) == 0 then
@@ -54,6 +55,8 @@ if redis.call("exists", lock) == 0 then
         if queued == token then
             return 2
         else
+            redis.call("pexpire", queue, queueTtl)
+
             return -1 - position
         end
     end
@@ -66,11 +69,14 @@ else
     local queued_tokens = redis.call("lrange", queue, 0, -1)
     for i=1,#queued_tokens do
         if queued_tokens[i] == token then
+            redis.call("pexpire", queue, queueTtl)
+
             return -1 - i
         end
     end
 
     redis.call("rpush", queue, token)
+    redis.call("pexpire", queue, queueTtl)
 
     return -1 - redis.call("llen", queue)
 end
@@ -161,11 +167,17 @@ RENEW;
                 $result = yield $this->sharedConnection->eval(
                     self::LOCK,
                     ["{$prefix}lock:{$key}", "{$prefix}lock-queue:{$key}"],
-                    [$token, $this->options->getLockExpiration()]
+                    [$token, $this->options->getLockExpiration(), $this->options->getLockExpiration() + $this->options->getLockTimeout()]
                 );
 
                 if ($result < 1) {
                     if ($attempts > 2 && \microtime(true) * 1000 > $timeLimit) {
+                        // In very rare cases we might not get the lock, but are at the head of the queue and another
+                        // client moves us into the lock position. Deleting the token from the queue and afterwards
+                        // unlocking solves this. No yield required, because we use the same connection.
+                        $this->sharedConnection->getList("{$prefix}lock-queue:{$key}")->remove($token);
+                        $this->unlock("{$prefix}lock:{$key}", $token);
+
                         throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() . ' ms');
                     }
 
