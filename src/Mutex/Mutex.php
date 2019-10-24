@@ -176,7 +176,7 @@ RENEW;
                         // client moves us into the lock position. Deleting the token from the queue and afterwards
                         // unlocking solves this. No yield required, because we use the same connection.
                         $this->sharedConnection->getList("{$prefix}lock-queue:{$key}")->remove($token);
-                        $this->unlock("{$prefix}lock:{$key}", $token);
+                        Promise\rethrow($this->unlock($key, $token));
 
                         throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() . ' ms');
                     }
