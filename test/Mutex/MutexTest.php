@@ -5,8 +5,6 @@ namespace Amp\Redis\Mutex;
 use Amp\Delayed;
 use Amp\Redis\Config;
 use Amp\Redis\IntegrationTest;
-use Amp\Redis\QueryExecutor;
-use Amp\Redis\QueryExecutorFactory;
 use Amp\Redis\RemoteExecutorFactory;
 use Amp\Sync\Lock;
 use function Amp\delay;
