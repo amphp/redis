@@ -28,6 +28,7 @@
         "amphp/sync": "^1.1"
     },
     "require-dev": {
+        "amphp/parallel": "dev-master as 1.4",
         "amphp/phpunit-util": "^1.1.2",
         "phpunit/phpunit": "^7 | ^8",
         "amphp/php-cs-fixer-config": "dev-master"
@@ -43,7 +44,8 @@
     "autoload-dev": {
         "psr-4": {
             "Amp\\Redis\\": "test",
-            "Amp\\Cache\\Test\\": "vendor/amphp/cache/test"
+            "Amp\\Cache\\Test\\": "vendor/amphp/cache/test",
+            "Amp\\Parallel\\Test\\": "vendor/amphp/parallel/test"
         }
     }
 }
