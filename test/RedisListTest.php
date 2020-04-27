@@ -47,5 +47,7 @@ class RedisListTest extends IntegrationTest
 
         $this->assertSame('y', yield $list->popHeadBlocking());
         $this->assertSame('b', yield $list->popTailBlocking());
+
+        $this->assertNull(yield $this->redis->getList('nonexistent')->popHeadBlocking(1));
     }
 }
