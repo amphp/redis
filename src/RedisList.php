@@ -154,14 +154,14 @@ final class RedisList
     /**
      * @param int $timeout
      *
-     * @return Promise<string>
+     * @return Promise<string|null>
      *
      * @link https://redis.io/commands/brpop
      */
     public function popTailBlocking(int $timeout = 0): Promise
     {
         return $this->queryExecutor->execute(['brpop', $this->key, $timeout], static function ($response) {
-            return $response[1];
+            return $response[1] ?? null;
         });
     }
 
@@ -181,7 +181,7 @@ final class RedisList
      * @param string $destination
      * @param int    $timeout
      *
-     * @return Promise<string>
+     * @return Promise<string|null>
      *
      * @link https://redis.io/commands/brpoplpush
      */
