@@ -1,29 +1,26 @@
-sudo: false
-
+os: linux
+dist: xenial
 language: php
 
 php:
   - 7.1
   - 7.2
   - 7.3
-  - 7.4snapshot
+  - 7.4
   - nightly
 
 services:
   - redis-server
 
-matrix:
+jobs:
   allow_failures:
-    - php: 7.4snapshot
     - php: nightly
   fast_finish: true
 
 install:
   # --prefer-source for including test directory for amphp/cache
   - composer update -n --prefer-source
-
-  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.1.0/php-coveralls.phar
-  - chmod +x php-coveralls.phar
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.2.0/php-coveralls.phar
 
   - mkdir -p coverage/cov coverage/bin
   - wget https://phar.phpunit.de/phpcov.phar -O coverage/bin/phpcov
@@ -37,7 +34,7 @@ script:
 
 after_script:
   - coverage/bin/phpcov merge --clover build/logs/clover.xml coverage/cov
-  - travis_retry ./php-coveralls.phar -v
+  - travis_retry php php-coveralls.phar -v
 
 cache:
   directories:
