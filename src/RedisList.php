@@ -130,7 +130,7 @@ final class RedisList
     /**
      * @param int $timeout
      *
-     * @return Promise<string>
+     * @return Promise<string|null>
      *
      * @link https://redis.io/commands/blpop
      */
