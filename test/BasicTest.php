@@ -2,10 +2,75 @@
 
 namespace Amp\Redis;
 
+use Amp\ByteStream\ClosedException;
 use Amp\Delayed;
 
 class BasicTest extends IntegrationTest
 {
+    public function testRaw(): \Generator
+    {
+        $this->setTimeout(5000);
+
+        $config = Config::fromUri($this->getUri());
+        /** @var RespSocket $resp */
+        $resp = yield connect($config);
+
+        yield $resp->write('PING');
+
+        $this->assertEquals(['PONG'], yield $resp->read());
+
+        $resp->close();
+
+        $this->expectException(ClosedException::class);
+        $this->expectExceptionMessage('Redis connection already closed');
+
+        yield $resp->write('PING');
+    }
+
+    public function testRawCloseRemote(): \Generator
+    {
+        $this->setTimeout(5000);
+
+        $config = Config::fromUri($this->getUri());
+        /** @var RespSocket $resp */
+        $resp = yield connect($config);
+
+        yield $resp->write('QUIT');
+
+        $this->assertEquals(['OK'], yield $resp->read());
+
+        $this->assertNull(yield $resp->read());
+        $this->assertNull(yield $resp->read());
+
+        $this->expectException(ClosedException::class);
+        $this->expectExceptionMessage('The stream was closed by the peer');
+
+        yield $resp->write('PING');
+    }
+
+    public function testRawCloseLocal(): \Generator
+    {
+        $this->setTimeout(5000);
+
+        $config = Config::fromUri($this->getUri());
+        /** @var RespSocket $resp */
+        $resp = yield connect($config);
+
+        yield $resp->write('QUIT');
+
+        $this->assertEquals(['OK'], yield $resp->read());
+
+        $this->assertNull(yield $resp->read());
+        $this->assertNull(yield $resp->read());
+
+        $resp->close();
+
+        $this->expectException(ClosedException::class);
+        $this->expectExceptionMessage('Redis connection already closed');
+
+        yield $resp->write('PING');
+    }
+
     public function testConnect(): \Generator
     {
         $this->assertEquals('PONG', yield $this->createInstance()->echo('PONG'));

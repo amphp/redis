@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\ByteStream\ClosedException;
 use Amp\Emitter;
 use Amp\Iterator;
 use Amp\Promise;
@@ -24,6 +25,9 @@ final class RespSocket
     /** @var Promise */
     private $backpressure;
 
+    /** @var \Throwable */
+    private $error;
+
     public function __construct(Socket $socket)
     {
         $emitter = new Emitter;
@@ -36,11 +40,17 @@ final class RespSocket
             $backpressure = $emitter->emit($message);
         });
 
-        asyncCall(function () use ($socket) {
-            while (null !== $chunk = yield $socket->read()) {
-                $this->parser->append($chunk);
-                yield $this->backpressure;
+        asyncCall(function () use ($socket, $emitter) {
+            try {
+                while (null !== $chunk = yield $socket->read()) {
+                    $this->parser->append($chunk);
+                    yield $this->backpressure;
+                }
+            } catch (\Throwable $e) {
+                $emitter->fail($e);
             }
+
+            $emitter->complete();
 
             $this->close();
         });
@@ -49,8 +59,16 @@ final class RespSocket
     public function read(): Promise
     {
         return call(function () {
-            if (yield $this->iterator->advance()) {
-                return [$this->iterator->getCurrent()];
+            try {
+                if (yield $this->iterator->advance()) {
+                    return [$this->iterator->getCurrent()];
+                }
+            } catch (\Throwable $e) {
+                if ($this->error === null) {
+                    $this->error = $e;
+                }
+
+                throw $e;
             }
 
             return null;
@@ -60,6 +78,14 @@ final class RespSocket
     public function write(string ...$args): Promise
     {
         return call(function () use ($args) {
+            if ($this->error) {
+                throw $this->error;
+            }
+
+            if ($this->socket === null) {
+                throw new ClosedException('Redis connection already closed');
+            }
+
             $payload = '';
             foreach ($args as $arg) {
                 $payload .= '$' . \strlen($arg) . "\r\n{$arg}\r\n";
