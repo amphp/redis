@@ -35,7 +35,7 @@ class AuthTest extends AsyncTestCase
         $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=wrong')));
 
         $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('ERR invalid password');
+        $this->expectExceptionMessageMatches('(ERR invalid password|WRONGPASS invalid username-password pair)');
 
         yield $redis->echo('PONG');
     }
