@@ -10,7 +10,7 @@ php:
   - nightly
 
 services:
-  - redis-server
+  - redis
 
 jobs:
   allow_failures:
@@ -29,7 +29,7 @@ install:
   - composer show
 
 script:
-  - AMPHP_TEST_REDIS_INSTANCE=tcp://localhost:6379 phpdbg -qrr vendor/bin/phpunit --verbose --coverage-php coverage/cov/main.cov
+  - AMPHP_TEST_REDIS_INSTANCE=tcp://localhost:6379 vendor/bin/phpunit --verbose --coverage-php coverage/cov/main.cov
   - PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer --diff --dry-run -v fix
 
 after_script:
