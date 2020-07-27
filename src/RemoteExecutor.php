@@ -115,8 +115,6 @@ final class RemoteExecutor implements QueryExecutor
                         $deferred = \array_shift($queue);
                         $deferred->fail($error);
                     }
-
-                    throw $error;
                 }
             });
 

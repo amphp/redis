@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\ByteStream\ClosedException;
 use Amp\Delayed;
+use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
@@ -27,7 +28,7 @@ class BasicTest extends IntegrationTest
         yield $resp->write('PING');
     }
 
-    public function testRawCloseRemote(): \Generator
+    public function testRawCloseReadRemote(): \Generator
     {
         $this->setTimeout(5000);
 
@@ -39,16 +40,53 @@ class BasicTest extends IntegrationTest
 
         $this->assertEquals(['OK'], yield $resp->read());
 
+        $this->expectException(ClosedException::class);
+        $this->expectExceptionMessage('Socket closed');
+
         $this->assertNull(yield $resp->read());
-        $this->assertNull(yield $resp->read());
+    }
+
+    public function testRawCloseReadLocal(): \Generator
+    {
+        $this->setTimeout(5000);
+
+        $config = Config::fromUri($this->getUri());
+        /** @var RespSocket $resp */
+        $resp = yield connect($config);
+
+        yield $resp->write('QUIT');
+
+        $this->assertEquals(['OK'], yield $resp->read());
+
+        $resp->close();
 
         $this->expectException(ClosedException::class);
-        $this->expectExceptionMessage('The stream was closed by the peer');
+        $this->expectExceptionMessage('Socket closed');
+
+        $this->assertNull(yield $resp->read());
+    }
+
+    public function testRawCloseWriteRemote(): \Generator
+    {
+        $this->setTimeout(5000);
+
+        $config = Config::fromUri($this->getUri());
+        /** @var RespSocket $resp */
+        $resp = yield connect($config);
+
+        yield $resp->write('QUIT');
+
+        $this->assertEquals(['OK'], yield $resp->read());
+
+        yield delay(0);
+
+        $this->expectException(ClosedException::class);
+        $this->expectExceptionMessage('Redis connection already closed');
 
         yield $resp->write('PING');
     }
 
-    public function testRawCloseLocal(): \Generator
+    public function testRawCloseWriteLocal(): \Generator
     {
         $this->setTimeout(5000);
 
@@ -60,8 +98,7 @@ class BasicTest extends IntegrationTest
 
         $this->assertEquals(['OK'], yield $resp->read());
 
-        $this->assertNull(yield $resp->read());
-        $this->assertNull(yield $resp->read());
+        yield delay(0);
 
         $resp->close();
 

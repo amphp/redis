@@ -46,11 +46,15 @@ final class RespSocket
                     $this->parser->append($chunk);
                     yield $this->backpressure;
                 }
+
+                $emitter->fail(new ClosedException('Socket closed'));
             } catch (\Throwable $e) {
+                if ($this->error === null) {
+                    $this->error = $e;
+                }
+
                 $emitter->fail($e);
             }
-
-            $emitter->complete();
 
             $this->close();
         });
@@ -59,16 +63,8 @@ final class RespSocket
     public function read(): Promise
     {
         return call(function () {
-            try {
-                if (yield $this->iterator->advance()) {
-                    return [$this->iterator->getCurrent()];
-                }
-            } catch (\Throwable $e) {
-                if ($this->error === null) {
-                    $this->error = $e;
-                }
-
-                throw $e;
+            if (yield $this->iterator->advance()) {
+                return [$this->iterator->getCurrent()];
             }
 
             return null;
