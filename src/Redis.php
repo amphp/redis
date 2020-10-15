@@ -477,7 +477,7 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<string>
+     * @return Promise<string|null>
      *
      * @link https://redis.io/commands/get
      */
