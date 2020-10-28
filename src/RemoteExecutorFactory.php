@@ -6,8 +6,8 @@ use Amp\Socket;
 
 final class RemoteExecutorFactory implements QueryExecutorFactory
 {
-    private $config;
-    private $connector;
+    private Config $config;
+    private Socket\Connector $connector;
 
     public function __construct(Config $config, ?Socket\Connector $connector = null)
     {

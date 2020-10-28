@@ -2,23 +2,26 @@
 
 namespace Amp\Redis;
 
+use function Amp\async;
+use function Amp\await;
+
 class CloseTest extends IntegrationTest
 {
-    public function testReconnect(): \Generator
+    public function testReconnect(): void
     {
         $redis = $this->createInstance();
-        $this->assertEquals('PONG', yield $redis->echo('PONG'));
-        yield $redis->quit();
-        $this->assertEquals('PONG', yield $redis->echo('PONG'));
+        $this->assertEquals('PONG', $redis->echo('PONG'));
+        $redis->quit();
+        $this->assertEquals('PONG', $redis->echo('PONG'));
     }
 
-    public function testReconnect2(): \Generator
+    public function testReconnect2(): void
     {
         $redis = $this->createInstance();
-        $this->assertEquals('PONG', yield $redis->echo('PONG'));
-        $quitPromise = $redis->quit();
-        $promise = $redis->echo('PONG');
-        yield $quitPromise;
-        $this->assertEquals('PONG', yield $promise);
+        $this->assertEquals('PONG', $redis->echo('PONG'));
+        $quitPromise = async(fn() => $redis->quit());
+        $promise = async(fn() => $redis->echo('PONG'));
+        await($quitPromise);
+        $this->assertEquals('PONG', await($promise));
     }
 }

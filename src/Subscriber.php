@@ -2,24 +2,23 @@
 
 namespace Amp\Redis;
 
-use Amp\Emitter;
+use Amp\PipelineSource;
 use Amp\Promise;
-use function Amp\asyncCall;
-use function Amp\call;
+use function Amp\async;
+use function Amp\await;
+use function Amp\defer;
 
 final class Subscriber
 {
-    /** @var Config */
-    private $config;
+    private Config $config;
 
-    /** @var Promise|null */
-    private $connect;
+    private ?Promise $connect = null;
 
-    /** @var Emitter[][] */
-    private $emitters = [];
+    /** @var PipelineSource[][] */
+    private array $emitters = [];
 
-    /** @var Emitter[][] */
-    private $patternEmitters = [];
+    /** @var PipelineSource[][] */
+    private array $patternEmitters = [];
 
     public function __construct(Config $config)
     {
@@ -29,56 +28,52 @@ final class Subscriber
     /**
      * @param string $channel
      *
-     * @return Promise<Subscription>
+     * @return Subscription
      */
-    public function subscribe(string $channel): Promise
+    public function subscribe(string $channel): Subscription
     {
-        return call(function () use ($channel) {
-            $emitter = new Emitter;
-            $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
+        $emitter = new PipelineSource;
+        $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
 
-            try {
-                /** @var RespSocket $resp */
-                $resp = yield $this->connect();
-                $resp->reference();
-                yield $resp->write('subscribe', $channel);
-            } catch (\Throwable $e) {
-                $this->unloadEmitter($emitter, $channel);
+        try {
+            /** @var RespSocket $resp */
+            $resp = await($this->connect());
+            $resp->reference();
+            $resp->write('subscribe', $channel);
+        } catch (\Throwable $e) {
+            $this->unloadEmitter($emitter, $channel);
 
-                throw $e;
-            }
+            throw $e;
+        }
 
-            return new Subscription($emitter->iterate(), function () use ($emitter, $channel) {
-                $this->unloadEmitter($emitter, $channel);
-            });
+        return new Subscription($emitter->pipe(), function () use ($emitter, $channel) {
+            $this->unloadEmitter($emitter, $channel);
         });
     }
 
     /**
      * @param string $pattern
      *
-     * @return Promise<Subscription>
+     * @return Subscription
      */
-    public function subscribeToPattern(string $pattern): Promise
+    public function subscribeToPattern(string $pattern): Subscription
     {
-        return call(function () use ($pattern) {
-            $emitter = new Emitter;
-            $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
+        $emitter = new PipelineSource();
+        $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
 
-            try {
-                /** @var RespSocket $resp */
-                $resp = yield $this->connect();
-                $resp->reference();
-                yield $resp->write('psubscribe', $pattern);
-            } catch (\Throwable $e) {
-                $this->unloadPatternEmitter($emitter, $pattern);
+        try {
+            /** @var RespSocket $resp */
+            $resp = await($this->connect());
+            $resp->reference();
+            $resp->write('psubscribe', $pattern);
+        } catch (\Throwable $e) {
+            $this->unloadPatternEmitter($emitter, $pattern);
 
-                throw $e;
-            }
+            throw $e;
+        }
 
-            return new Subscription($emitter->iterate(), function () use ($emitter, $pattern) {
-                $this->unloadPatternEmitter($emitter, $pattern);
-            });
+        return new Subscription($emitter->pipe(), function () use ($emitter, $pattern) {
+            $this->unloadPatternEmitter($emitter, $pattern);
         });
     }
 
@@ -88,20 +83,19 @@ final class Subscriber
             return $this->connect;
         }
 
-        return $this->connect = call(function () {
-            /** @var RespSocket $resp */
-            $resp = yield connect($this->config);
+        return $this->connect = async(function (): RespSocket {
+            $resp = connect($this->config);
 
-            asyncCall(function () use ($resp) {
+            defer(function () use ($resp): void {
                 try {
-                    while ([$response] = yield $resp->read()) {
+                    while ([$response] = $resp->read()) {
                         switch ($response[0]) {
                             case 'message':
                                 $backpressure = [];
                                 foreach ($this->emitters[$response[1]] as $emitter) {
                                     $backpressure[] = $emitter->emit($response[2]);
                                 }
-                                yield Promise\any($backpressure);
+                                await(Promise\any($backpressure));
 
                                 break;
 
@@ -110,7 +104,7 @@ final class Subscriber
                                 foreach ($this->patternEmitters[$response[1]] as $emitter) {
                                     $backpressure[] = $emitter->emit([$response[3], $response[2]]);
                                 }
-                                yield Promise\any($backpressure);
+                                await(Promise\any($backpressure));
 
                                 break;
                         }
@@ -143,7 +137,7 @@ final class Subscriber
         return !$this->emitters && !$this->patternEmitters;
     }
 
-    private function unloadEmitter(Emitter $emitter, string $channel): void
+    private function unloadEmitter(PipelineSource $emitter, string $channel): void
     {
         $hash = \spl_object_hash($emitter);
 
@@ -155,14 +149,14 @@ final class Subscriber
             if (empty($this->emitters[$channel])) {
                 unset($this->emitters[$channel]);
 
-                asyncCall(function () use ($channel) {
+                defer(function () use ($channel): void {
                     try {
                         /** @var RespSocket $resp */
-                        $resp = yield $this->connect();
+                        $resp = await($this->connect());
 
                         if (empty($this->emitters[$channel])) {
                             $resp->reference();
-                            yield $resp->write('unsubscribe', $channel);
+                            $resp->write('unsubscribe', $channel);
                         }
 
                         if ($this->isIdle()) {
@@ -176,7 +170,7 @@ final class Subscriber
         }
     }
 
-    private function unloadPatternEmitter(Emitter $emitter, string $pattern): void
+    private function unloadPatternEmitter(PipelineSource $emitter, string $pattern): void
     {
         $hash = \spl_object_hash($emitter);
 
@@ -188,14 +182,14 @@ final class Subscriber
             if (empty($this->patternEmitters[$pattern])) {
                 unset($this->patternEmitters[$pattern]);
 
-                asyncCall(function () use ($pattern) {
+                defer(function () use ($pattern): void {
                     try {
                         /** @var RespSocket $resp */
-                        $resp = yield $this->connect();
+                        $resp = await($this->connect());
 
                         if (empty($this->patternEmitters[$pattern])) {
                             $resp->reference();
-                            yield $resp->write('punsubscribe', $pattern);
+                            $resp->write('punsubscribe', $pattern);
                         }
 
                         if ($this->isIdle()) {

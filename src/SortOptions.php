@@ -4,16 +4,11 @@ namespace Amp\Redis;
 
 final class SortOptions
 {
-    /** @var string|null */
-    private $pattern;
-    /** @var int|null */
-    private $offset;
-    /** @var int|null */
-    private $count;
-    /** @var bool */
-    private $ascending = true;
-    /** @var bool */
-    private $lexicographically = false;
+    private ?string $pattern = null;
+    private ?int $offset = null;
+    private ?int $count = null;
+    private bool $ascending = true;
+    private bool $lexicographically = false;
 
     public function hasPattern(): bool
     {

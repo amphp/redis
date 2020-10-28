@@ -12,11 +12,11 @@ final class RespParser
     public const TYPE_INTEGER = ':';
 
     private $responseCallback;
-    private $buffer = '';
-    private $currentResponse;
-    private $arrayStack;
-    private $currentSize;
-    private $arraySizes;
+    private string $buffer = '';
+    private ?array $currentResponse = null;
+    private array $arrayStack = [];
+    private int $currentSize = 0;
+    private array $arraySizes = [];
 
     public function __construct(callable $responseCallback)
     {
@@ -27,9 +27,9 @@ final class RespParser
     {
         $this->buffer = '';
         $this->currentResponse = null;
-        $this->arrayStack = null;
-        $this->currentSize = null;
-        $this->arraySizes = null;
+        $this->arrayStack = [];
+        $this->currentSize = 0;
+        $this->arraySizes = [];
     }
 
     public function append(string $str): void

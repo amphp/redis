@@ -25,14 +25,10 @@ final class Config
         return new self($uri);
     }
 
-    /** @var string */
-    private $uri;
-    /** @var string */
-    private $password = '';
-    /** @var int */
-    private $database = 0;
-    /** @var int */
-    private $timeout = 5000;
+    private string $uri;
+    private string $password = '';
+    private int $database = 0;
+    private int $timeout = 5000;
 
     /**
      * @param string $uri

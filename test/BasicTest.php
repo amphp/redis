@@ -8,143 +8,136 @@ use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
-    public function testRaw(): \Generator
+    public function testRaw(): void
     {
         $this->setTimeout(5000);
 
         $config = Config::fromUri($this->getUri());
         /** @var RespSocket $resp */
-        $resp = yield connect($config);
+        $resp = connect($config);
 
-        yield $resp->write('PING');
+        $resp->write('PING');
 
-        $this->assertEquals(['PONG'], yield $resp->read());
+        $this->assertEquals(['PONG'], $resp->read());
 
         $resp->close();
 
         $this->expectException(ClosedException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        yield $resp->write('PING');
+        $resp->write('PING');
     }
 
-    public function testRawCloseReadRemote(): \Generator
+    public function testRawCloseReadRemote(): void
     {
         $this->setTimeout(5000);
 
         $config = Config::fromUri($this->getUri());
         /** @var RespSocket $resp */
-        $resp = yield connect($config);
+        $resp = connect($config);
 
-        yield $resp->write('QUIT');
+        $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], yield $resp->read());
+        $this->assertEquals(['OK'], $resp->read());
 
-        $this->expectException(ClosedException::class);
-        $this->expectExceptionMessage('Socket closed');
-
-        $this->assertNull(yield $resp->read());
+        $this->assertNull($resp->read());
     }
 
-    public function testRawCloseReadLocal(): \Generator
+    public function testRawCloseReadLocal(): void
     {
         $this->setTimeout(5000);
 
         $config = Config::fromUri($this->getUri());
         /** @var RespSocket $resp */
-        $resp = yield connect($config);
+        $resp = connect($config);
 
-        yield $resp->write('QUIT');
+        $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], yield $resp->read());
+        $this->assertEquals(['OK'], $resp->read());
 
         $resp->close();
 
-        $this->expectException(ClosedException::class);
-        $this->expectExceptionMessage('Socket closed');
-
-        $this->assertNull(yield $resp->read());
+        $this->assertNull($resp->read());
     }
 
-    public function testRawCloseWriteRemote(): \Generator
+    public function testRawCloseWriteRemote(): void
     {
         $this->setTimeout(5000);
 
         $config = Config::fromUri($this->getUri());
         /** @var RespSocket $resp */
-        $resp = yield connect($config);
+        $resp = connect($config);
 
-        yield $resp->write('QUIT');
+        $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], yield $resp->read());
+        $this->assertEquals(['OK'], $resp->read());
 
-        yield delay(0);
+        delay(0);
 
         $this->expectException(ClosedException::class);
-        $this->expectExceptionMessage('Redis connection already closed');
 
-        yield $resp->write('PING');
+        $resp->write('PING');
     }
 
-    public function testRawCloseWriteLocal(): \Generator
+    public function testRawCloseWriteLocal(): void
     {
         $this->setTimeout(5000);
 
         $config = Config::fromUri($this->getUri());
         /** @var RespSocket $resp */
-        $resp = yield connect($config);
+        $resp = connect($config);
 
-        yield $resp->write('QUIT');
+        $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], yield $resp->read());
+        $this->assertEquals(['OK'], $resp->read());
 
-        yield delay(0);
+        delay(0);
 
         $resp->close();
 
         $this->expectException(ClosedException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        yield $resp->write('PING');
+        $resp->write('PING');
     }
 
-    public function testConnect(): \Generator
+    public function testConnect(): void
     {
-        $this->assertEquals('PONG', yield $this->createInstance()->echo('PONG'));
+        $this->assertEquals('PONG', $this->createInstance()->echo('PONG'));
     }
 
-    public function testLongPayload(): \Generator
+    public function testLongPayload(): void
     {
         $redis = $this->createInstance();
         $payload = \str_repeat('a', 6000000);
-        yield $redis->set('foobar', $payload);
-        $this->assertEquals($payload, yield $redis->get('foobar'));
+        $redis->set('foobar', $payload);
+        $this->assertEquals($payload, $redis->get('foobar'));
     }
 
-    public function testAcceptsOnlyScalars(): \Generator
+    public function testAcceptsOnlyScalars(): void
     {
         $this->expectException(\TypeError::class);
 
         $redis = $this->createInstance();
         /** @noinspection PhpParamsInspection */
-        yield $redis->set('foobar', ['abc']);
+        $redis->set('foobar', ['abc']);
     }
 
-    public function testMultiCommand(): \Generator
+    public function testMultiCommand(): void
     {
         $redis = $this->createInstance();
         $redis->echo('1');
-        $this->assertEquals('2', (yield $redis->echo('2')));
+        $this->assertEquals('2', ($redis->echo('2')));
     }
 
     /**
      * @medium
      */
-    public function testTimeout(): \Generator
+    public function testTimeout(): void
     {
         $redis = $this->createInstance();
-        yield $redis->echo('1');
-        yield new Delayed(8000);
-        $this->assertEquals('2', (yield $redis->echo('2')));
+        $redis->echo('1');
+        new Delayed(8000);
+        $this->assertEquals('2', ($redis->echo('2')));
     }
 }

@@ -2,18 +2,15 @@
 
 namespace Amp\Redis;
 
-use Amp\Iterator;
-use Amp\Producer;
-use Amp\Promise;
-use function Amp\call;
+use Amp\AsyncGenerator;
+use Amp\Pipeline;
 
 final class Redis
 {
-    /** @var QueryExecutor */
-    private $queryExecutor;
+    private QueryExecutor $queryExecutor;
 
     /** @var string[] */
-    private $evalCache = [];
+    private array $evalCache = [];
 
     public function __construct(QueryExecutor $queryExecutor)
     {
@@ -49,9 +46,9 @@ final class Redis
      * @param string $arg
      * @param string ...$args
      *
-     * @return Promise
+     * @return mixed
      */
-    public function query(string $arg, string ...$args): Promise
+    public function query(string $arg, string ...$args): mixed
     {
         return $this->queryExecutor->execute(\array_merge([$arg], $args));
     }
@@ -60,11 +57,11 @@ final class Redis
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/del
      */
-    public function delete(string $key, string ...$keys): Promise
+    public function delete(string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['del', $key], $keys));
     }
@@ -72,11 +69,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/dump
      */
-    public function dump(string $key): Promise
+    public function dump(string $key): string
     {
         return $this->queryExecutor->execute(['dump', $key]);
     }
@@ -84,11 +81,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/exists
      */
-    public function has(string $key): Promise
+    public function has(string $key): bool
     {
         return $this->queryExecutor->execute(['exists', $key], toBool);
     }
@@ -97,11 +94,11 @@ final class Redis
      * @param string $key
      * @param int    $seconds
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/expire
      */
-    public function expireIn(string $key, int $seconds): Promise
+    public function expireIn(string $key, int $seconds): bool
     {
         return $this->queryExecutor->execute(['expire', $key, $seconds], toBool);
     }
@@ -110,11 +107,11 @@ final class Redis
      * @param string $key
      * @param int    $millis
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/pexpire
      */
-    public function expireInMillis(string $key, int $millis): Promise
+    public function expireInMillis(string $key, int $millis): bool
     {
         return $this->queryExecutor->execute(['pexpire', $key, $millis], toBool);
     }
@@ -123,11 +120,11 @@ final class Redis
      * @param string $key
      * @param int    $timestamp
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/expireat
      */
-    public function expireAt(string $key, int $timestamp): Promise
+    public function expireAt(string $key, int $timestamp): bool
     {
         return $this->queryExecutor->execute(['expireat', $key, $timestamp], toBool);
     }
@@ -136,11 +133,11 @@ final class Redis
      * @param string $key
      * @param int    $timestamp
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/pexpireat
      */
-    public function expireAtMillis(string $key, int $timestamp): Promise
+    public function expireAtMillis(string $key, int $timestamp): bool
     {
         return $this->queryExecutor->execute(['pexpireat', $key, $timestamp], toBool);
     }
@@ -148,13 +145,13 @@ final class Redis
     /**
      * @param string $pattern
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/keys
      *
      * @see Redis::scan()
      */
-    public function getKeys(string $pattern = '*'): Promise
+    public function getKeys(string $pattern = '*'): array
     {
         return $this->queryExecutor->execute(['keys', $pattern]);
     }
@@ -163,11 +160,11 @@ final class Redis
      * @param string $key
      * @param int    $db
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/move
      */
-    public function move(string $key, int $db): Promise
+    public function move(string $key, int $db): bool
     {
         return $this->queryExecutor->execute(['move', $key, $db], toBool);
     }
@@ -175,11 +172,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/object
      */
-    public function getObjectRefcount(string $key): Promise
+    public function getObjectRefcount(string $key): int
     {
         return $this->queryExecutor->execute(['object', 'refcount', $key]);
     }
@@ -187,11 +184,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/object
      */
-    public function getObjectEncoding(string $key): Promise
+    public function getObjectEncoding(string $key): string
     {
         return $this->queryExecutor->execute(['object', 'encoding', $key]);
     }
@@ -199,11 +196,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/object
      */
-    public function getObjectIdletime(string $key): Promise
+    public function getObjectIdletime(string $key): int
     {
         return $this->queryExecutor->execute(['object', 'idletime', $key]);
     }
@@ -211,21 +208,21 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/persist
      */
-    public function persist(string $key): Promise
+    public function persist(string $key): bool
     {
         return $this->queryExecutor->execute(['persist', $key], toBool);
     }
 
     /**
-     * @return Promise<string|null>
+     * @return string|null
      *
      * @link https://redis.io/commands/randomkey
      */
-    public function getRandomKey(): Promise
+    public function getRandomKey(): ?string
     {
         return $this->queryExecutor->execute(['randomkey']);
     }
@@ -234,26 +231,22 @@ final class Redis
      * @param string $key
      * @param string $newKey
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/rename
      */
-    public function rename(string $key, string $newKey): Promise
+    public function rename(string $key, string $newKey): void
     {
-        return $this->queryExecutor->execute(['rename', $key, $newKey], toNull);
+        $this->queryExecutor->execute(['rename', $key, $newKey], toNull);
     }
 
     /**
      * @param string $key
      * @param string $newKey
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/renamenx
      */
-    public function renameWithoutOverwrite(string $key, string $newKey): Promise
+    public function renameWithoutOverwrite(string $key, string $newKey): void
     {
-        return $this->queryExecutor->execute(['renamenx', $key, $newKey], toNull);
+        $this->queryExecutor->execute(['renamenx', $key, $newKey], toNull);
     }
 
     /**
@@ -261,26 +254,24 @@ final class Redis
      * @param string $serializedValue
      * @param int    $ttl
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/restore
      */
-    public function restore(string $key, string $serializedValue, int $ttl = 0): Promise
+    public function restore(string $key, string $serializedValue, int $ttl = 0): void
     {
-        return $this->queryExecutor->execute(['restore', $key, $ttl, $serializedValue], toNull);
+        $this->queryExecutor->execute(['restore', $key, $ttl, $serializedValue], toNull);
     }
 
     /**
      * @param string $pattern
      * @param int    $count
      *
-     * @return Iterator<string>
+     * @return Pipeline<string>
      *
      * @link https://redis.io/commands/scan
      */
-    public function scan(?string $pattern = null, ?int $count = null): Iterator
+    public function scan(?string $pattern = null, ?int $count = null): Pipeline
     {
-        return new Producer(function (callable $emit) use ($pattern, $count) {
+        return new AsyncGenerator(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {
@@ -296,10 +287,10 @@ final class Redis
                     $query[] = $count;
                 }
 
-                [$cursor, $keys] = yield $this->queryExecutor->execute($query);
+                [$cursor, $keys] = $this->queryExecutor->execute($query);
 
                 foreach ($keys as $key) {
-                    yield $emit($key);
+                    yield $key;
                 }
             } while ($cursor !== '0');
         });
@@ -308,11 +299,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/ttl
      */
-    public function getTtl(string $key): Promise
+    public function getTtl(string $key): int
     {
         return $this->queryExecutor->execute(['ttl', $key]);
     }
@@ -320,11 +311,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/pttl
      */
-    public function getTtlInMillis(string $key): Promise
+    public function getTtlInMillis(string $key): int
     {
         return $this->queryExecutor->execute(['pttl', $key]);
     }
@@ -332,11 +323,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/type
      */
-    public function getType(string $key): Promise
+    public function getType(string $key): string
     {
         return $this->queryExecutor->execute(['type', $key]);
     }
@@ -345,11 +336,11 @@ final class Redis
      * @param string $key
      * @param string $value
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/append
      */
-    public function append(string $key, string $value): Promise
+    public function append(string $key, string $value): int
     {
         return $this->queryExecutor->execute(['append', $key, $value]);
     }
@@ -359,11 +350,11 @@ final class Redis
      * @param int|null $start
      * @param int|null $end
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitcount
      */
-    public function countBits(string $key, ?int $start = null, ?int $end = null): Promise
+    public function countBits(string $key, ?int $start = null, ?int $end = null): int
     {
         $cmd = ['bitcount', $key];
 
@@ -382,11 +373,11 @@ final class Redis
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitop
      */
-    public function storeBitwiseAnd(string $destination, string $key, string ...$keys): Promise
+    public function storeBitwiseAnd(string $destination, string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['bitop', 'and', $destination, $key], $keys));
     }
@@ -396,11 +387,11 @@ final class Redis
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitop
      */
-    public function storeBitwiseOr(string $destination, string $key, string ...$keys): Promise
+    public function storeBitwiseOr(string $destination, string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['bitop', 'or', $destination, $key], $keys));
     }
@@ -410,11 +401,11 @@ final class Redis
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitop
      */
-    public function storeBitwiseXor(string $destination, string $key, string ...$keys): Promise
+    public function storeBitwiseXor(string $destination, string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['bitop', 'xor', $destination, $key], $keys));
     }
@@ -423,11 +414,11 @@ final class Redis
      * @param string $destination
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitop
      */
-    public function storeBitwiseNot(string $destination, string $key): Promise
+    public function storeBitwiseNot(string $destination, string $key): int
     {
         return $this->queryExecutor->execute(['bitop', 'not', $destination, $key]);
     }
@@ -438,11 +429,11 @@ final class Redis
      * @param int    $start
      * @param int    $end
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/bitpos
      */
-    public function getBitPosition(string $key, bool $bit, ?int $start = null, ?int $end = null): Promise
+    public function getBitPosition(string $key, bool $bit, ?int $start = null, ?int $end = null): int
     {
         $payload = ['bitpos', $key, $bit ? 1 : 0];
 
@@ -461,11 +452,11 @@ final class Redis
      * @param string $key
      * @param int    $decrement
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/decrby
      */
-    public function decrement(string $key, int $decrement = 1): Promise
+    public function decrement(string $key, int $decrement = 1): int
     {
         if ($decrement === 1) {
             return $this->queryExecutor->execute(['decr', $key]);
@@ -477,11 +468,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<string|null>
+     * @return string|null
      *
      * @link https://redis.io/commands/get
      */
-    public function get(string $key): Promise
+    public function get(string $key): ?string
     {
         return $this->queryExecutor->execute(['get', $key]);
     }
@@ -490,11 +481,11 @@ final class Redis
      * @param string $key
      * @param int    $offset
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/getbit
      */
-    public function getBit(string $key, int $offset): Promise
+    public function getBit(string $key, int $offset): bool
     {
         return $this->queryExecutor->execute(['getbit', $key, $offset], toBool);
     }
@@ -504,11 +495,11 @@ final class Redis
      * @param int    $start
      * @param int    $end
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/getrange
      */
-    public function getRange(string $key, int $start = 0, int $end = -1): Promise
+    public function getRange(string $key, int $start = 0, int $end = -1): string
     {
         return $this->queryExecutor->execute(['getrange', $key, $start, $end]);
     }
@@ -517,11 +508,11 @@ final class Redis
      * @param string $key
      * @param string $value
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/getset
      */
-    public function getAndSet(string $key, string $value): Promise
+    public function getAndSet(string $key, string $value): string
     {
         return $this->queryExecutor->execute(['getset', $key, $value]);
     }
@@ -530,11 +521,11 @@ final class Redis
      * @param string $key
      * @param int    $increment
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/incrby
      */
-    public function increment(string $key, int $increment = 1): Promise
+    public function increment(string $key, int $increment = 1): int
     {
         if ($increment === 1) {
             return $this->queryExecutor->execute(['incr', $key]);
@@ -547,11 +538,11 @@ final class Redis
      * @param string $key
      * @param float  $increment
      *
-     * @return Promise<float>
+     * @return float
      *
      * @link https://redis.io/commands/incrbyfloat
      */
-    public function incrementByFloat(string $key, float $increment): Promise
+    public function incrementByFloat(string $key, float $increment): float
     {
         return $this->queryExecutor->execute(['incrbyfloat', $key, $increment], toFloat);
     }
@@ -560,11 +551,11 @@ final class Redis
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<array<string|null>>
+     * @return array<string|null>
      *
      * @link https://redis.io/commands/mget
      */
-    public function getMultiple(string $key, string ...$keys): Promise
+    public function getMultiple(string $key, string ...$keys): array
     {
         $query = \array_merge(['mget', $key], $keys);
 
@@ -576,11 +567,9 @@ final class Redis
     /**
      * @param array $data
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/mset
      */
-    public function setMultiple(array $data): Promise
+    public function setMultiple(array $data): void
     {
         $payload = ['mset'];
 
@@ -589,17 +578,15 @@ final class Redis
             $payload[] = $value;
         }
 
-        return $this->queryExecutor->execute($payload, toNull);
+        $this->queryExecutor->execute($payload, toNull);
     }
 
     /**
      * @param array $data
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/msetnx
      */
-    public function setMultipleWithoutOverwrite(array $data): Promise
+    public function setMultipleWithoutOverwrite(array $data): void
     {
         $payload = ['msetnx'];
 
@@ -608,18 +595,18 @@ final class Redis
             $payload[] = $value;
         }
 
-        return $this->queryExecutor->execute($payload, toNull);
+        $this->queryExecutor->execute($payload, toNull);
     }
 
     /**
      * @param string $key
      * @param string $value
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/setnx
      */
-    public function setWithoutOverwrite(string $key, string $value): Promise
+    public function setWithoutOverwrite(string $key, string $value): bool
     {
         return $this->queryExecutor->execute(['setnx', $key, $value], toBool);
     }
@@ -628,9 +615,9 @@ final class Redis
      * @param string $key
      * @param string $value
      *
-     * @return Promise<bool>
+     * @return bool
      */
-    public function set(string $key, string $value, SetOptions $options = null): Promise
+    public function set(string $key, string $value, ?SetOptions $options = null): bool
     {
         $query = ['set', $key, $value];
 
@@ -646,11 +633,11 @@ final class Redis
      * @param int    $offset
      * @param bool   $value
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/setbit
      */
-    public function setBit(string $key, int $offset, bool $value): Promise
+    public function setBit(string $key, int $offset, bool $value): int
     {
         return $this->queryExecutor->execute(['setbit', $key, $offset, (int) $value]);
     }
@@ -660,11 +647,11 @@ final class Redis
      * @param int    $offset
      * @param mixed  $value
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/setrange
      */
-    public function setRange(string $key, int $offset, string $value): Promise
+    public function setRange(string $key, int $offset, string $value): int
     {
         return $this->queryExecutor->execute(['setrange', $key, $offset, $value]);
     }
@@ -672,11 +659,11 @@ final class Redis
     /**
      * @param string $key
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/strlen
      */
-    public function getLength(string $key): Promise
+    public function getLength(string $key): int
     {
         return $this->queryExecutor->execute(['strlen', $key]);
     }
@@ -685,11 +672,11 @@ final class Redis
      * @param string $channel
      * @param string $message
      *
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/publish
      */
-    public function publish(string $channel, string $message): Promise
+    public function publish(string $channel, string $message): int
     {
         return $this->queryExecutor->execute(['publish', $channel, $message]);
     }
@@ -697,11 +684,11 @@ final class Redis
     /**
      * @param string $pattern
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/pubsub
      */
-    public function getActiveChannels(?string $pattern = null): Promise
+    public function getActiveChannels(?string $pattern = null): array
     {
         $payload = ['pubsub', 'channels'];
 
@@ -715,11 +702,11 @@ final class Redis
     /**
      * @param string ...$channels
      *
-     * @return Promise<int[]>
+     * @return int[]
      *
      * @link https://redis.io/commands/pubsub
      */
-    public function getNumberOfSubscriptions(string ...$channels): Promise
+    public function getNumberOfSubscriptions(string ...$channels): array
     {
         $query = \array_merge(['pubsub', 'numsub'], $channels);
 
@@ -735,61 +722,53 @@ final class Redis
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/pubsub
      */
-    public function getNumberOfPatternSubscriptions(): Promise
+    public function getNumberOfPatternSubscriptions(): int
     {
         return $this->queryExecutor->execute(['pubsub', 'numpat']);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/ping
      */
-    public function ping(): Promise
+    public function ping(): void
     {
-        return $this->queryExecutor->execute(['ping'], toNull);
+        $this->queryExecutor->execute(['ping'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/quit
      */
-    public function quit(): Promise
+    public function quit(): void
     {
-        return $this->queryExecutor->execute(['quit'], toNull);
+        $this->queryExecutor->execute(['quit'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/bgrewriteaof
      */
-    public function rewriteAofAsync(): Promise
+    public function rewriteAofAsync(): void
     {
-        return $this->queryExecutor->execute(['bgrewriteaof'], toNull);
+        $this->queryExecutor->execute(['bgrewriteaof'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/bgsave
      */
-    public function saveAsync(): Promise
+    public function saveAsync(): void
     {
-        return $this->queryExecutor->execute(['bgsave'], toNull);
+        $this->queryExecutor->execute(['bgsave'], toNull);
     }
 
     /**
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/client-getname
      */
-    public function getName(): Promise
+    public function getName(): string
     {
         return $this->queryExecutor->execute(['client', 'getname']);
     }
@@ -797,158 +776,142 @@ final class Redis
     /**
      * @param int $timeInMillis
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/client-pause
      */
-    public function pauseMillis(int $timeInMillis): Promise
+    public function pauseMillis(int $timeInMillis): void
     {
-        return $this->queryExecutor->execute(['client', 'pause', $timeInMillis], toNull);
+        $this->queryExecutor->execute(['client', 'pause', $timeInMillis], toNull);
     }
 
     /**
      * @param string $name
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/client-setname
      */
-    public function setName(string $name): Promise
+    public function setName(string $name): void
     {
-        return $this->queryExecutor->execute(['client', 'setname', $name], toNull);
+        $this->queryExecutor->execute(['client', 'setname', $name], toNull);
     }
 
     /**
      * @param string $parameter
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/config-get
      */
-    public function getConfig(string $parameter): Promise
+    public function getConfig(string $parameter): array
     {
         return $this->queryExecutor->execute(['config', 'get', $parameter]);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/config-resetstat
      */
-    public function resetStatistics(): Promise
+    public function resetStatistics(): void
     {
-        return $this->queryExecutor->execute(['config', 'resetstat'], toNull);
+        $this->queryExecutor->execute(['config', 'resetstat'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/config-rewrite
      */
-    public function rewriteConfig(): Promise
+    public function rewriteConfig(): void
     {
-        return $this->queryExecutor->execute(['config', 'rewrite'], toNull);
+        $this->queryExecutor->execute(['config', 'rewrite'], toNull);
     }
 
     /**
      * @param string $parameter
      * @param string $value
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/config-set
      */
-    public function setConfig(string $parameter, string $value): Promise
+    public function setConfig(string $parameter, string $value): void
     {
-        return $this->queryExecutor->execute(['config', 'set', $parameter, $value], toNull);
+        $this->queryExecutor->execute(['config', 'set', $parameter, $value], toNull);
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/dbsize
      */
-    public function getDatabaseSize(): Promise
+    public function getDatabaseSize(): int
     {
         return $this->queryExecutor->execute(['dbsize']);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/flushall
      */
-    public function flushAll(): Promise
+    public function flushAll(): void
     {
-        return $this->queryExecutor->execute(['flushall'], toNull);
+        $this->queryExecutor->execute(['flushall'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/flushdb
      */
-    public function flushDatabase(): Promise
+    public function flushDatabase(): void
     {
-        return $this->queryExecutor->execute(['flushdb'], toNull);
+        $this->queryExecutor->execute(['flushdb'], toNull);
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/lastsave
      */
-    public function getLastSave(): Promise
+    public function getLastSave(): int
     {
         return $this->queryExecutor->execute(['lastsave']);
     }
 
     /**
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/role
      */
-    public function getRole(): Promise
+    public function getRole(): array
     {
         return $this->queryExecutor->execute(['role']);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/save
      */
-    public function save(): Promise
+    public function save(): void
     {
-        return $this->queryExecutor->execute(['save'], toNull);
+        $this->queryExecutor->execute(['save'], toNull);
     }
 
     /**
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/shutdown
      */
-    public function shutdownWithSave(): Promise
+    public function shutdownWithSave(): string
     {
         return $this->queryExecutor->execute(['shutdown', 'save']);
     }
 
     /**
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/shutdown
      */
-    public function shutdownWithoutSave(): Promise
+    public function shutdownWithoutSave(): string
     {
         return $this->queryExecutor->execute(['shutdown', 'nosave']);
     }
 
     /**
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/shutdown
      */
-    public function shutdown(): Promise
+    public function shutdown(): string
     {
         return $this->queryExecutor->execute(['shutdown']);
     }
@@ -957,33 +920,29 @@ final class Redis
      * @param string $host
      * @param int    $port
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/slaveof
      */
-    public function enableReplication(string $host, int $port): Promise
+    public function enableReplication(string $host, int $port): void
     {
-        return $this->queryExecutor->execute(['slaveof', $host, $port], toNull);
+        $this->queryExecutor->execute(['slaveof', $host, $port], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/slaveof
      */
-    public function disableReplication(): Promise
+    public function disableReplication(): void
     {
-        return $this->queryExecutor->execute(['slaveof', 'no', 'one'], toNull);
+        $this->queryExecutor->execute(['slaveof', 'no', 'one'], toNull);
     }
 
     /**
      * @param int $count
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/slowlog
      */
-    public function getSlowlog(?int $count = null): Promise
+    public function getSlowlog(?int $count = null): array
     {
         $payload = ['slowlog', 'get'];
 
@@ -995,41 +954,39 @@ final class Redis
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/slowlog
      */
-    public function getSlowlogLength(): Promise
+    public function getSlowlogLength(): int
     {
         return $this->queryExecutor->execute(['slowlog', 'len']);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/slowlog
      */
-    public function resetSlowlog(): Promise
+    public function resetSlowlog(): void
     {
-        return $this->queryExecutor->execute(['slowlog', 'reset'], toNull);
+        $this->queryExecutor->execute(['slowlog', 'reset'], toNull);
     }
 
     /**
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/time
      */
-    public function getTime(): Promise
+    public function getTime(): array
     {
         return $this->queryExecutor->execute(['time']);
     }
 
     /**
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/script-exists
      */
-    public function hasScript(string $sha1): Promise
+    public function hasScript(string $sha1): bool
     {
         return $this->queryExecutor->execute(['script', 'exists', $sha1], static function (array $array) {
             return (bool) $array[0];
@@ -1037,35 +994,31 @@ final class Redis
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/script-flush
      */
-    public function flushScripts(): Promise
+    public function flushScripts(): void
     {
         $this->evalCache = []; // same as internal redis behavior
 
-        return $this->queryExecutor->execute(['script', 'flush'], toNull);
+        $this->queryExecutor->execute(['script', 'flush'], toNull);
     }
 
     /**
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/script-kill
      */
-    public function killScript(): Promise
+    public function killScript(): void
     {
-        return $this->queryExecutor->execute(['script', 'kill'], toNull);
+        $this->queryExecutor->execute(['script', 'kill'], toNull);
     }
 
     /**
      * @param string $script
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/script-load
      */
-    public function loadScript(string $script): Promise
+    public function loadScript(string $script): string
     {
         return $this->queryExecutor->execute(['script', 'load', $script]);
     }
@@ -1073,11 +1026,11 @@ final class Redis
     /**
      * @param string $text
      *
-     * @return Promise<string>
+     * @return string
      *
      * @link https://redis.io/commands/echo
      */
-    public function echo(string $text): Promise
+    public function echo(string $text): string
     {
         return $this->queryExecutor->execute(['echo', $text]);
     }
@@ -1087,31 +1040,29 @@ final class Redis
      * @param string[] $keys
      * @param string[] $args
      *
-     * @return Promise<mixed>
+     * @return mixed
      *
      * @link https://redis.io/commands/eval
      */
-    public function eval(string $script, array $keys = [], array $args = []): Promise
+    public function eval(string $script, array $keys = [], array $args = []): mixed
     {
-        return call(function () use ($script, $keys, $args) {
-            try {
-                $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
-                $query = \array_merge(['evalsha', $sha1, \count($keys)], $keys, $args);
+        try {
+            $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
+            $query = \array_merge(['evalsha', $sha1, \count($keys)], $keys, $args);
 
-                return yield $this->queryExecutor->execute($query);
-            } catch (QueryException $e) {
-                if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
-                    $query = \array_merge(['eval', $script, \count($keys)], $keys, $args);
-                    return $this->queryExecutor->execute($query);
-                }
-
-                throw $e;
+            return $this->queryExecutor->execute($query);
+        } catch (QueryException $e) {
+            if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
+                $query = \array_merge(['eval', $script, \count($keys)], $keys, $args);
+                return $this->queryExecutor->execute($query);
             }
-        });
+
+            throw $e;
+        }
     }
 
-    public function select(int $database): Promise
+    public function select(int $database): void
     {
-        return $this->queryExecutor->execute(['select', $database], toNull);
+        $this->queryExecutor->execute(['select', $database], toNull);
     }
 }

@@ -4,12 +4,9 @@ namespace Amp\Redis;
 
 final class SetOptions
 {
-    /** @var int|null */
-    private $ttl;
-    /** @var string|null */
-    private $ttlUnit;
-    /** @var string|null */
-    private $existenceFlag;
+    private ?int $ttl = null;
+    private string $ttlUnit;
+    private string $existenceFlag;
 
     public function withTtl(int $seconds): self
     {
@@ -54,7 +51,7 @@ final class SetOptions
             $query[] = $this->ttl;
         }
 
-        if ($this->existenceFlag !== null) {
+        if (isset($this->existenceFlag)) {
             $query[] = $this->existenceFlag;
         }
 

@@ -4,16 +4,16 @@ namespace Amp\Redis;
 
 class RedisHyperLogLogTest extends IntegrationTest
 {
-    public function test(): \Generator
+    public function test(): void
     {
-        yield $this->redis->flushAll();
+        $this->redis->flushAll();
         $hll1 = $this->redis->getHyperLogLog('hll1');
         $hll2 = $this->redis->getHyperLogLog('hll2');
         $hll3 = $this->redis->getHyperLogLog('hll3');
 
-        $this->assertTrue(yield $hll1->add('foo', 'bar', 'zap', 'a'));
-        $this->assertTrue(yield $hll2->add('a', 'b', 'c', 'foo'));
-        $this->assertNull(yield $hll3->storeUnion('hll1', 'hll2'));
-        $this->assertSame(6, yield $hll3->count());
+        $this->assertTrue($hll1->add('foo', 'bar', 'zap', 'a'));
+        $this->assertTrue($hll2->add('a', 'b', 'c', 'foo'));
+        $hll3->storeUnion('hll1', 'hll2');
+        $this->assertSame(6, $hll3->count());
     }
 }

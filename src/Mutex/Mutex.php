@@ -3,7 +3,6 @@
 namespace Amp\Redis\Mutex;
 
 use Amp\Loop;
-use Amp\Promise;
 use Amp\Redis\QueryExecutorFactory;
 use Amp\Redis\Redis;
 use Amp\Redis\RedisException;
@@ -11,7 +10,7 @@ use Amp\Sync\KeyedMutex;
 use Amp\Sync\Lock;
 use Psr\Log\LoggerInterface as PsrLogger;
 use Psr\Log\NullLogger;
-use function Amp\call;
+use function Amp\asyncCallable;
 use function Amp\delay;
 
 /**
@@ -37,7 +36,7 @@ if redis.call("exists", lock) == 0 then
         local queued_tokens = redis.call("lrange", queue, 0, -1)
         local push = 1
         local position = 0
-        
+
         for i=1,#queued_tokens do
             if queued_tokens[i] == token then
                 push = 0
@@ -102,25 +101,21 @@ for i=1,#KEYS do
 end
 RENEW;
 
-    /** @var MutexOptions */
-    private $options;
-    /** @var Redis */
-    private $sharedConnection;
-    /** @var array[] */
-    private $locks;
-    /** @var string */
-    private $watcher;
-    /** @var PsrLogger */
-    private $logger;
-
-    private $numberOfLocks = 0;
-    private $numberOfAttempts = 0;
+    private MutexOptions $options;
+    private Redis $sharedConnection;
+    /** @var Lock[] */
+    private array $locks = [];
+    private ?string $watcher = null;
+    private PsrLogger $logger;
+    private int $numberOfLocks = 0;
+    private int $numberOfAttempts = 0;
 
     /**
      * Constructs a new Mutex instance. A single instance can be used to create as many locks as you need.
      *
      * @param QueryExecutorFactory $queryExecutorFactory
      * @param MutexOptions|null    $options
+     * @param PsrLogger|null       $logger
      */
     public function __construct(
         QueryExecutorFactory $queryExecutorFactory,
@@ -148,54 +143,52 @@ RENEW;
      *
      * @param string $key Lock key.
      *
-     * @return Promise<Lock> Resolves to an instance of `Lock`.
+     * @return Lock
      */
-    public function acquire(string $key): Promise
+    public function acquire(string $key): Lock
     {
-        return call(function () use ($key) {
-            $this->numberOfLocks++;
+        $this->numberOfLocks++;
 
-            $token = \base64_encode(\random_bytes(16));
-            $prefix = $this->options->getKeyPrefix();
-            $timeLimit = \microtime(true) * 1000 + $this->options->getLockTimeout();
-            $attempts = 0;
+        $token = \base64_encode(\random_bytes(16));
+        $prefix = $this->options->getKeyPrefix();
+        $timeLimit = \microtime(true) * 1000 + $this->options->getLockTimeout();
+        $attempts = 0;
 
-            do {
-                $attempts++;
-                $this->numberOfAttempts++;
+        do {
+            $attempts++;
+            $this->numberOfAttempts++;
 
-                $result = yield $this->sharedConnection->eval(
-                    self::LOCK,
-                    ["{$prefix}lock:{$key}", "{$prefix}lock-queue:{$key}"],
-                    [$token, $this->options->getLockExpiration(), $this->options->getLockExpiration() + $this->options->getLockTimeout()]
-                );
+            $result = $this->sharedConnection->eval(
+                self::LOCK,
+                ["{$prefix}lock:{$key}", "{$prefix}lock-queue:{$key}"],
+                [$token, $this->options->getLockExpiration(), $this->options->getLockExpiration() + $this->options->getLockTimeout()]
+            );
 
-                if ($result < 1) {
-                    if ($attempts > 2 && \microtime(true) * 1000 > $timeLimit) {
-                        // In very rare cases we might not get the lock, but are at the head of the queue and another
-                        // client moves us into the lock position. Deleting the token from the queue and afterwards
-                        // unlocking solves this. No yield required, because we use the same connection.
-                        $this->sharedConnection->getList("{$prefix}lock-queue:{$key}")->remove($token);
-                        Promise\rethrow($this->unlock($key, $token));
+            if ($result < 1) {
+                if ($attempts > 2 && \microtime(true) * 1000 > $timeLimit) {
+                    // In very rare cases we might not get the lock, but are at the head of the queue and another
+                    // client moves us into the lock position. Deleting the token from the queue and afterwards
+                    // unlocking solves this. No yield required, because we use the same connection.
+                    $this->sharedConnection->getList("{$prefix}lock-queue:{$key}")->remove($token);
+                    $this->unlock($key, $token);
 
-                        throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() . ' ms');
-                    }
-
-                    // A negative integer as reply means we're still in the queue and indicates the queue position.
-                    // Making the timing dependent on the queue position greatly reduces CPU usage and locking attempts.
-                    yield delay(5 + \min((-$result - 1) * 10, 300));
+                    throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() . ' ms');
                 }
-            } while ($result < 1);
 
-            if (empty($this->locks)) {
-                $this->createRenewWatcher();
+                // A negative integer as reply means we're still in the queue and indicates the queue position.
+                // Making the timing dependent on the queue position greatly reduces CPU usage and locking attempts.
+                delay(5 + \min((-$result - 1) * 10, 300));
             }
+        } while ($result < 1);
 
-            $this->locks[$key . ' @ ' . $token] = [$key, $token];
+        if (empty($this->locks)) {
+            $this->createRenewWatcher();
+        }
 
-            return new Lock(0, function () use ($key, $token) {
-                Promise\rethrow($this->unlock($key, $token));
-            });
+        $this->locks[$key . ' @ ' . $token] = [$key, $token];
+
+        return new Lock(0, function () use ($key, $token): void {
+            $this->unlock($key, $token);
         });
     }
 
@@ -220,50 +213,46 @@ RENEW;
      *
      * @param string $key Lock key.
      * @param string $token Unique token generated during {@link lock()}.
-     *
-     * @return Promise Fails if lock couldn't be unlocked, otherwise resolves normally.
      */
-    private function unlock(string $key, string $token): Promise
+    private function unlock(string $key, string $token): void
     {
-        return call(function () use ($key, $token) {
-            // Unset before unlocking, as we don't want to renew the lock anymore
-            // If something goes wrong, the lock will simply expire
-            unset($this->locks[$key . ' @ ' . $token]);
+        // Unset before unlocking, as we don't want to renew the lock anymore
+        // If something goes wrong, the lock will simply expire
+        unset($this->locks[$key . ' @ ' . $token]);
 
-            if (empty($this->locks) && $this->watcher !== null) {
-                Loop::cancel($this->watcher);
-                $this->watcher = null;
-            }
+        if (empty($this->locks) && $this->watcher !== null) {
+            Loop::cancel($this->watcher);
+            $this->watcher = null;
+        }
 
-            $prefix = $this->options->getKeyPrefix();
+        $prefix = $this->options->getKeyPrefix();
 
-            for ($attempt = 0; $attempt < 2; $attempt++) {
-                try {
-                    $result = yield $this->sharedConnection->eval(
-                        self::UNLOCK,
-                        ["{$prefix}lock:{$key}"],
-                        [$token]
-                    );
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            try {
+                $result = $this->sharedConnection->eval(
+                    self::UNLOCK,
+                    ["{$prefix}lock:{$key}"],
+                    [$token]
+                );
 
-                    if ($result === 2) {
-                        $this->logger->warning('Lock was already expired when unlocked', [
-                            'key' => $key,
-                        ]);
-                    }
-
-                    break;
-                } catch (RedisException $e) {
-                    $this->logger->error('Unlock operation failed on attempt ' . ($attempt + 1), [
-                        'exception' => $e,
+                if ($result === 2) {
+                    $this->logger->warning('Lock was already expired when unlocked', [
+                        'key' => $key,
                     ]);
                 }
+
+                break;
+            } catch (RedisException $e) {
+                $this->logger->error('Unlock operation failed on attempt ' . ($attempt + 1), [
+                    'exception' => $e,
+                ]);
             }
-        });
+        }
     }
 
     private function createRenewWatcher(): void
     {
-        $this->watcher = Loop::repeat($this->options->getLockRenewInterval(), function () {
+        $this->watcher = Loop::repeat($this->options->getLockRenewInterval(), asyncCallable(function (): void {
             \assert(!empty($this->locks));
 
             $keys = [];
@@ -277,12 +266,12 @@ RENEW;
             }
 
             try {
-                yield $this->sharedConnection->eval(self::RENEW, $keys, $arguments);
+                $this->sharedConnection->eval(self::RENEW, $keys, $arguments);
             } catch (RedisException $e) {
                 $this->logger->error('Renew operation failed, locks might expire', [
                     'exception' => $e,
                 ]);
             }
-        });
+        }));
     }
 }

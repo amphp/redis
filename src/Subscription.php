@@ -2,34 +2,28 @@
 
 namespace Amp\Redis;
 
-use Amp\Iterator;
-use Amp\Promise;
+use Amp\Pipeline;
 
-final class Subscription implements Iterator
+final class Subscription implements Pipeline
 {
-    private $iterator;
+    private Pipeline $pipeline;
     private $unsubscribeCallback;
 
-    public function __construct(Iterator $iterator, callable $unsubscribeCallback)
+    public function __construct(Pipeline $iterator, callable $unsubscribeCallback)
     {
-        $this->iterator = $iterator;
+        $this->pipeline = $iterator;
         $this->unsubscribeCallback = $unsubscribeCallback;
     }
 
     /** @inheritdoc */
-    public function advance(): Promise
+    public function continue(): mixed
     {
-        return $this->iterator->advance();
+        return $this->pipeline->continue();
     }
 
-    /** @inheritdoc */
-    public function getCurrent()
-    {
-        return $this->iterator->getCurrent();
-    }
-
-    public function cancel(): void
+    public function dispose(): void
     {
         ($this->unsubscribeCallback)();
+        $this->pipeline->dispose();
     }
 }

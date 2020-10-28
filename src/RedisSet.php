@@ -2,16 +2,13 @@
 
 namespace Amp\Redis;
 
-use Amp\Iterator;
-use Amp\Producer;
-use Amp\Promise;
+use Amp\AsyncGenerator;
+use Amp\Pipeline;
 
 final class RedisSet
 {
-    /** @var QueryExecutor */
-    private $queryExecutor;
-    /** @var string */
-    private $key;
+    private QueryExecutor $queryExecutor;
+    private string $key;
 
     public function __construct(QueryExecutor $queryExecutor, string $key)
     {
@@ -23,17 +20,17 @@ final class RedisSet
      * @param string $member
      * @param string ...$members
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function add(string $member, string ...$members): Promise
+    public function add(string $member, string ...$members): int
     {
         return $this->queryExecutor->execute(\array_merge(['sadd', $this->key, $member], $members));
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      */
-    public function getSize(): Promise
+    public function getSize(): int
     {
         return $this->queryExecutor->execute(['scard', $this->key]);
     }
@@ -41,9 +38,9 @@ final class RedisSet
     /**
      * @param string ...$keys
      *
-     * @return Promise<array>
+     * @return array
      */
-    public function diff(string ...$keys): Promise
+    public function diff(string ...$keys): array
     {
         return $this->queryExecutor->execute(\array_merge(['sdiff', $this->key], $keys));
     }
@@ -52,9 +49,9 @@ final class RedisSet
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function storeDiff(string $key, string ...$keys): Promise
+    public function storeDiff(string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['sdiffstore', $this->key, $key], $keys));
     }
@@ -62,9 +59,9 @@ final class RedisSet
     /**
      * @param string ...$keys
      *
-     * @return Promise<array>
+     * @return array
      */
-    public function intersect(string ...$keys): Promise
+    public function intersect(string ...$keys): array
     {
         return $this->queryExecutor->execute(\array_merge(['sinter', $this->key], $keys));
     }
@@ -73,9 +70,9 @@ final class RedisSet
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function storeIntersection(string $key, string ...$keys): Promise
+    public function storeIntersection(string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['sinterstore', $this->key, $key], $keys));
     }
@@ -83,17 +80,17 @@ final class RedisSet
     /**
      * @param string $member
      *
-     * @return Promise<bool>
+     * @return bool
      */
-    public function contains(string $member): Promise
+    public function contains(string $member): bool
     {
         return $this->queryExecutor->execute(['sismember', $this->key, $member], toBool);
     }
 
     /**
-     * @return Promise<array>
+     * @return array
      */
-    public function getAll(): Promise
+    public function getAll(): array
     {
         return $this->queryExecutor->execute(['smembers', $this->key]);
     }
@@ -102,25 +99,25 @@ final class RedisSet
      * @param string $member
      * @param string $destination
      *
-     * @return Promise<bool>
+     * @return bool
      */
-    public function move(string $member, string $destination): Promise
+    public function move(string $member, string $destination): bool
     {
         return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], toBool);
     }
 
     /**
-     * @return Promise<string>
+     * @return string
      */
-    public function popRandomMember(): Promise
+    public function popRandomMember(): string
     {
         return $this->queryExecutor->execute(['spop', $this->key]);
     }
 
     /**
-     * @return Promise<string|null>
+     * @return string|null
      */
-    public function getRandomMember(): Promise
+    public function getRandomMember(): ?string
     {
         return $this->queryExecutor->execute(['srandmember', $this->key]);
     }
@@ -128,9 +125,9 @@ final class RedisSet
     /**
      * @param int $count
      *
-     * @return Promise<string[]>
+     * @return string[]
      */
-    public function getRandomMembers(int $count): Promise
+    public function getRandomMembers(int $count): array
     {
         return $this->queryExecutor->execute(['srandmember', $this->key, $count]);
     }
@@ -139,9 +136,9 @@ final class RedisSet
      * @param string $member
      * @param string ...$members
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function remove(string $member, string ...$members): Promise
+    public function remove(string $member, string ...$members): int
     {
         return $this->queryExecutor->execute(\array_merge(['srem', $this->key, $member], $members));
     }
@@ -149,9 +146,9 @@ final class RedisSet
     /**
      * @param string ...$keys
      *
-     * @return Promise<array>
+     * @return array
      */
-    public function union(string ...$keys): Promise
+    public function union(string ...$keys): array
     {
         return $this->queryExecutor->execute(\array_merge(['sunion', $this->key], $keys));
     }
@@ -160,9 +157,9 @@ final class RedisSet
      * @param string $key
      * @param string ...$keys
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function storeUnion(string $key, string ...$keys): Promise
+    public function storeUnion(string $key, string ...$keys): int
     {
         return $this->queryExecutor->execute(\array_merge(['sunionstore', $this->key, $key], $keys));
     }
@@ -171,11 +168,11 @@ final class RedisSet
      * @param string $pattern
      * @param int    $count
      *
-     * @return Iterator
+     * @return Pipeline
      */
-    public function scan(?string $pattern = null, ?int $count = null): Iterator
+    public function scan(?string $pattern = null, ?int $count = null): Pipeline
     {
-        return new Producer(function (callable $emit) use ($pattern, $count) {
+        return new AsyncGenerator(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {
@@ -191,10 +188,10 @@ final class RedisSet
                     $query[] = $count;
                 }
 
-                [$cursor, $keys] = yield $this->queryExecutor->execute($query);
+                [$cursor, $keys] = $this->queryExecutor->execute($query);
 
                 foreach ($keys as $key) {
-                    yield $emit($key);
+                    yield $key;
                 }
             } while ($cursor !== '0');
         });
@@ -203,11 +200,11 @@ final class RedisSet
     /**
      * @param SortOptions $sort
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/sort
      */
-    public function sort(?SortOptions $sort = null): Promise
+    public function sort(?SortOptions $sort = null): array
     {
         return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new SortOptions)->toQuery()));
     }

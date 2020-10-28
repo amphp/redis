@@ -6,25 +6,22 @@ use Amp\ByteStream\StreamException;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Socket;
-use function Amp\asyncCall;
-use function Amp\call;
+use function Amp\async;
+use function Amp\await;
+use function Amp\defer;
 
 final class RemoteExecutor implements QueryExecutor
 {
     /** @var Deferred[] */
-    private $queue = [];
+    private array $queue = [];
 
-    /** @var Config */
-    private $config;
+    private Config $config;
 
-    /** @var int */
-    private $database;
+    private int $database;
 
-    /** @var Promise|null */
-    private $connect;
+    private ?Promise $connect = null;
 
-    /** @var Socket\Connector */
-    private $connector;
+    private Socket\Connector $connector;
 
     public function __construct(Config $config, ?Socket\Connector $connector = null)
     {
@@ -37,47 +34,43 @@ final class RemoteExecutor implements QueryExecutor
      * @param string[] $args
      * @param callable $transform
      *
-     * @return Promise
+     * @return mixed
      */
-    public function execute(array $args, callable $transform = null): Promise
+    public function execute(array $args, callable $transform = null): mixed
     {
-        return call(function () use ($args, $transform) {
-            $command = \strtolower($args[0] ?? '');
+        $command = \strtolower($args[0] ?? '');
 
-            $connectPromise = $this->connect();
-            if ($command === 'quit') {
-                $this->connect = null;
-            }
+        $connectPromise = $this->connect();
+        if ($command === 'quit') {
+            $this->connect = null;
+        }
 
-            /** @var RespSocket $resp */
-            $resp = yield $connectPromise;
+        /** @var RespSocket $resp */
+        $resp = await($connectPromise);
 
-            $response = yield $this->enqueue($resp, ...$args);
+        $response = await($this->enqueue($resp, ...$args));
 
-            if ($command === 'select') {
-                $this->database = (int) $args[1];
-            }
+        if ($command === 'select') {
+            $this->database = (int) $args[1];
+        }
 
-            return $transform ? $transform($response) : $response;
-        });
+        return $transform ? $transform($response) : $response;
     }
 
     private function enqueue(RespSocket $resp, string... $args): Promise
     {
-        return call(function () use ($resp, $args) {
-            $deferred = new Deferred;
-            $this->queue[] = $deferred;
+        $deferred = new Deferred;
+        $this->queue[] = $deferred;
 
-            $resp->reference();
+        $resp->reference();
 
-            try {
-                yield $resp->write(...$args);
-            } catch (Socket\SocketException | StreamException $exception) {
-                throw new SocketException($exception);
-            }
+        try {
+            $resp->write(...$args);
+        } catch (Socket\SocketException | StreamException $exception) {
+            throw new SocketException($exception);
+        }
 
-            return $deferred->promise();
-        });
+        return $deferred->promise();
     }
 
     private function connect(): Promise
@@ -86,13 +79,13 @@ final class RemoteExecutor implements QueryExecutor
             return $this->connect;
         }
 
-        return $this->connect = call(function () {
+        return $this->connect = async(function (): RespSocket {
             /** @var RespSocket $resp */
-            $resp = yield connect($this->config->withDatabase($this->database), $this->connector);
+            $resp = connect($this->config->withDatabase($this->database), $this->connector);
 
-            asyncCall(function () use ($resp) {
+            defer(function () use ($resp): void {
                 try {
-                    while ([$response] = yield $resp->read()) {
+                    while ([$response] = $resp->read()) {
                         $deferred = \array_shift($this->queue);
                         if (!$this->queue) {
                             $resp->unreference();

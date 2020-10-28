@@ -4,91 +4,88 @@ namespace Amp\Redis;
 
 use Amp\Delayed;
 use Amp\Loop;
+use function Amp\async;
+use function Amp\asyncCallable;
+use function Amp\await;
+use function Amp\delay;
 
 class PubSubTest extends IntegrationTest
 {
-    public function testBasic(): \Generator
+    public function testBasic(): void
     {
         $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
-        /** @var Subscription $subscription */
-        $subscription = yield $subscriber->subscribe('foo');
+        $subscription = $subscriber->subscribe('foo');
 
         $result = null;
 
-        // Use callback to not block, because we publish in the same coroutine
-        $subscription->advance()->onResolve(static function () use (&$result, $subscription) {
-            $result = $subscription->getCurrent();
-        });
+        // Use async() to not block, because we publish in the same coroutine
+        $promise = async(fn() => $subscription->continue());
 
-        yield $this->redis->publish('foo', 'bar');
-        yield new Delayed(1000);
+        $this->redis->publish('foo', 'bar');
+        delay(1000);
 
-        $subscription->cancel();
+        $subscription->dispose();
 
-        $this->assertEquals('bar', $result);
+        delay(100);
+
+        $this->assertEquals('bar', await($promise));
     }
 
-    public function testDoubleCancel(): \Generator
+    public function testDoubleCancel(): void
     {
         $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
-        /** @var Subscription $subscription */
-        $subscription = yield $subscriber->subscribe('foo');
-        $subscription->cancel();
-        $subscription->cancel();
+        $subscription = $subscriber->subscribe('foo');
+        $subscription->dispose();
+        $subscription->dispose();
+
+        delay(100); // Ensure cancel request has completed.
 
         $this->assertTrue(true);
     }
 
-    public function testMulti(): \Generator
+    public function testMulti(): void
     {
         $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
-        /** @var Subscription $subscription1 */
-        $subscription1 = yield $subscriber->subscribe('foo');
-        /** @var Subscription $subscription2 */
-        $subscription2 = yield $subscriber->subscribe('foo');
+        $subscription1 = $subscriber->subscribe('foo');
+        $subscription2 = $subscriber->subscribe('foo');
 
-        yield $this->redis->publish('foo', 'bar');
+        $this->redis->publish('foo', 'bar');
 
-        yield $subscription1->advance();
-        yield $subscription2->advance();
+        $this->assertEquals('bar', $subscription1->continue());
+        $this->assertEquals('bar', $subscription2->continue());
 
-        $this->assertEquals('bar', $subscription1->getCurrent());
-        $this->assertEquals('bar', $subscription2->getCurrent());
+        $subscription1->dispose();
 
-        $subscription1->cancel();
+        $this->redis->publish('foo', 'xxx');
 
-        yield $this->redis->publish('foo', 'xxx');
+        $this->assertEquals('xxx', $subscription2->continue());
 
-        yield $subscription2->advance();
+        $subscription2->dispose();
 
-        $this->assertEquals('bar', $subscription1->getCurrent());
-        $this->assertEquals('xxx', $subscription2->getCurrent());
-
-        $subscription2->cancel();
+        delay(100); // Ensure cancel request has completed.
     }
 
-    public function testStream(): \Generator
+    public function testStream(): void
     {
         $subscriber = new Subscriber(Config::fromUri($this->getUri()));
 
-        /** @var Subscription $subscription */
-        $subscription = yield $subscriber->subscribe('foo');
+        $subscription = $subscriber->subscribe('foo');
 
-        $producer = Loop::repeat(1000, function () {
-            yield $this->redis->publish('foo', 'bar');
-        });
+        $producer = Loop::repeat(100, asyncCallable(function (): void {
+            $this->redis->publish('foo', 'bar');
+        }));
 
         $lastResult = null;
         $consumed = 0;
 
-        while (yield $subscription->advance()) {
-            $lastResult = $subscription->getCurrent();
+        while ($lastResult = $subscription->continue()) {
             $consumed++;
             if ($consumed === 3) {
-                $subscription->cancel();
+                $subscription->dispose();
+                break;
             }
         }
 
@@ -96,5 +93,7 @@ class PubSubTest extends IntegrationTest
 
         $this->assertSame(3, $consumed);
         $this->assertEquals('bar', $lastResult);
+
+        delay(100); // Ensure cancel request has completed.
     }
 }

@@ -4,31 +4,31 @@ namespace Amp\Redis;
 
 class SelectTest extends IntegrationTest
 {
-    public function testConnect(): \Generator
+    public function testConnect(): void
     {
-        $this->assertEquals('PONG', yield $this->redis->echo('PONG'));
+        $this->assertEquals('PONG', $this->redis->echo('PONG'));
     }
 
-    public function testSelect(): \Generator
+    public function testSelect(): void
     {
         $redis1 = $this->createInstance();
-        yield $redis1->select(1);
+        $redis1->select(1);
         $payload = 'bar';
-        yield $redis1->set('foobar', $payload);
-        $this->assertSame($payload, yield $redis1->get('foobar'));
+        $redis1->set('foobar', $payload);
+        $this->assertSame($payload, $redis1->get('foobar'));
 
-        $this->assertNotSame($payload, yield $this->redis->get('foobar'));
+        $this->assertNotSame($payload, $this->redis->get('foobar'));
     }
 
-    public function testSelectOnReconnect(): \Generator
+    public function testSelectOnReconnect(): void
     {
         $redis1 = $this->createInstance();
-        yield $redis1->select(1);
-        yield $redis1->quit();
+        $redis1->select(1);
+        $redis1->quit();
         $payload = 'bar';
-        yield $redis1->set('foobar', $payload);
-        $this->assertSame($payload, yield $redis1->get('foobar'));
+        $redis1->set('foobar', $payload);
+        $this->assertSame($payload, $redis1->get('foobar'));
 
-        $this->assertNotSame($payload, yield $this->redis->get('foobar'));
+        $this->assertNotSame($payload, $this->redis->get('foobar'));
     }
 }

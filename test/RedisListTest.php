@@ -4,52 +4,52 @@ namespace Amp\Redis;
 
 class RedisListTest extends IntegrationTest
 {
-    public function test(): \Generator
+    public function test(): void
     {
         $this->redis->flushAll();
         $list = $this->redis->getList('list1');
 
-        $this->assertSame(0, yield $list->getSize());
-        $this->assertSame(1, yield $list->pushHead('a'));
-        $this->assertSame(2, yield $list->pushHead('b'));
-        $this->assertSame(2, yield $list->getSize());
-        $this->assertSame(['b', 'a'], yield $list->getRange());
-        $this->assertSame(['b'], yield $list->getRange(0, 0));
-        $this->assertSame(['a'], yield $list->getRange(1));
-        $this->assertSame('b', yield $list->get(0));
-        $this->assertSame('a', yield $list->get(1));
-        $this->assertNull(yield $list->set(0, 'b+'));
-        $this->assertSame(3, yield $list->pushTail('c'));
-        $this->assertSame('c', yield $list->popTail());
-        $this->assertSame('b+', yield $list->popHead());
-        $this->assertSame('a', yield $list->popHead());
-        $this->assertNull(yield $list->popHead());
-        $this->assertNull(yield $list->popTail());
+        $this->assertSame(0, $list->getSize());
+        $this->assertSame(1, $list->pushHead('a'));
+        $this->assertSame(2, $list->pushHead('b'));
+        $this->assertSame(2, $list->getSize());
+        $this->assertSame(['b', 'a'], $list->getRange());
+        $this->assertSame(['b'], $list->getRange(0, 0));
+        $this->assertSame(['a'], $list->getRange(1));
+        $this->assertSame('b', $list->get(0));
+        $this->assertSame('a', $list->get(1));
+        $list->set(0, 'b+');
+        $this->assertSame(3, $list->pushTail('c'));
+        $this->assertSame('c', $list->popTail());
+        $this->assertSame('b+', $list->popHead());
+        $this->assertSame('a', $list->popHead());
+        $this->assertNull($list->popHead());
+        $this->assertNull($list->popTail());
 
-        $this->assertSame(1, yield $list->pushTail('x'));
-        $this->assertSame(4, yield $list->pushTailIfExists('a', 'b', 'c'));
-        $this->assertNull(yield $list->trim(1));
-        $this->assertSame(['b', 'c'], yield $list->getRange(1, 2));
-        $this->assertNull(yield $list->trim(0, -2));
-        $this->assertSame(2, yield $list->getSize());
-        $this->assertSame(['a', 'b'], yield $list->getRange());
+        $this->assertSame(1, $list->pushTail('x'));
+        $this->assertSame(4, $list->pushTailIfExists('a', 'b', 'c'));
+        $list->trim(1);
+        $this->assertSame(['b', 'c'], $list->getRange(1, 2));
+        $list->trim(0, -2);
+        $this->assertSame(2, $list->getSize());
+        $this->assertSame(['a', 'b'], $list->getRange());
 
-        $this->assertSame(3, yield $list->insertAfter('a', 'x'));
-        $this->assertSame(['a', 'x', 'b'], yield $list->getRange());
+        $this->assertSame(3, $list->insertAfter('a', 'x'));
+        $this->assertSame(['a', 'x', 'b'], $list->getRange());
 
-        $this->assertSame(4, yield $list->insertBefore('a', 'y'));
-        $this->assertSame(['y', 'a', 'x', 'b'], yield $list->getRange());
+        $this->assertSame(4, $list->insertBefore('a', 'y'));
+        $this->assertSame(['y', 'a', 'x', 'b'], $list->getRange());
 
-        $this->assertSame(1, yield $list->remove('a'));
-        $this->assertSame(['y', 'x', 'b'], yield $list->getRange());
+        $this->assertSame(1, $list->remove('a'));
+        $this->assertSame(['y', 'x', 'b'], $list->getRange());
 
-        $this->assertSame(['b', 'x', 'y'], yield $list->sort((new SortOptions)->withLexicographicSorting()));
+        $this->assertSame(['b', 'x', 'y'], $list->sort((new SortOptions)->withLexicographicSorting()));
 
-        $this->assertSame('y', yield $list->popHeadBlocking());
-        $this->assertSame('b', yield $list->popTailBlocking());
+        $this->assertSame('y', $list->popHeadBlocking());
+        $this->assertSame('b', $list->popTailBlocking());
 
-        $this->assertNull(yield $this->redis->getList('nonexistent')->popHeadBlocking(1));
-        $this->assertNull(yield $this->redis->getList('nonexistent')->popTailBlocking(1));
-        $this->assertNull(yield $this->redis->getList('nonexistent')->popTailPushHeadBlocking('nonexistent', 1));
+        $this->assertNull($this->redis->getList('nonexistent')->popHeadBlocking(1));
+        $this->assertNull($this->redis->getList('nonexistent')->popTailBlocking(1));
+        $this->assertNull($this->redis->getList('nonexistent')->popTailPushHeadBlocking('nonexistent', 1));
     }
 }

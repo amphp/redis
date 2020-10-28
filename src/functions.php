@@ -2,10 +2,8 @@
 
 namespace Amp\Redis;
 
-use Amp\Promise;
 use Amp\Socket;
 use Amp\Socket\ConnectContext;
-use function Amp\call;
 
 const toFloat = __NAMESPACE__ . '\toFloat';
 const toBool = __NAMESPACE__ . '\toBool';
@@ -55,50 +53,46 @@ function toNull($response): void
  * @param Config $config
  * @param Socket\Connector|null $connector
  *
- * @return Promise<RespSocket>
+ * @return RespSocket
  *
  * @throws RedisException
  */
-function connect(Config $config, ?Socket\Connector $connector = null): Promise
+function connect(Config $config, ?Socket\Connector $connector = null): RespSocket
 {
-    return call(static function () use ($config, $connector) {
-        try {
-            $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
-            $resp = new RespSocket(
-                yield ($connector ?? Socket\connector())->connect($config->getConnectUri(), $connectContext)
-            );
-        } catch (Socket\SocketException $e) {
-            throw new SocketException(
-                'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
-                0,
-                $e
-            );
-        }
+    try {
+        $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
+        $resp = new RespSocket(
+            ($connector ?? Socket\connector())->connect($config->getConnectUri(), $connectContext)
+        );
+    } catch (Socket\SocketException $e) {
+        throw new SocketException(
+            'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
+            0,
+            $e
+        );
+    }
 
-        $promises = [];
+    $readsNeeded = 0;
 
-        if ($config->hasPassword()) {
-            // pipeline, don't await
-            $promises[] = $resp->write('AUTH', $config->getPassword());
-        }
+    if ($config->hasPassword()) {
+        $readsNeeded++;
+        $resp->write('AUTH', $config->getPassword());
+    }
 
-        if ($config->getDatabase() !== 0) {
-            // pipeline, don't await
-            $promises[] = $resp->write('SELECT', $config->getDatabase());
-        }
+    if ($config->getDatabase() !== 0) {
+        $readsNeeded++;
+        $resp->write('SELECT', $config->getDatabase());
+    }
 
-        foreach ($promises as $promise) {
-            yield $promise;
-
-            if ([$response] = yield $resp->read()) {
-                if ($response instanceof \Throwable) {
-                    throw $response;
-                }
-            } else {
-                throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
+    for ($i = 0; $i < $readsNeeded; $i++) {
+        if ([$response] = $resp->read()) {
+            if ($response instanceof \Throwable) {
+                throw $response;
             }
+        } else {
+            throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
         }
+    }
 
-        return $resp;
-    });
+    return $resp;
 }

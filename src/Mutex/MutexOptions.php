@@ -4,10 +4,10 @@ namespace Amp\Redis\Mutex;
 
 final class MutexOptions
 {
-    private $keyPrefix = '';
-    private $lockRenewInterval = 1000;
-    private $lockExpiration = 3000;
-    private $lockTimeout = 10000;
+    private string $keyPrefix = '';
+    private int $lockRenewInterval = 1000;
+    private int $lockExpiration = 3000;
+    private int $lockTimeout = 10000;
 
     public function getKeyPrefix(): string
     {

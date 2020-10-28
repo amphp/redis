@@ -3,12 +3,10 @@
 namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\Promise\wait;
 
 abstract class IntegrationTest extends AsyncTestCase
 {
-    /** @var Redis */
-    protected $redis;
+    protected Redis $redis;
 
     protected function setUp(): void
     {
@@ -20,7 +18,7 @@ abstract class IntegrationTest extends AsyncTestCase
 
         $this->redis = $this->createInstance();
 
-        wait($this->redis->flushAll());
+        $this->redis->flushAll();
     }
 
 

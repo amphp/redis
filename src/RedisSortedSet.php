@@ -2,16 +2,13 @@
 
 namespace Amp\Redis;
 
-use Amp\Iterator;
-use Amp\Producer;
-use Amp\Promise;
+use Amp\AsyncGenerator;
+use Amp\Pipeline;
 
 final class RedisSortedSet
 {
-    /** @var QueryExecutor */
-    private $queryExecutor;
-    /** @var string */
-    private $key;
+    private QueryExecutor $queryExecutor;
+    private string $key;
 
     public function __construct(QueryExecutor $queryExecutor, string $key)
     {
@@ -22,9 +19,9 @@ final class RedisSortedSet
     /**
      * @param array $data
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function add(array $data): Promise
+    public function add(array $data): int
     {
         $payload = ['zadd', $this->key];
 
@@ -37,9 +34,9 @@ final class RedisSortedSet
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      */
-    public function getSize(): Promise
+    public function getSize(): int
     {
         return $this->queryExecutor->execute(['zcard', $this->key]);
     }
@@ -48,9 +45,9 @@ final class RedisSortedSet
      * @param int $min
      * @param int $max
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function count(int $min, int $max): Promise
+    public function count(int $min, int $max): int
     {
         return $this->queryExecutor->execute(['zcount', $this->key, $min, $max]);
     }
@@ -59,9 +56,9 @@ final class RedisSortedSet
      * @param string $member
      * @param float  $increment
      *
-     * @return Promise<float>
+     * @return float
      */
-    public function increment(string $member, float $increment = 1): Promise
+    public function increment(string $member, float $increment = 1): float
     {
         return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], toFloat);
     }
@@ -70,9 +67,9 @@ final class RedisSortedSet
      * @param string[] $keys
      * @param string   $aggregate
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function storeIntersection(array $keys, string $aggregate = 'sum'): Promise
+    public function storeIntersection(array $keys, string $aggregate = 'sum'): int
     {
         $payload = ['zinterstore', $this->key, \count($keys)];
         $weights = [];
@@ -108,9 +105,9 @@ final class RedisSortedSet
      * @param string $min
      * @param string $max
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function countLexicographically(string $min, string $max): Promise
+    public function countLexicographically(string $min, string $max): int
     {
         return $this->queryExecutor->execute(['zlexcount', $this->key, $min, $max]);
     }
@@ -118,9 +115,9 @@ final class RedisSortedSet
     /**
      * @param string $member
      *
-     * @return Promise<int|null>
+     * @return int|null
      */
-    public function getRank(string $member): Promise
+    public function getRank(string $member): ?int
     {
         return $this->queryExecutor->execute(['zrank', $this->key, $member]);
     }
@@ -129,9 +126,9 @@ final class RedisSortedSet
      * @param string $member
      * @param string ...$members
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function remove(string $member, string ...$members): Promise
+    public function remove(string $member, string ...$members): int
     {
         return $this->queryExecutor->execute(\array_merge(['zrem', $this->key, $member], $members));
     }
@@ -140,9 +137,9 @@ final class RedisSortedSet
      * @param string $min
      * @param string $max
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function removeLexicographicRange(string $min, string $max): Promise
+    public function removeLexicographicRange(string $min, string $max): int
     {
         return $this->queryExecutor->execute(['zremrangebylex', $this->key, $min, $max]);
     }
@@ -151,9 +148,9 @@ final class RedisSortedSet
      * @param int $start
      * @param int $stop
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function removeRankRange(int $start, int $stop): Promise
+    public function removeRankRange(int $start, int $stop): int
     {
         return $this->queryExecutor->execute(['zremrangebyrank', $this->key, $start, $stop]);
     }
@@ -162,9 +159,9 @@ final class RedisSortedSet
      * @param float $min
      * @param float $max
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function removeScoreRange(float $min, float $max): Promise
+    public function removeScoreRange(float $min, float $max): int
     {
         return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min, $max]);
     }
@@ -172,9 +169,9 @@ final class RedisSortedSet
     /**
      * @param string $member
      *
-     * @return Promise<int|null>
+     * @return int|null
      */
-    public function getReversedRank(string $member): Promise
+    public function getReversedRank(string $member): ?int
     {
         return $this->queryExecutor->execute(['zrevrank', $this->key, $member]);
     }
@@ -183,11 +180,11 @@ final class RedisSortedSet
      * @param string|null $pattern
      * @param int|null    $count
      *
-     * @return Iterator<string>
+     * @return Pipeline<array>
      */
-    public function scan(?string $pattern = null, ?int $count = null): Iterator
+    public function scan(?string $pattern = null, ?int $count = null): Pipeline
     {
-        return new Producer(function (callable $emit) use ($pattern, $count) {
+        return new AsyncGenerator(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {
@@ -203,13 +200,13 @@ final class RedisSortedSet
                     $query[] = $count;
                 }
 
-                [$cursor, $keys] = yield $this->queryExecutor->execute($query);
+                [$cursor, $keys] = $this->queryExecutor->execute($query);
 
                 $count = \count($keys);
                 \assert($count % 2 === 0);
 
                 for ($i = 0; $i < $count; $i += 2) {
-                    yield $emit([$keys[$i], (float) $keys[$i + 1]]);
+                    yield [$keys[$i], (float) $keys[$i + 1]];
                 }
             } while ($cursor !== '0');
         });
@@ -218,9 +215,9 @@ final class RedisSortedSet
     /**
      * @param string $member
      *
-     * @return Promise<float|null>
+     * @return float|null
      */
-    public function getScore(string $member): Promise
+    public function getScore(string $member): ?float
     {
         return $this->queryExecutor->execute(['zscore', $this->key, $member], toFloat);
     }
@@ -229,9 +226,9 @@ final class RedisSortedSet
      * @param string[] $keys
      * @param string   $aggregate
      *
-     * @return Promise<int>
+     * @return int
      */
-    public function storeUnion(array $keys, string $aggregate = 'sum'): Promise
+    public function storeUnion(array $keys, string $aggregate = 'sum'): int
     {
         $payload = ['zunionstore', $this->key, \count($keys)];
         $weights = [];
@@ -264,13 +261,13 @@ final class RedisSortedSet
     }
 
     /**
-     * @param SortOptions $sort
+     * @param SortOptions|null $sort
      *
-     * @return Promise<array>
+     * @return array
      *
      * @link https://redis.io/commands/sort
      */
-    public function sort(?SortOptions $sort = null): Promise
+    public function sort(?SortOptions $sort = null): array
     {
         return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new SortOptions)->toQuery()));
     }

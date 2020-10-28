@@ -23,25 +23,21 @@ class AuthTest extends AsyncTestCase
         }
     }
 
-    public function testSuccess(): \Generator
+    public function testSuccess(): void
     {
         $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=secret')));
-        $this->assertSame('PONG', yield $redis->echo('PONG'));
-        yield $redis->quit();
+        $this->assertSame('PONG', $redis->echo('PONG'));
+        $redis->quit();
     }
 
-    public function testFailure(): \Generator
+    public function testFailure(): void
     {
         $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=wrong')));
 
         $this->expectException(QueryException::class);
 
-        if (\method_exists($this, 'expectExceptionMessageMatches')) {
-            $this->expectExceptionMessageMatches('(ERR invalid password|WRONGPASS invalid username-password pair)');
-        } else {
-            $this->expectExceptionMessageRegExp('(ERR invalid password|WRONGPASS invalid username-password pair)');
-        }
+        $this->expectExceptionMessageMatches('(ERR invalid password|WRONGPASS invalid username-password pair)');
 
-        yield $redis->echo('PONG');
+        $redis->echo('PONG');
     }
 }

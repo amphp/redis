@@ -2,14 +2,10 @@
 
 namespace Amp\Redis;
 
-use Amp\Promise;
-
 final class RedisHyperLogLog
 {
-    /** @var QueryExecutor */
-    private $queryExecutor;
-    /** @var string */
-    private $key;
+    private QueryExecutor $queryExecutor;
+    private string $key;
 
     public function __construct(QueryExecutor $queryExecutor, string $key)
     {
@@ -21,21 +17,21 @@ final class RedisHyperLogLog
      * @param string $element
      * @param string ...$elements
      *
-     * @return Promise<bool>
+     * @return bool
      *
      * @link https://redis.io/commands/pfadd
      */
-    public function add(string $element, string ...$elements): Promise
+    public function add(string $element, string ...$elements): bool
     {
         return $this->queryExecutor->execute(\array_merge(['pfadd', $this->key, $element], $elements), toBool);
     }
 
     /**
-     * @return Promise<int>
+     * @return int
      *
      * @link https://redis.io/commands/pfcount
      */
-    public function count(): Promise
+    public function count(): int
     {
         return $this->queryExecutor->execute(['pfcount', $this->key]);
     }
@@ -44,12 +40,10 @@ final class RedisHyperLogLog
      * @param string $sourceKey
      * @param string ...$sourceKeys
      *
-     * @return Promise<void>
-     *
      * @link https://redis.io/commands/pfmerge
      */
-    public function storeUnion(string $sourceKey, string ...$sourceKeys): Promise
+    public function storeUnion(string $sourceKey, string ...$sourceKeys): void
     {
-        return $this->queryExecutor->execute(\array_merge(['pfmerge', $this->key, $sourceKey], $sourceKeys), toNull);
+        $this->queryExecutor->execute(\array_merge(['pfmerge', $this->key, $sourceKey], $sourceKeys), toNull);
     }
 }

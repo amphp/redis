@@ -20,18 +20,20 @@
         "issues": "https://github.com/amphp/redis/issues"
     },
     "require": {
-        "php": ">=7.1",
-        "amphp/amp": "^2.2.1",
-        "amphp/cache": "^1.2.1",
-        "amphp/socket": "^1",
-        "league/uri-parser": "^1.4",
-        "amphp/sync": "^1.1"
+        "php": ">=8",
+        "amphp/amp": "^3-dev",
+        "amphp/cache": "^2-dev",
+        "amphp/socket": "^2-dev",
+        "amphp/sync": "^2-dev",
+        "league/uri-parser": "^1.4"
     },
     "require-dev": {
-        "amphp/phpunit-util": "^1.1.2",
-        "phpunit/phpunit": "^7 | ^8",
+        "amphp/phpunit-util": "^2-dev",
+        "phpunit/phpunit": "^9",
         "amphp/php-cs-fixer-config": "dev-master"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\Redis\\": "src"

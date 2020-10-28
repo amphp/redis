@@ -2,22 +2,25 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-Amp\Loop::run(static function () {
-    $config = Amp\Redis\Config::fromUri('tcp://localhost:6379');
-    $pushClient = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
-    $pushClient->getList('foobar-list')->popHeadBlocking()->onResolve(static function (?\Throwable $error, $value) {
-        if ($error) {
-            print 'Error: ' . $error->getMessage() . PHP_EOL;
-        } else {
-            print 'Value: ' . \var_export($value, true) . PHP_EOL;
-        }
+use function Amp\async;
+use function Amp\await;
 
-        Amp\Loop::stop();
-    });
+$config = Amp\Redis\Config::fromUri('tcp://localhost:6379');
 
-    $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
-
-    print 'Pushing value…' . PHP_EOL;
-    yield $client->getList('foobar-list')->pushHead('42');
-    print 'Value pushed.' . PHP_EOL;
+$promise = async(function () use ($config): void {
+    $popClient = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
+    try {
+        $value = $popClient->getList('foobar-list')->popHeadBlocking();
+        print 'Value: ' . \var_export($value, true) . PHP_EOL;
+    } catch (\Throwable $error) {
+        print 'Error: ' . $error->getMessage() . PHP_EOL;
+    }
 });
+
+$pushClient = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
+
+print 'Pushing value…' . PHP_EOL;
+$pushClient->getList('foobar-list')->pushHead('42');
+print 'Value pushed.' . PHP_EOL;
+
+await($promise);

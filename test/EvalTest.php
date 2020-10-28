@@ -4,14 +4,14 @@ namespace Amp\Redis;
 
 class EvalTest extends IntegrationTest
 {
-    public function testEval(): \Generator
+    public function testEval(): void
     {
         $redis = $this->createInstance();
-        yield $redis->set('foo', 'eval-test');
+        $redis->set('foo', 'eval-test');
 
         $script = "return redis.call('get','foo')";
 
-        $value = yield $redis->eval($script, ['foo']);
+        $value = $redis->eval($script, ['foo']);
         $this->assertSame('eval-test', $value);
     }
 }
