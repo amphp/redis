@@ -8,6 +8,7 @@ use Amp\Promise;
 use Amp\Socket;
 use function Amp\asyncCall;
 use function Amp\call;
+use function Amp\delay;
 
 final class RemoteExecutor implements QueryExecutor
 {
@@ -87,8 +88,16 @@ final class RemoteExecutor implements QueryExecutor
         }
 
         return $this->connect = call(function () {
-            /** @var RespSocket $resp */
-            $resp = yield connect($this->config->withDatabase($this->database), $this->connector);
+            try {
+                /** @var RespSocket $resp */
+                $resp = yield connect($this->config->withDatabase($this->database), $this->connector);
+            } catch (\Throwable $connectException) {
+                yield delay(0); // ensure $this->connect is already assigned above in case of immediate failure
+
+                $this->connect = null;
+
+                throw $connectException;
+            }
 
             asyncCall(function () use ($resp) {
                 try {
