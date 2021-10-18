@@ -566,7 +566,8 @@ final class Redis
      */
     public function getMultiple(string $key, string ...$keys): Promise
     {
-        $query = \array_merge(['mget', $key], $keys);
+        \array_unshift($keys , $key);
+        $query = \array_merge(['mget'], $keys);
 
         return $this->queryExecutor->execute($query, static function ($response) use ($keys) {
             return \array_combine($keys, $response);
