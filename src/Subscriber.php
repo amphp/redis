@@ -138,8 +138,6 @@ final class Subscriber
                             $emitter->fail($error);
                         }
                     }
-
-                    throw $error;
                 }
             });
 
