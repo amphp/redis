@@ -104,7 +104,7 @@ RENEW;
 
     private readonly Redis $sharedConnection;
 
-    /** @var Lock[] */
+    /** @var array<string, array{string, string}> */
     private array $locks = [];
 
     private ?string $watcher = null;

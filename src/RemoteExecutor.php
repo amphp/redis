@@ -35,13 +35,15 @@ final class RemoteExecutor implements QueryExecutor
     }
 
     /**
-     * @param string[] $query
+     * @param array<array-key, int|float|string> $query
      */
     public function execute(array $query, ?\Closure $responseResponseTransform = null): mixed
     {
         if (!$this->running) {
             $this->run();
         }
+
+        $query = \array_map(strval(...), $query);
 
         $command = \strtolower($query[0] ?? '');
 

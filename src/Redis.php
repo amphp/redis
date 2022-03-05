@@ -787,8 +787,8 @@ final class Redis
     }
 
     /**
-     * @param string[] $keys
-     * @param string[] $args
+     * @param array<array-key, string> $keys
+     * @param array<array-key, int|float|string> $args
      *
      * @link https://redis.io/commands/eval
      */

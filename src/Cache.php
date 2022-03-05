@@ -59,7 +59,7 @@ final class Cache implements CacheInterface
     public function delete(string $key): bool
     {
         try {
-            return $this->redis->delete($key);
+            return (bool) $this->redis->delete($key);
         } catch (RedisException $e) {
             throw new CacheException("Deleting '{$key}' from cache failed", 0, $e);
         }

@@ -5,7 +5,7 @@ namespace Amp\Redis;
 interface QueryExecutor
 {
     /**
-     * @param string[] $query
+     * @param array<array-key, int|float|string> $query
      * @param null|\Closure(mixed):mixed $responseResponseTransform
      *
      * @see toBool()

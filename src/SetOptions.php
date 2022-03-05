@@ -6,7 +6,7 @@ final class SetOptions
 {
     private ?int $ttl = null;
     private string $ttlUnit;
-    private string $existenceFlag;
+    private ?string $existenceFlag = null;
 
     public function withTtl(int $seconds): self
     {
@@ -51,7 +51,7 @@ final class SetOptions
             $query[] = $this->ttl;
         }
 
-        if (isset($this->existenceFlag)) {
+        if ($this->existenceFlag !== null) {
             $query[] = $this->existenceFlag;
         }
 

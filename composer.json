@@ -32,7 +32,8 @@
         "amphp/phpunit-util": "^3",
         "amphp/process": "^2",
         "phpunit/phpunit": "^9",
-        "amphp/php-cs-fixer-config": "^2-dev"
+        "amphp/php-cs-fixer-config": "^2-dev",
+        "psalm/phar": "^4.22"
     },
     "minimum-stability": "beta",
     "prefer-stable": true,

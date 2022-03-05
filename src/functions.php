@@ -71,7 +71,7 @@ function connect(Config $config, ?Socket\SocketConnector $connector = null): Res
 
     if ($config->getDatabase() !== 0) {
         $readsNeeded++;
-        $resp->write('SELECT', $config->getDatabase());
+        $resp->write('SELECT', (string) $config->getDatabase());
     }
 
     for ($i = 0; $i < $readsNeeded; $i++) {

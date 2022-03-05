@@ -152,7 +152,7 @@ final class Subscriber
 
                 foreach ($queueGroups as $queueGroup) {
                     foreach ($queueGroup as $queue) {
-                        $queue->fail($exception);
+                        $queue->error($exception);
                     }
                 }
 
