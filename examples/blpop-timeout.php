@@ -15,4 +15,4 @@ EventLoop::unreference(EventLoop::repeat(1, static function (): void {
 
 $value = $client->getList('foobar-list')->popHeadBlocking(5);
 
-\var_dump($value);
+var_dump($value);

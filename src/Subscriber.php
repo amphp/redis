@@ -32,11 +32,6 @@ final class Subscriber
         $this->socket?->close();
     }
 
-    /**
-     * @param string $channel
-     *
-     * @return Subscription
-     */
     public function subscribe(string $channel): Subscription
     {
         if (!$this->running) {
@@ -63,11 +58,6 @@ final class Subscriber
         return new Subscription($queue->iterate(), fn () => $this->unloadEmitter($queue, $channel));
     }
 
-    /**
-     * @param string $pattern
-     *
-     * @return Subscription
-     */
     public function subscribeToPattern(string $pattern): Subscription
     {
         if (!$this->running) {

@@ -11,7 +11,7 @@ $redis = new Amp\Redis\Redis($executorFactory->createQueryExecutor());
 $mutex = new Amp\Redis\Mutex\Mutex($executorFactory);
 
 for ($i = 0; $i < 100; $i++) {
-    $lock = $mutex->acquire('test' . \random_int(0, 49));
+    $lock = $mutex->acquire('test' . random_int(0, 49));
     $lock->release();
 
     if ($i % 10 === 0) {

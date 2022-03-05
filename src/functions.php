@@ -45,11 +45,6 @@ function toNull(mixed $response): void
 }
 
 /**
- * @param Config $config
- * @param Socket\SocketConnector|null $connector
- *
- * @return RespSocket
- *
  * @throws RedisException
  */
 function connect(Config $config, ?Socket\SocketConnector $connector = null): RespSocket

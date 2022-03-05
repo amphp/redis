@@ -14,10 +14,6 @@ final class RedisList
     }
 
     /**
-     * @param string $index
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/lindex
      */
     public function get(string $index): string
@@ -26,11 +22,6 @@ final class RedisList
     }
 
     /**
-     * @param string $pivot
-     * @param string $value
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/linsert
      */
     public function insertBefore(string $pivot, string $value): int
@@ -39,11 +30,6 @@ final class RedisList
     }
 
     /**
-     * @param string $pivot
-     * @param string $value
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/linsert
      */
     public function insertAfter(string $pivot, string $value): int
@@ -52,7 +38,6 @@ final class RedisList
     }
 
     /**
-     * @return int
      *
      * @link https://redis.io/commands/llen
      */
@@ -62,11 +47,6 @@ final class RedisList
     }
 
     /**
-     * @param string $value
-     * @param string ...$values
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/lpush
      */
     public function pushHead(string $value, string ...$values): int
@@ -75,11 +55,6 @@ final class RedisList
     }
 
     /**
-     * @param string $value
-     * @param string ...$values
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/lpushx
      */
     public function pushHeadIfExists(string $value, string ...$values): int
@@ -88,11 +63,6 @@ final class RedisList
     }
 
     /**
-     * @param string $value
-     * @param string ...$values
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/rpush
      */
     public function pushTail(string $value, string ...$values): int
@@ -101,11 +71,6 @@ final class RedisList
     }
 
     /**
-     * @param string $value
-     * @param string ...$values
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/rpushx
      */
     public function pushTailIfExists(string $value, string ...$values): int
@@ -114,7 +79,6 @@ final class RedisList
     }
 
     /**
-     * @return string|null
      *
      * @link https://redis.io/commands/lpop
      */
@@ -124,10 +88,6 @@ final class RedisList
     }
 
     /**
-     * @param int $timeout
-     *
-     * @return string|null
-     *
      * @link https://redis.io/commands/blpop
      */
     public function popHeadBlocking(int $timeout = 0): ?string
@@ -138,8 +98,6 @@ final class RedisList
     }
 
     /**
-     * @return string|null
-     *
      * @link https://redis.io/commands/rpop
      */
     public function popTail(): ?string
@@ -148,10 +106,6 @@ final class RedisList
     }
 
     /**
-     * @param int $timeout
-     *
-     * @return string|null
-     *
      * @link https://redis.io/commands/brpop
      */
     public function popTailBlocking(int $timeout = 0): ?string
@@ -162,10 +116,6 @@ final class RedisList
     }
 
     /**
-     * @param string $destination
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/rpoplpush
      */
     public function popTailPushHead(string $destination): string
@@ -174,11 +124,6 @@ final class RedisList
     }
 
     /**
-     * @param string $destination
-     * @param int    $timeout
-     *
-     * @return string|null
-     *
      * @link https://redis.io/commands/brpoplpush
      */
     public function popTailPushHeadBlocking(string $destination, int $timeout = 0): ?string
@@ -187,11 +132,6 @@ final class RedisList
     }
 
     /**
-     * @param int $start
-     * @param int $end
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/lrange
      */
     public function getRange(int $start = 0, int $end = -1): array
@@ -200,11 +140,6 @@ final class RedisList
     }
 
     /**
-     * @param string $value
-     * @param int    $count
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/lrem
      */
     public function remove(string $value, int $count = 0): int
@@ -213,9 +148,6 @@ final class RedisList
     }
 
     /**
-     * @param int    $index
-     * @param string $value
-     *
      * @link https://redis.io/commands/lset
      */
     public function set(int $index, string $value): void
@@ -224,8 +156,6 @@ final class RedisList
     }
 
     /**
-     * @param int $start
-     * @param int $stop
      *
      * @link https://redis.io/commands/ltrim
      */
@@ -235,10 +165,6 @@ final class RedisList
     }
 
     /**
-     * @param SortOptions|null $sort
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/sort
      */
     public function sort(?SortOptions $sort = null): array

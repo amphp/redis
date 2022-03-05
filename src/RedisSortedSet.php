@@ -15,11 +15,6 @@ final class RedisSortedSet
         $this->key = $key;
     }
 
-    /**
-     * @param array $data
-     *
-     * @return int
-     */
     public function add(array $data): int
     {
         $payload = ['zadd', $this->key];
@@ -32,31 +27,16 @@ final class RedisSortedSet
         return $this->queryExecutor->execute($payload);
     }
 
-    /**
-     * @return int
-     */
     public function getSize(): int
     {
         return $this->queryExecutor->execute(['zcard', $this->key]);
     }
 
-    /**
-     * @param int $min
-     * @param int $max
-     *
-     * @return int
-     */
     public function count(int $min, int $max): int
     {
         return $this->queryExecutor->execute(['zcount', $this->key, $min, $max]);
     }
 
-    /**
-     * @param string $member
-     * @param float  $increment
-     *
-     * @return float
-     */
     public function increment(string $member, float $increment = 1): float
     {
         return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], toFloat(...));
@@ -64,9 +44,6 @@ final class RedisSortedSet
 
     /**
      * @param string[] $keys
-     * @param string   $aggregate
-     *
-     * @return int
      */
     public function storeIntersection(array $keys, string $aggregate = 'sum'): int
     {
@@ -100,76 +77,36 @@ final class RedisSortedSet
         return $this->queryExecutor->execute($payload);
     }
 
-    /**
-     * @param string $min
-     * @param string $max
-     *
-     * @return int
-     */
     public function countLexicographically(string $min, string $max): int
     {
         return $this->queryExecutor->execute(['zlexcount', $this->key, $min, $max]);
     }
 
-    /**
-     * @param string $member
-     *
-     * @return int|null
-     */
     public function getRank(string $member): ?int
     {
         return $this->queryExecutor->execute(['zrank', $this->key, $member]);
     }
 
-    /**
-     * @param string $member
-     * @param string ...$members
-     *
-     * @return int
-     */
     public function remove(string $member, string ...$members): int
     {
         return $this->queryExecutor->execute(\array_merge(['zrem', $this->key, $member], $members));
     }
 
-    /**
-     * @param string $min
-     * @param string $max
-     *
-     * @return int
-     */
     public function removeLexicographicRange(string $min, string $max): int
     {
         return $this->queryExecutor->execute(['zremrangebylex', $this->key, $min, $max]);
     }
 
-    /**
-     * @param int $start
-     * @param int $stop
-     *
-     * @return int
-     */
     public function removeRankRange(int $start, int $stop): int
     {
         return $this->queryExecutor->execute(['zremrangebyrank', $this->key, $start, $stop]);
     }
 
-    /**
-     * @param float $min
-     * @param float $max
-     *
-     * @return int
-     */
     public function removeScoreRange(float $min, float $max): int
     {
         return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min, $max]);
     }
 
-    /**
-     * @param string $member
-     *
-     * @return int|null
-     */
     public function getReversedRank(string $member): ?int
     {
         return $this->queryExecutor->execute(['zrevrank', $this->key, $member]);
@@ -208,11 +145,6 @@ final class RedisSortedSet
         });
     }
 
-    /**
-     * @param string $member
-     *
-     * @return float|null
-     */
     public function getScore(string $member): ?float
     {
         return $this->queryExecutor->execute(['zscore', $this->key, $member], toFloat(...));
@@ -220,9 +152,6 @@ final class RedisSortedSet
 
     /**
      * @param string[] $keys
-     * @param string   $aggregate
-     *
-     * @return int
      */
     public function storeUnion(array $keys, string $aggregate = 'sum'): int
     {
@@ -257,10 +186,6 @@ final class RedisSortedSet
     }
 
     /**
-     * @param SortOptions|null $sort
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/sort
      */
     public function sort(?SortOptions $sort = null): array

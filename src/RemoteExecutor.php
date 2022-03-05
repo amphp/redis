@@ -36,9 +36,6 @@ final class RemoteExecutor implements QueryExecutor
 
     /**
      * @param string[] $query
-     * @param \Closure|null $responseResponseTransform
-     *
-     * @return mixed
      */
     public function execute(array $query, ?\Closure $responseResponseTransform = null): mixed
     {

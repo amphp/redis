@@ -16,11 +16,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param string ...$fields
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/hdel
      */
     public function remove(string $field, string ...$fields): int
@@ -29,10 +24,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/hexists
      */
     public function hasKey(string $field): bool
@@ -41,11 +32,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param int    $increment
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/hincrby
      */
     public function increment(string $field, int $increment = 1): int
@@ -54,11 +40,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param float  $increment
-     *
-     * @return float
-     *
      * @link https://redis.io/commands/hincrbyfloat
      */
     public function incrementByFloat(string $field, float $increment): float
@@ -67,8 +48,6 @@ final class RedisMap
     }
 
     /**
-     * @return array
-     *
      * @link https://redis.io/commands/hkeys
      */
     public function getKeys(): array
@@ -77,8 +56,6 @@ final class RedisMap
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/hlen
      */
     public function getSize(): int
@@ -87,8 +64,6 @@ final class RedisMap
     }
 
     /**
-     * @return array
-     *
      * @link https://redis.io/commands/hvals
      * @link https://redis.io/commands/hgetall
      */
@@ -98,8 +73,6 @@ final class RedisMap
     }
 
     /**
-     * @param array $data
-     *
      * @link https://redis.io/commands/hmset
      */
     public function setValues(array $data): void
@@ -115,10 +88,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/hget
      */
     public function getValue(string $field): string
@@ -127,11 +96,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param string ...$fields
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/hmget
      */
     public function getValues(string $field, string ...$fields): array
@@ -140,11 +104,6 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param string $value
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/hset
      */
     public function setValue(string $field, string $value): bool
@@ -153,11 +112,7 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     * @param string $value
-     *
-     * @return bool
-     *
+
      * @link https://redis.io/commands/hsetnx
      */
     public function setValueWithoutOverwrite(string $field, string $value): bool
@@ -166,10 +121,7 @@ final class RedisMap
     }
 
     /**
-     * @param string $field
-     *
-     * @return int
-     *
+
      * @link https://redis.io/commands/hstrlen
      */
     public function getLength(string $field): int

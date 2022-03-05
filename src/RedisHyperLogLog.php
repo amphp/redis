@@ -14,11 +14,6 @@ final class RedisHyperLogLog
     }
 
     /**
-     * @param string $element
-     * @param string ...$elements
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/pfadd
      */
     public function add(string $element, string ...$elements): bool
@@ -27,8 +22,6 @@ final class RedisHyperLogLog
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/pfcount
      */
     public function count(): int
@@ -37,9 +30,6 @@ final class RedisHyperLogLog
     }
 
     /**
-     * @param string $sourceKey
-     * @param string ...$sourceKeys
-     *
      * @link https://redis.io/commands/pfmerge
      */
     public function storeUnion(string $sourceKey, string ...$sourceKeys): void

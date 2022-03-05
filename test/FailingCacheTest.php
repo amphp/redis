@@ -5,7 +5,6 @@ namespace Amp\Redis;
 use Amp\Cache\Cache as CacheInterface;
 use Amp\Cache\CacheException;
 use Amp\PHPUnit\AsyncTestCase;
-use Closure;
 
 class FailingCacheTest extends AsyncTestCase
 {

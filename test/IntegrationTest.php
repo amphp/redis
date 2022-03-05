@@ -21,7 +21,6 @@ abstract class IntegrationTest extends AsyncTestCase
         $this->redis->flushAll();
     }
 
-
     final protected function createInstance(): Redis
     {
         return new Redis(new RemoteExecutor(Config::fromUri($this->getUri())));

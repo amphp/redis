@@ -41,23 +41,12 @@ final class Redis
         return new RedisSortedSet($this->queryExecutor, $key);
     }
 
-    /**
-     * @param string $arg
-     * @param string ...$args
-     *
-     * @return mixed
-     */
     public function query(string $arg, string ...$args): mixed
     {
         return $this->queryExecutor->execute(\array_merge([$arg], $args));
     }
 
     /**
-     * @param string $key
-     * @param string ...$keys
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/del
      */
     public function delete(string $key, string ...$keys): int
@@ -66,10 +55,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/dump
      */
     public function dump(string $key): string
@@ -78,10 +63,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/exists
      */
     public function has(string $key): bool
@@ -90,11 +71,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $seconds
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/expire
      */
     public function expireIn(string $key, int $seconds): bool
@@ -103,11 +79,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $millis
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/pexpire
      */
     public function expireInMillis(string $key, int $millis): bool
@@ -116,11 +87,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $timestamp
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/expireat
      */
     public function expireAt(string $key, int $timestamp): bool
@@ -129,11 +95,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $timestamp
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/pexpireat
      */
     public function expireAtMillis(string $key, int $timestamp): bool
@@ -142,10 +103,6 @@ final class Redis
     }
 
     /**
-     * @param string $pattern
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/keys
      *
      * @see Redis::scan()
@@ -156,11 +113,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $db
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/move
      */
     public function move(string $key, int $db): bool
@@ -169,10 +121,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/object
      */
     public function getObjectRefcount(string $key): int
@@ -181,10 +129,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/object
      */
     public function getObjectEncoding(string $key): string
@@ -193,10 +137,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/object
      */
     public function getObjectIdletime(string $key): int
@@ -205,10 +145,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/persist
      */
     public function persist(string $key): bool
@@ -217,8 +153,6 @@ final class Redis
     }
 
     /**
-     * @return string|null
-     *
      * @link https://redis.io/commands/randomkey
      */
     public function getRandomKey(): ?string
@@ -227,9 +161,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $newKey
-     *
      * @link https://redis.io/commands/rename
      */
     public function rename(string $key, string $newKey): void
@@ -238,9 +169,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $newKey
-     *
      * @link https://redis.io/commands/renamenx
      */
     public function renameWithoutOverwrite(string $key, string $newKey): void
@@ -249,10 +177,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $serializedValue
-     * @param int    $ttl
-     *
      * @link https://redis.io/commands/restore
      */
     public function restore(string $key, string $serializedValue, int $ttl = 0): void
@@ -296,10 +220,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/ttl
      */
     public function getTtl(string $key): int
@@ -308,10 +228,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/pttl
      */
     public function getTtlInMillis(string $key): int
@@ -320,10 +236,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/type
      */
     public function getType(string $key): string
@@ -332,11 +244,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/append
      */
     public function append(string $key, string $value): int
@@ -345,12 +252,6 @@ final class Redis
     }
 
     /**
-     * @param string   $key
-     * @param int|null $start
-     * @param int|null $end
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/bitcount
      */
     public function countBits(string $key, ?int $start = null, ?int $end = null): int
@@ -368,12 +269,6 @@ final class Redis
     }
 
     /**
-     * @param string $destination
-     * @param string $key
-     * @param string ...$keys
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/bitop
      */
     public function storeBitwiseAnd(string $destination, string $key, string ...$keys): int
@@ -382,12 +277,6 @@ final class Redis
     }
 
     /**
-     * @param string $destination
-     * @param string $key
-     * @param string ...$keys
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/bitop
      */
     public function storeBitwiseOr(string $destination, string $key, string ...$keys): int
@@ -396,12 +285,6 @@ final class Redis
     }
 
     /**
-     * @param string $destination
-     * @param string $key
-     * @param string ...$keys
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/bitop
      */
     public function storeBitwiseXor(string $destination, string $key, string ...$keys): int
@@ -410,11 +293,6 @@ final class Redis
     }
 
     /**
-     * @param string $destination
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/bitop
      */
     public function storeBitwiseNot(string $destination, string $key): int
@@ -423,12 +301,8 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param bool   $bit
      * @param int    $start
      * @param int    $end
-     *
-     * @return int
      *
      * @link https://redis.io/commands/bitpos
      */
@@ -448,11 +322,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $decrement
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/decrby
      */
     public function decrement(string $key, int $decrement = 1): int
@@ -465,10 +334,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return string|null
-     *
      * @link https://redis.io/commands/get
      */
     public function get(string $key): ?string
@@ -477,11 +342,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $offset
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/getbit
      */
     public function getBit(string $key, int $offset): bool
@@ -490,12 +350,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $start
-     * @param int    $end
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/getrange
      */
     public function getRange(string $key, int $start = 0, int $end = -1): string
@@ -504,11 +358,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/getset
      */
     public function getAndSet(string $key, string $value): string
@@ -517,11 +366,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $increment
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/incrby
      */
     public function increment(string $key, int $increment = 1): int
@@ -534,11 +378,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param float  $increment
-     *
-     * @return float
-     *
      * @link https://redis.io/commands/incrbyfloat
      */
     public function incrementByFloat(string $key, float $increment): float
@@ -547,9 +386,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string ...$keys
-     *
      * @return array<string|null>
      *
      * @link https://redis.io/commands/mget
@@ -564,8 +400,6 @@ final class Redis
     }
 
     /**
-     * @param array $data
-     *
      * @link https://redis.io/commands/mset
      */
     public function setMultiple(array $data): void
@@ -581,8 +415,6 @@ final class Redis
     }
 
     /**
-     * @param array $data
-     *
      * @link https://redis.io/commands/msetnx
      */
     public function setMultipleWithoutOverwrite(array $data): void
@@ -598,11 +430,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return bool
-     *
      * @link https://redis.io/commands/setnx
      */
     public function setWithoutOverwrite(string $key, string $value): bool
@@ -610,12 +437,6 @@ final class Redis
         return $this->queryExecutor->execute(['setnx', $key, $value], toBool(...));
     }
 
-    /**
-     * @param string $key
-     * @param string $value
-     *
-     * @return bool
-     */
     public function set(string $key, string $value, ?SetOptions $options = null): bool
     {
         $query = ['set', $key, $value];
@@ -628,12 +449,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $offset
-     * @param bool   $value
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/setbit
      */
     public function setBit(string $key, int $offset, bool $value): int
@@ -642,11 +457,7 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     * @param int    $offset
      * @param mixed  $value
-     *
-     * @return int
      *
      * @link https://redis.io/commands/setrange
      */
@@ -656,10 +467,6 @@ final class Redis
     }
 
     /**
-     * @param string $key
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/strlen
      */
     public function getLength(string $key): int
@@ -668,11 +475,6 @@ final class Redis
     }
 
     /**
-     * @param string $channel
-     * @param string $message
-     *
-     * @return int
-     *
      * @link https://redis.io/commands/publish
      */
     public function publish(string $channel, string $message): int
@@ -682,8 +484,6 @@ final class Redis
 
     /**
      * @param string $pattern
-     *
-     * @return array
      *
      * @link https://redis.io/commands/pubsub
      */
@@ -699,8 +499,6 @@ final class Redis
     }
 
     /**
-     * @param string ...$channels
-     *
      * @return int[]
      *
      * @link https://redis.io/commands/pubsub
@@ -721,8 +519,6 @@ final class Redis
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/pubsub
      */
     public function getNumberOfPatternSubscriptions(): int
@@ -763,8 +559,6 @@ final class Redis
     }
 
     /**
-     * @return string
-     *
      * @link https://redis.io/commands/client-getname
      */
     public function getName(): string
@@ -773,8 +567,6 @@ final class Redis
     }
 
     /**
-     * @param int $timeInMillis
-     *
      * @link https://redis.io/commands/client-pause
      */
     public function pauseMillis(int $timeInMillis): void
@@ -783,8 +575,6 @@ final class Redis
     }
 
     /**
-     * @param string $name
-     *
      * @link https://redis.io/commands/client-setname
      */
     public function setName(string $name): void
@@ -793,10 +583,6 @@ final class Redis
     }
 
     /**
-     * @param string $parameter
-     *
-     * @return array
-     *
      * @link https://redis.io/commands/config-get
      */
     public function getConfig(string $parameter): array
@@ -821,9 +607,6 @@ final class Redis
     }
 
     /**
-     * @param string $parameter
-     * @param string $value
-     *
      * @link https://redis.io/commands/config-set
      */
     public function setConfig(string $parameter, string $value): void
@@ -832,8 +615,6 @@ final class Redis
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/dbsize
      */
     public function getDatabaseSize(): int
@@ -858,8 +639,6 @@ final class Redis
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/lastsave
      */
     public function getLastSave(): int
@@ -868,8 +647,6 @@ final class Redis
     }
 
     /**
-     * @return array
-     *
      * @link https://redis.io/commands/role
      */
     public function getRole(): array
@@ -886,8 +663,6 @@ final class Redis
     }
 
     /**
-     * @return string
-     *
      * @link https://redis.io/commands/shutdown
      */
     public function shutdownWithSave(): string
@@ -896,8 +671,6 @@ final class Redis
     }
 
     /**
-     * @return string
-     *
      * @link https://redis.io/commands/shutdown
      */
     public function shutdownWithoutSave(): string
@@ -906,8 +679,6 @@ final class Redis
     }
 
     /**
-     * @return string
-     *
      * @link https://redis.io/commands/shutdown
      */
     public function shutdown(): string
@@ -916,9 +687,6 @@ final class Redis
     }
 
     /**
-     * @param string $host
-     * @param int    $port
-     *
      * @link https://redis.io/commands/slaveof
      */
     public function enableReplication(string $host, int $port): void
@@ -937,8 +705,6 @@ final class Redis
     /**
      * @param int $count
      *
-     * @return array
-     *
      * @link https://redis.io/commands/slowlog
      */
     public function getSlowlog(?int $count = null): array
@@ -953,8 +719,6 @@ final class Redis
     }
 
     /**
-     * @return int
-     *
      * @link https://redis.io/commands/slowlog
      */
     public function getSlowlogLength(): int
@@ -971,8 +735,6 @@ final class Redis
     }
 
     /**
-     * @return array
-     *
      * @link https://redis.io/commands/time
      */
     public function getTime(): array
@@ -981,8 +743,6 @@ final class Redis
     }
 
     /**
-     * @return bool
-     *
      * @link https://redis.io/commands/script-exists
      */
     public function hasScript(string $sha1): bool
@@ -1011,10 +771,6 @@ final class Redis
     }
 
     /**
-     * @param string $script
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/script-load
      */
     public function loadScript(string $script): string
@@ -1023,10 +779,6 @@ final class Redis
     }
 
     /**
-     * @param string $text
-     *
-     * @return string
-     *
      * @link https://redis.io/commands/echo
      */
     public function echo(string $text): string
@@ -1035,11 +787,8 @@ final class Redis
     }
 
     /**
-     * @param string   $script
      * @param string[] $keys
      * @param string[] $args
-     *
-     * @return mixed
      *
      * @link https://redis.io/commands/eval
      */

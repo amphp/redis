@@ -10,7 +10,7 @@ $future = async(function () use ($config): void {
     $popClient = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
     try {
         $value = $popClient->getList('foobar-list')->popHeadBlocking();
-        print 'Value: ' . \var_export($value, true) . PHP_EOL;
+        print 'Value: ' . var_export($value, true) . PHP_EOL;
     } catch (\Throwable $error) {
         print 'Error: ' . $error->getMessage() . PHP_EOL;
     }

@@ -117,10 +117,6 @@ RENEW;
 
     /**
      * Constructs a new Mutex instance. A single instance can be used to create as many locks as you need.
-     *
-     * @param QueryExecutorFactory $queryExecutorFactory
-     * @param MutexOptions|null $options
-     * @param PsrLogger|null $logger
      */
     public function __construct(
         QueryExecutorFactory $queryExecutorFactory,
@@ -147,8 +143,6 @@ RENEW;
      * will be able to acquire it.
      *
      * @param string $key Lock key.
-     *
-     * @return Lock
      */
     public function acquire(string $key): Lock
     {

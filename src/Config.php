@@ -10,10 +10,6 @@ final class Config
     public const DEFAULT_PORT = '6379';
 
     /**
-     * @param string $uri
-     *
-     * @return self
-     *
      * @throws RedisException
      */
     public static function fromUri(string $uri): self
@@ -31,8 +27,6 @@ final class Config
     private int $timeout = 5000;
 
     /**
-     * @param string $uri
-     *
      * @throws RedisException
      */
     private function __construct(string $uri)

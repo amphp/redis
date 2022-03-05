@@ -18,8 +18,8 @@ class CloseTest extends IntegrationTest
     {
         $redis = $this->createInstance();
         $this->assertEquals('PONG', $redis->echo('PONG'));
-        $quitPromise = async(fn() => $redis->quit());
-        $promise = async(fn() => $redis->echo('PONG'));
+        $quitPromise = async(fn () => $redis->quit());
+        $promise = async(fn () => $redis->echo('PONG'));
         $quitPromise->await();
         $this->assertEquals('PONG', $promise->await());
     }

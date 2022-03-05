@@ -9,7 +9,6 @@ use Amp\Serialization\Serializer;
 
 final class Cache implements CacheInterface
 {
-    /** @var Redis */
     private readonly Redis $redis;
 
     private readonly Serializer $serializer;

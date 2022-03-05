@@ -3,9 +3,9 @@
 namespace Amp\Redis;
 
 use Amp\ByteStream\ClosedException;
+use Amp\Future;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
-use Amp\Future;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 

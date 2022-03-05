@@ -6,7 +6,8 @@ use function Amp\delay;
 
 class CacheTest extends IntegrationTest
 {
-    protected function createCache(): Cache {
+    protected function createCache(): Cache
+    {
         return new Cache($this->createInstance());
     }
 
