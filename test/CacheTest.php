@@ -1,14 +1,56 @@
-<?php /** @noinspection PhpUnhandledExceptionInspection */
+<?php
 
 namespace Amp\Redis;
 
-use Amp\Cache\Cache as CacheInterface;
-use Amp\Cache\Test\CacheTest as BaseCacheTest;
+use function Amp\delay;
 
-class CacheTest extends BaseCacheTest
+class CacheTest extends IntegrationTest
 {
-    protected function createCache(): CacheInterface
+    protected function createCache(): Cache {
+        return new Cache($this->createInstance());
+    }
+
+    public function testGet(): void
     {
-        return new Cache(new Redis(new RemoteExecutor(Config::fromUri(\getenv('AMPHP_TEST_REDIS_INSTANCE')))));
+        $cache = $this->createCache();
+
+        $result = $cache->get("mykey");
+        self::assertNull($result);
+
+        $cache->set("mykey", "myvalue", 10);
+
+        $result = $cache->get("mykey");
+        self::assertSame("myvalue", $result);
+    }
+
+    public function testEntryIsNotReturnedAfterTTLHasPassed(): void
+    {
+        $cache = $this->createCache();
+
+        $cache->set("foo", "bar", 0);
+        delay(1);
+
+        self::assertNull($cache->get("foo"));
+    }
+
+    public function testEntryIsReturnedWhenOverriddenWithNoTimeout(): void
+    {
+        $cache = $this->createCache();
+
+        $cache->set("foo", "bar", 0);
+        $cache->set("foo", "bar");
+        delay(1);
+
+        self::assertNotNull($cache->get("foo"));
+    }
+
+    public function testEntryIsNotReturnedAfterDelete(): void
+    {
+        $cache = $this->createCache();
+
+        $cache->set("foo", "bar");
+        $cache->delete("foo");
+
+        self::assertNull($cache->get("foo"));
     }
 }

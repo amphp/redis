@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline;
-
 class RedisMapTest extends IntegrationTest
 {
     public function test(): void
@@ -34,10 +32,10 @@ class RedisMapTest extends IntegrationTest
         $this->assertSame(['lol', '3.5'], $map->getValues('rofl', 'number'));
         $this->assertSame(3, $map->getLength('rofl'));
 
-        $this->assertSame([['rofl', 'lol'], ['number', '3.5']], Pipeline\toArray($map->scan()));
-        $this->assertSame([['number', '3.5']], Pipeline\toArray($map->scan('num*')));
-        $this->assertSame([], Pipeline\toArray($map->scan('none*')));
-        $this->assertSame([], Pipeline\toArray($map->scan('none*', 1)));
+        $this->assertSame([['rofl', 'lol'], ['number', '3.5']], \iterator_to_array($map->scan()));
+        $this->assertSame([['number', '3.5']], \iterator_to_array($map->scan('num*')));
+        $this->assertSame([], \iterator_to_array($map->scan('none*')));
+        $this->assertSame([], \iterator_to_array($map->scan('none*', 1)));
 
         $this->assertFalse($map->setValueWithoutOverwrite('rofl', 'test'));
         $this->assertSame('lol', $map->getValue('rofl'));

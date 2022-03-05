@@ -1,13 +1,15 @@
-<?php /** @noinspection ForgottenDebugOutputInspection */
+<?php
+
+use Revolt\EventLoop;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$config = Amp\Redis\Config::fromUri('tcp://localhost:6379');
+$config = Amp\Redis\Config::fromUri('redis://');
 $client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
 
 $client->delete('foobar-list');
 
-Amp\Loop::unreference(Amp\Loop::repeat(1000, static function (): void {
+EventLoop::unreference(EventLoop::repeat(1, static function (): void {
     print 'Waiting for blpop…' . PHP_EOL;
 }));
 

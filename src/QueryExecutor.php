@@ -6,7 +6,7 @@ interface QueryExecutor
 {
     /**
      * @param string[]      $query
-     * @param callable|null $responseTransform
+     * @param null|\Closure(mixed):mixed $responseResponseTransform
      *
      * @return mixed
      *
@@ -15,5 +15,5 @@ interface QueryExecutor
      * @see toFloat()
      * @see toMap()
      */
-    public function execute(array $query, callable $responseTransform = null): mixed;
+    public function execute(array $query, ?\Closure $responseResponseTransform = null): mixed;
 }

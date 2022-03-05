@@ -2,8 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\AsyncGenerator;
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
 
 final class RedisMap
 {
@@ -38,7 +37,7 @@ final class RedisMap
      */
     public function hasKey(string $field): bool
     {
-        return $this->queryExecutor->execute(['hexists', $this->key, $field], toBool);
+        return $this->queryExecutor->execute(['hexists', $this->key, $field], toBool(...));
     }
 
     /**
@@ -64,7 +63,7 @@ final class RedisMap
      */
     public function incrementByFloat(string $field, float $increment): float
     {
-        return $this->queryExecutor->execute(['hincrbyfloat', $this->key, $field, $increment], toFloat);
+        return $this->queryExecutor->execute(['hincrbyfloat', $this->key, $field, $increment], toFloat(...));
     }
 
     /**
@@ -95,7 +94,7 @@ final class RedisMap
      */
     public function getAll(): array
     {
-        return $this->queryExecutor->execute(['hgetall', $this->key], toMap);
+        return $this->queryExecutor->execute(['hgetall', $this->key], toMap(...));
     }
 
     /**
@@ -112,7 +111,7 @@ final class RedisMap
             $array[] = $value;
         }
 
-        $this->queryExecutor->execute($array, toNull);
+        $this->queryExecutor->execute($array, toNull(...));
     }
 
     /**
@@ -150,7 +149,7 @@ final class RedisMap
      */
     public function setValue(string $field, string $value): bool
     {
-        return $this->queryExecutor->execute(['hset', $this->key, $field, $value], toBool);
+        return $this->queryExecutor->execute(['hset', $this->key, $field, $value], toBool(...));
     }
 
     /**
@@ -163,7 +162,7 @@ final class RedisMap
      */
     public function setValueWithoutOverwrite(string $field, string $value): bool
     {
-        return $this->queryExecutor->execute(['hsetnx', $this->key, $field, $value], toBool);
+        return $this->queryExecutor->execute(['hsetnx', $this->key, $field, $value], toBool(...));
     }
 
     /**
@@ -179,16 +178,13 @@ final class RedisMap
     }
 
     /**
-     * @param string|null $pattern
-     * @param int|null    $count
-     *
-     * @return Pipeline<array>
+     * @return \Traversable<array>
      *
      * @link https://redis.io/commands/hscan
      */
-    public function scan(?string $pattern = null, ?int $count = null): Pipeline
+    public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return new AsyncGenerator(function () use ($pattern, $count) {
+        return Pipeline::fromIterable(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {

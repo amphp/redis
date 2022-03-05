@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline;
-
 class RedisSortedSetTest extends IntegrationTest
 {
     public function test(): void
@@ -16,9 +14,9 @@ class RedisSortedSetTest extends IntegrationTest
             'bar' => 3,
         ]));
 
-        $this->assertSame([['foo', 1.0], ['bar', 3.0]], Pipeline\toArray($set->scan()));
-        $this->assertSame([['foo', 1.0]], Pipeline\toArray($set->scan('f*')));
-        $this->assertSame([['foo', 1.0]], Pipeline\toArray($set->scan('f*', 1)));
+        $this->assertSame([['foo', 1.0], ['bar', 3.0]], \iterator_to_array($set->scan()));
+        $this->assertSame([['foo', 1.0]], \iterator_to_array($set->scan('f*')));
+        $this->assertSame([['foo', 1.0]], \iterator_to_array($set->scan('f*', 1)));
 
         $this->assertSame(1.0, $set->getScore('foo'));
         $this->assertSame(3.0, $set->getScore('bar'));

@@ -3,70 +3,62 @@
 namespace Amp\Redis;
 
 use Amp\ByteStream\ClosedException;
-use Amp\Pipeline;
-use Amp\PipelineSource;
-use Amp\Promise;
+use Amp\Pipeline\ConcurrentIterator;
+use Amp\Pipeline\Queue;
+use Amp\Future;
 use Amp\Socket\Socket;
-use Amp\Success;
-use function Amp\await;
-use function Amp\defer;
+use Revolt\EventLoop;
 
 final class RespSocket
 {
-    private RespParser $parser;
+    private Socket $socket;
 
-    private ?Socket $socket;
+    private ConcurrentIterator $iterator;
 
-    private Pipeline $pipeline;
-
-    private Promise $backpressure;
-
-    private \Throwable $error;
+    private Future $backpressure;
 
     public function __construct(Socket $socket)
     {
-        $source = new PipelineSource;
-        $this->backpressure = new Success;
+        $queue = new Queue();
+        $this->backpressure = Future::complete();
         $backpressure = &$this->backpressure;
 
         $this->socket = $socket;
-        $this->pipeline = $source->pipe();
-        $this->parser = new RespParser(static function ($message) use ($source, &$backpressure): void {
-            $backpressure = $source->emit([$message]);
+        $this->iterator = $queue->iterate();
+
+        $parser = new RespParser(static function ($message) use ($queue, &$backpressure): void {
+            $backpressure = $queue->pushAsync([$message]);
         });
 
-        defer(function () use ($socket, $source): void {
+        EventLoop::queue(static function () use (&$backpressure, $socket, $parser, $queue): void {
             try {
                 while (null !== $chunk = $socket->read()) {
-                    $this->parser->append($chunk);
-                    await($this->backpressure);
+                    $parser->append($chunk);
+                    $backpressure->await();
                 }
 
-                $source->complete();
+                $queue->complete();
             } catch (\Throwable $e) {
-                if (isset($this->error)) {
-                    $this->error = $e;
-                }
-
-                $source->fail($e);
+                $queue->error($e);
             }
 
-            $this->close();
+            $socket->close();
+            $parser->reset();
         });
     }
 
     public function read(): ?array
     {
-        return $this->pipeline->continue();
+        if (!$this->iterator->continue()) {
+            return null;
+        }
+
+        return $this->iterator->getValue();
     }
 
     public function write(string ...$args): void
     {
-        if (isset($this->error)) {
-            throw $this->error;
-        }
-
-        if ($this->socket === null) {
+        if ($this->socket->isClosed()) {
             throw new ClosedException('Redis connection already closed');
         }
 
@@ -81,33 +73,22 @@ final class RespSocket
 
     public function reference(): void
     {
-        if ($this->socket) {
-            $this->socket->reference();
-        }
+        $this->socket->reference();
     }
 
     public function unreference(): void
     {
-        if ($this->socket) {
-            $this->socket->unreference();
-        }
+        $this->socket->unreference();
     }
 
     public function close(): void
     {
-        if ($this->parser) {
-            $this->parser->reset();
-        }
-
-        if ($this->socket) {
-            $this->socket->close();
-            $this->socket = null;
-        }
+        $this->socket->close();
     }
 
     public function isClosed(): bool
     {
-        return $this->socket === null;
+        return $this->socket->isClosed();
     }
 
     public function __destruct()

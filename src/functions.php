@@ -5,12 +5,7 @@ namespace Amp\Redis;
 use Amp\Socket;
 use Amp\Socket\ConnectContext;
 
-const toFloat = __NAMESPACE__ . '\toFloat';
-const toBool = __NAMESPACE__ . '\toBool';
-const toNull = __NAMESPACE__ . '\toNull';
-const toMap = __NAMESPACE__ . '\toMap';
-
-function toFloat($response): ?float
+function toFloat(mixed $response): ?float
 {
     if ($response === null) {
         return null;
@@ -19,7 +14,7 @@ function toFloat($response): ?float
     return (float) $response;
 }
 
-function toBool($response): ?bool
+function toBool(mixed $response): ?bool
 {
     if ($response === null) {
         return null;
@@ -44,25 +39,25 @@ function toMap(?array $values): ?array
     return $result;
 }
 
-function toNull($response): void
+function toNull(mixed $response): void
 {
     // nothing to do
 }
 
 /**
  * @param Config $config
- * @param Socket\Connector|null $connector
+ * @param Socket\SocketConnector|null $connector
  *
  * @return RespSocket
  *
  * @throws RedisException
  */
-function connect(Config $config, ?Socket\Connector $connector = null): RespSocket
+function connect(Config $config, ?Socket\SocketConnector $connector = null): RespSocket
 {
     try {
         $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
         $resp = new RespSocket(
-            ($connector ?? Socket\connector())->connect($config->getConnectUri(), $connectContext)
+            ($connector ?? Socket\socketConnector())->connect($config->getConnectUri(), $connectContext)
         );
     } catch (Socket\SocketException $e) {
         throw new SocketException(

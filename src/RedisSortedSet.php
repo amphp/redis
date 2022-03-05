@@ -2,8 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\AsyncGenerator;
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
 
 final class RedisSortedSet
 {
@@ -60,7 +59,7 @@ final class RedisSortedSet
      */
     public function increment(string $member, float $increment = 1): float
     {
-        return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], toFloat);
+        return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], toFloat(...));
     }
 
     /**
@@ -177,14 +176,11 @@ final class RedisSortedSet
     }
 
     /**
-     * @param string|null $pattern
-     * @param int|null    $count
-     *
-     * @return Pipeline<array>
+     * @return \Traversable<array>
      */
-    public function scan(?string $pattern = null, ?int $count = null): Pipeline
+    public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return new AsyncGenerator(function () use ($pattern, $count) {
+        return Pipeline::fromIterable(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {
@@ -219,7 +215,7 @@ final class RedisSortedSet
      */
     public function getScore(string $member): ?float
     {
-        return $this->queryExecutor->execute(['zscore', $this->key, $member], toFloat);
+        return $this->queryExecutor->execute(['zscore', $this->key, $member], toFloat(...));
     }
 
     /**

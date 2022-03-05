@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\Cache\Cache as CacheInterface;
 use Amp\Cache\CacheException;
 use Amp\PHPUnit\AsyncTestCase;
+use Closure;
 
 class FailingCacheTest extends AsyncTestCase
 {
@@ -38,7 +39,7 @@ class FailingCacheTest extends AsyncTestCase
     private function createFailingCache(): CacheInterface
     {
         return new Cache(new Redis(new class implements QueryExecutor {
-            public function execute(array $query, callable $responseTransform = null): mixed
+            public function execute(array $query, ?\Closure $responseResponseTransform = null): never
             {
                 throw new RedisException('Failed, because dummy implementation');
             }

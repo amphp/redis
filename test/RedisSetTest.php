@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline;
-
 class RedisSetTest extends IntegrationTest
 {
     public function test(): void
@@ -31,8 +29,8 @@ class RedisSetTest extends IntegrationTest
         $this->assertSame(['a', 'b', 'c', 'd', 'e'], $this->sorted($a->union('set-b')));
         $this->assertSame(['b', 'd'], $this->sorted($a->diff('set-b')));
 
-        $this->assertSame(['a', 'b', 'c', 'd'], $this->sorted(Pipeline\toArray($a->scan())));
-        $this->assertSame(['a'], $this->sorted(Pipeline\toArray($a->scan('a'))));
+        $this->assertSame(['a', 'b', 'c', 'd'], $this->sorted(\iterator_to_array($a->scan())));
+        $this->assertSame(['a'], $this->sorted(\iterator_to_array($a->scan('a'))));
         $this->assertSame(2, $a->remove('a', 'b'));
         $this->assertSame(['c', 'd'], $this->sorted($a->getRandomMembers(2)));
         $this->assertContains($a->getRandomMember(), ['c', 'd']);

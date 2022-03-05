@@ -5,26 +5,26 @@ namespace Amp\Redis\Mutex;
 final class MutexOptions
 {
     private string $keyPrefix = '';
-    private int $lockRenewInterval = 1000;
-    private int $lockExpiration = 3000;
-    private int $lockTimeout = 10000;
+    private float $lockRenewInterval = 1;
+    private float $lockExpiration = 3;
+    private float $lockTimeout = 10;
 
     public function getKeyPrefix(): string
     {
         return $this->keyPrefix;
     }
 
-    public function getLockExpiration(): int
+    public function getLockExpiration(): float
     {
         return $this->lockExpiration;
     }
 
-    public function getLockRenewInterval(): int
+    public function getLockRenewInterval(): float
     {
         return $this->lockRenewInterval;
     }
 
-    public function getLockTimeout(): int
+    public function getLockTimeout(): float
     {
         return $this->lockTimeout;
     }
@@ -37,7 +37,7 @@ final class MutexOptions
         return $clone;
     }
 
-    public function withLockExpiration(int $lockExpiration): self
+    public function withLockExpiration(float $lockExpiration): self
     {
         $clone = clone $this;
         $clone->lockExpiration = $lockExpiration;
@@ -45,7 +45,7 @@ final class MutexOptions
         return $clone;
     }
 
-    public function withLockRenewInterval(int $lockRenewInterval): self
+    public function withLockRenewInterval(float $lockRenewInterval): self
     {
         $clone = clone $this;
         $clone->lockRenewInterval = $lockRenewInterval;
@@ -53,7 +53,7 @@ final class MutexOptions
         return $clone;
     }
 
-    public function withLockTimeout(int $lockTimeout): self
+    public function withLockTimeout(float $lockTimeout): self
     {
         $clone = clone $this;
         $clone->lockTimeout = $lockTimeout;

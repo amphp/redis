@@ -29,6 +29,6 @@ abstract class IntegrationTest extends AsyncTestCase
 
     final protected function getUri(): ?string
     {
-        return \getenv('AMPHP_TEST_REDIS_INSTANCE') ?: null;
+        return \getenv('AMPHP_TEST_REDIS_INSTANCE') ?: 'redis://localhost';
     }
 }

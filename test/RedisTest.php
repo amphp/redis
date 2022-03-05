@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline;
 use function Amp\delay;
 
 class RedisTest extends IntegrationTest
@@ -22,12 +21,12 @@ class RedisTest extends IntegrationTest
         $this->assertSame(-1, $this->redis->getTtlInMillis('foo'));
         $this->assertSame(-1, $this->redis->getTtl('foo'));
 
-        delay(3000);
+        delay(3);
 
         $this->assertTrue($this->redis->has('foo'));
         $this->assertTrue($this->redis->expireIn('foo', 1));
 
-        delay(1500);
+        delay(1.5);
 
         $this->assertFalse($this->redis->has('foo'));
 
@@ -35,7 +34,7 @@ class RedisTest extends IntegrationTest
         $this->redis->rename('foo', 'bar');
         $this->assertSame('bar', $this->redis->get('bar'));
 
-        $this->assertSame(['bar'], Pipeline\toArray($this->redis->scan()));
+        $this->assertSame(['bar'], \iterator_to_array($this->redis->scan()));
 
         $this->assertTrue($this->redis->set('string', "\xF0"));
         $this->assertSame(4, $this->redis->countBits('string'));

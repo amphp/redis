@@ -2,17 +2,14 @@
 
 namespace Amp\Redis;
 
-use Amp\Socket;
+use Amp\Socket\SocketConnector;
 
 final class RemoteExecutorFactory implements QueryExecutorFactory
 {
-    private Config $config;
-    private Socket\Connector $connector;
-
-    public function __construct(Config $config, ?Socket\Connector $connector = null)
-    {
-        $this->config = $config;
-        $this->connector = $connector ?? Socket\connector();
+    public function __construct(
+        private readonly Config $config,
+        private readonly ?SocketConnector $connector = null
+    ) {
     }
 
     public function createQueryExecutor(): QueryExecutor

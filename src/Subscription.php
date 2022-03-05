@@ -2,28 +2,56 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline;
+use Amp\Cancellation;
+use Amp\Pipeline\ConcurrentIterator;
+use Revolt\EventLoop;
 
-final class Subscription implements Pipeline
+final class Subscription implements ConcurrentIterator
 {
-    private Pipeline $pipeline;
-    private $unsubscribeCallback;
+    private ?\Closure $unsubscribe;
 
-    public function __construct(Pipeline $iterator, callable $unsubscribeCallback)
-    {
-        $this->pipeline = $iterator;
-        $this->unsubscribeCallback = $unsubscribeCallback;
+    public function __construct(
+        private readonly ConcurrentIterator $iterator,
+        \Closure $unsubscribe
+    ) {
+        $this->unsubscribe = $unsubscribe;
     }
 
-    /** @inheritdoc */
-    public function continue(): mixed
+    public function __destruct()
     {
-        return $this->pipeline->continue();
+        if ($this->unsubscribe) {
+            $unsubscribe = $this->unsubscribe;
+            EventLoop::queue($unsubscribe);
+        }
+    }
+
+    public function continue(?Cancellation $cancellation = null): bool
+    {
+        return $this->iterator->continue($cancellation);
+    }
+
+    public function getValue(): string
+    {
+        return $this->iterator->getValue();
+    }
+
+    public function getPosition(): int
+    {
+        return $this->iterator->getPosition();
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return $this->iterator->getIterator();
     }
 
     public function dispose(): void
     {
-        ($this->unsubscribeCallback)();
-        $this->pipeline->dispose();
+        if ($this->unsubscribe) {
+            ($this->unsubscribe)();
+            $this->unsubscribe = null;
+        }
+
+        $this->iterator->dispose();
     }
 }

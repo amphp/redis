@@ -2,8 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\AsyncGenerator;
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
 
 final class RedisSet
 {
@@ -84,7 +83,7 @@ final class RedisSet
      */
     public function contains(string $member): bool
     {
-        return $this->queryExecutor->execute(['sismember', $this->key, $member], toBool);
+        return $this->queryExecutor->execute(['sismember', $this->key, $member], toBool(...));
     }
 
     /**
@@ -103,7 +102,7 @@ final class RedisSet
      */
     public function move(string $member, string $destination): bool
     {
-        return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], toBool);
+        return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], toBool(...));
     }
 
     /**
@@ -165,14 +164,11 @@ final class RedisSet
     }
 
     /**
-     * @param string $pattern
-     * @param int    $count
-     *
-     * @return Pipeline
+     * @return \Traversable
      */
-    public function scan(?string $pattern = null, ?int $count = null): Pipeline
+    public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return new AsyncGenerator(function () use ($pattern, $count) {
+        return Pipeline::fromIterable(function () use ($pattern, $count) {
             $cursor = 0;
 
             do {

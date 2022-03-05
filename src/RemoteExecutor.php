@@ -3,115 +3,135 @@
 namespace Amp\Redis;
 
 use Amp\ByteStream\StreamException;
-use Amp\Deferred;
-use Amp\Promise;
+use Amp\DeferredFuture;
+use Amp\Future;
 use Amp\Socket;
-use function Amp\async;
-use function Amp\await;
-use function Amp\defer;
+use Amp\Socket\SocketConnector;
+use Revolt\EventLoop;
 
 final class RemoteExecutor implements QueryExecutor
 {
-    /** @var Deferred[] */
-    private array $queue = [];
-
-    private Config $config;
+    /** @var \SplQueue<array{DeferredFuture, string[]}> */
+    private readonly \SplQueue $queue;
 
     private int $database;
 
-    private ?Promise $connect = null;
+    private bool $running = false;
 
-    private Socket\Connector $connector;
+    private ?RespSocket $socket = null;
 
-    public function __construct(Config $config, ?Socket\Connector $connector = null)
-    {
-        $this->config = $config;
+    public function __construct(
+        private readonly Config $config,
+        private readonly ?SocketConnector $connector = null,
+    ) {
         $this->database = $config->getDatabase();
-        $this->connector = $connector ?? Socket\connector();
+        $this->queue = new \SplQueue();
+    }
+
+    public function __destruct()
+    {
+        $this->running = false;
+        $this->socket?->close();
     }
 
     /**
-     * @param string[] $args
-     * @param callable $transform
+     * @param string[] $query
+     * @param \Closure|null $responseResponseTransform
      *
      * @return mixed
      */
-    public function execute(array $args, callable $transform = null): mixed
+    public function execute(array $query, ?\Closure $responseResponseTransform = null): mixed
     {
-        $command = \strtolower($args[0] ?? '');
-
-        $connectPromise = $this->connect();
-        if ($command === 'quit') {
-            $this->connect = null;
+        if (!$this->running) {
+            $this->run();
         }
 
-        /** @var RespSocket $resp */
-        $resp = await($connectPromise);
+        $command = \strtolower($query[0] ?? '');
 
-        $response = await($this->enqueue($resp, ...$args));
+        $future = $this->enqueue(...$query);
+
+        if ($command === 'quit') {
+            $socket = $this->socket;
+            $future->finally(static fn () => $socket->close());
+        }
+
+        $response = $future->await();
 
         if ($command === 'select') {
-            $this->database = (int) $args[1];
+            $this->database = (int) $query[1];
         }
 
-        return $transform ? $transform($response) : $response;
+        return $responseResponseTransform ? $responseResponseTransform($response) : $response;
     }
 
-    private function enqueue(RespSocket $resp, string... $args): Promise
+    private function enqueue(string ...$args): Future
     {
-        $deferred = new Deferred;
-        $this->queue[] = $deferred;
+        $deferred = new DeferredFuture();
+        $this->queue->push([$deferred, $args]);
 
-        $resp->reference();
+        $this->socket?->reference();
 
         try {
-            $resp->write(...$args);
-        } catch (Socket\SocketException | StreamException $exception) {
-            throw new SocketException($exception);
+            $this->socket?->write(...$args);
+        } catch (Socket\SocketException|StreamException $exception) {
+            $this->socket = null;
         }
 
-        return $deferred->promise();
+        return $deferred->getFuture();
     }
 
-    private function connect(): Promise
+    private function run(): void
     {
-        if ($this->connect) {
-            return $this->connect;
-        }
+        $config = $this->config;
+        $connector = $this->connector;
+        $queue = $this->queue;
+        $running = &$this->running;
+        $socket = &$this->socket;
+        $database = &$this->database;
+        EventLoop::queue(static function () use (&$socket, &$running, &$database, $queue, $config, $connector): void {
+            try {
+                while ($running) {
+                    $socket = connect($config->withDatabase($database), $connector);
+                    $socket->unreference();
 
-        return $this->connect = async(function (): RespSocket {
-            /** @var RespSocket $resp */
-            $resp = connect($this->config->withDatabase($this->database), $this->connector);
-
-            defer(function () use ($resp): void {
-                try {
-                    while ([$response] = $resp->read()) {
-                        $deferred = \array_shift($this->queue);
-                        if (!$this->queue) {
-                            $resp->unreference();
+                    try {
+                        foreach ($queue as [$deferred, $args]) {
+                            $socket->reference();
+                            $socket->write(...$args);
                         }
 
-                        if ($response instanceof \Throwable) {
-                            $deferred->fail($response);
-                        } else {
-                            $deferred->resolve($response);
+                        while ([$response] = $socket->read()) {
+                            /** @var DeferredFuture $deferred */
+                            [$deferred] = $queue->shift();
+                            if ($queue->isEmpty()) {
+                                $socket->unreference();
+                            }
+
+                            if ($response instanceof \Throwable) {
+                                $deferred->error($response);
+                            } else {
+                                $deferred->complete($response);
+                            }
                         }
-                    }
-
-                    throw new SocketException('Socket to redis instance (' . $this->config->getConnectUri() . ') closed unexpectedly');
-                } catch (\Throwable $error) {
-                    $queue = $this->queue;
-                    $this->queue = [];
-                    $this->connect = null;
-
-                    while ($queue) {
-                        $deferred = \array_shift($queue);
-                        $deferred->fail($error);
+                    } catch (\Throwable) {
+                        // Attempt to reconnect after failure.
+                    } finally {
+                        $socket = null;
                     }
                 }
-            });
+            } catch (\Throwable $exception) {
+                $exception = new SocketException($exception->getMessage(), 0, $exception);
 
-            return $resp;
+                while (!$queue->isEmpty()) {
+                    /** @var DeferredFuture $deferred */
+                    [$deferred] = $queue->shift();
+                    $deferred->error($exception);
+                }
+
+                $running = false;
+            }
         });
+
+        $this->running = true;
     }
 }

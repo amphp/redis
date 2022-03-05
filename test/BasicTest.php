@@ -3,17 +3,15 @@
 namespace Amp\Redis;
 
 use Amp\ByteStream\ClosedException;
-use Amp\Delayed;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
     public function testRaw(): void
     {
-        $this->setTimeout(5000);
+        $this->setTimeout(5);
 
         $config = Config::fromUri($this->getUri());
-        /** @var RespSocket $resp */
         $resp = connect($config);
 
         $resp->write('PING');
@@ -30,10 +28,9 @@ class BasicTest extends IntegrationTest
 
     public function testRawCloseReadRemote(): void
     {
-        $this->setTimeout(5000);
+        $this->setTimeout(5);
 
         $config = Config::fromUri($this->getUri());
-        /** @var RespSocket $resp */
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -45,10 +42,9 @@ class BasicTest extends IntegrationTest
 
     public function testRawCloseReadLocal(): void
     {
-        $this->setTimeout(5000);
+        $this->setTimeout(5);
 
         $config = Config::fromUri($this->getUri());
-        /** @var RespSocket $resp */
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -62,10 +58,9 @@ class BasicTest extends IntegrationTest
 
     public function testRawCloseWriteRemote(): void
     {
-        $this->setTimeout(5000);
+        $this->setTimeout(5);
 
         $config = Config::fromUri($this->getUri());
-        /** @var RespSocket $resp */
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -81,10 +76,9 @@ class BasicTest extends IntegrationTest
 
     public function testRawCloseWriteLocal(): void
     {
-        $this->setTimeout(5000);
+        $this->setTimeout(5);
 
         $config = Config::fromUri($this->getUri());
-        /** @var RespSocket $resp */
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -137,7 +131,7 @@ class BasicTest extends IntegrationTest
     {
         $redis = $this->createInstance();
         $redis->echo('1');
-        new Delayed(8000);
+        delay(0.1);
         $this->assertEquals('2', ($redis->echo('2')));
     }
 }

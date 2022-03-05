@@ -2,27 +2,34 @@
 
 namespace Amp\Redis;
 
-use Amp\PipelineSource;
-use Amp\Promise;
+use Amp\Future;
+use Amp\Pipeline\Queue;
+use Amp\Socket\SocketConnector;
+use Revolt\EventLoop;
 use function Amp\async;
-use function Amp\await;
-use function Amp\defer;
 
 final class Subscriber
 {
-    private Config $config;
+    private ?RespSocket $socket = null;
 
-    private ?Promise $connect = null;
+    private bool $running = false;
 
-    /** @var PipelineSource[][] */
-    private array $emitters = [];
+    /** @var array<string, array<int, Queue>> */
+    private array $queues = [];
 
-    /** @var PipelineSource[][] */
-    private array $patternEmitters = [];
+    /** @var array<string, array<int, Queue>> */
+    private array $patternQueues = [];
 
-    public function __construct(Config $config)
+    public function __construct(
+        private readonly Config $config,
+        private readonly ?SocketConnector $connector = null,
+    ) {
+    }
+
+    public function __destruct()
     {
-        $this->config = $config;
+        $this->running = false;
+        $this->socket?->close();
     }
 
     /**
@@ -32,23 +39,28 @@ final class Subscriber
      */
     public function subscribe(string $channel): Subscription
     {
-        $emitter = new PipelineSource;
-        $this->emitters[$channel][\spl_object_hash($emitter)] = $emitter;
-
-        try {
-            /** @var RespSocket $resp */
-            $resp = await($this->connect());
-            $resp->reference();
-            $resp->write('subscribe', $channel);
-        } catch (\Throwable $e) {
-            $this->unloadEmitter($emitter, $channel);
-
-            throw $e;
+        if (!$this->running) {
+            $this->run();
         }
 
-        return new Subscription($emitter->pipe(), function () use ($emitter, $channel) {
-            $this->unloadEmitter($emitter, $channel);
-        });
+        $subscribe = !isset($this->queues[$channel]);
+
+        $queue = new Queue();
+        $this->queues[$channel][\spl_object_id($queue)] = $queue;
+
+        if ($subscribe) {
+            $this->socket?->reference();
+
+            try {
+                $this->socket?->write('subscribe', $channel);
+            } catch (\Throwable $e) {
+                $this->unloadEmitter($queue, $channel);
+
+                throw $e;
+            }
+        }
+
+        return new Subscription($queue->iterate(), fn () => $this->unloadEmitter($queue, $channel));
     }
 
     /**
@@ -58,147 +70,170 @@ final class Subscriber
      */
     public function subscribeToPattern(string $pattern): Subscription
     {
-        $emitter = new PipelineSource();
-        $this->patternEmitters[$pattern][\spl_object_hash($emitter)] = $emitter;
-
-        try {
-            /** @var RespSocket $resp */
-            $resp = await($this->connect());
-            $resp->reference();
-            $resp->write('psubscribe', $pattern);
-        } catch (\Throwable $e) {
-            $this->unloadPatternEmitter($emitter, $pattern);
-
-            throw $e;
+        if (!$this->running) {
+            $this->run();
         }
 
-        return new Subscription($emitter->pipe(), function () use ($emitter, $pattern) {
-            $this->unloadPatternEmitter($emitter, $pattern);
-        });
+        $subscribe = !isset($this->patternQueues[$pattern]);
+
+        $queue = new Queue();
+        $this->patternQueues[$pattern][\spl_object_id($queue)] = $queue;
+
+        if ($subscribe) {
+            $this->socket?->reference();
+
+            try {
+                $this->socket?->write('psubscribe', $pattern);
+            } catch (\Throwable $e) {
+                $this->unloadPatternEmitter($queue, $pattern);
+
+                throw $e;
+            }
+        }
+
+        return new Subscription($queue->iterate(), fn () => $this->unloadPatternEmitter($queue, $pattern));
     }
 
-    private function connect(): Promise
+    private function run(): void
     {
-        if ($this->connect) {
-            return $this->connect;
-        }
+        $config = $this->config;
+        $connector = $this->connector;
+        $running = &$this->running;
+        $socket = &$this->socket;
+        $queues = &$this->queues;
+        $patternQueues = &$this->patternQueues;
 
-        return $this->connect = async(function (): RespSocket {
-            $resp = connect($this->config);
+        EventLoop::queue(static function () use (
+            &$running,
+            &$socket,
+            &$queues,
+            &$patternQueues,
+            $config,
+            $connector
+        ): void {
+            try {
+                while ($running) {
+                    $socket = connect($config, $connector);
+                    $socket->unreference();
 
-            defer(function () use ($resp): void {
-                try {
-                    while ([$response] = $resp->read()) {
-                        switch ($response[0]) {
-                            case 'message':
-                                $backpressure = [];
-                                foreach ($this->emitters[$response[1]] as $emitter) {
-                                    $backpressure[] = $emitter->emit($response[2]);
-                                }
-                                await(Promise\any($backpressure));
-
-                                break;
-
-                            case 'pmessage':
-                                $backpressure = [];
-                                foreach ($this->patternEmitters[$response[1]] as $emitter) {
-                                    $backpressure[] = $emitter->emit([$response[3], $response[2]]);
-                                }
-                                await(Promise\any($backpressure));
-
-                                break;
+                    try {
+                        foreach (\array_keys($queues) as $channel) {
+                            $socket->reference();
+                            $socket->write('subscribe', $channel);
                         }
-                    }
 
-                    throw new SocketException('Socket to redis instance (' . $this->config->getConnectUri() . ') closed unexpectedly');
-                } catch (\Throwable $error) {
-                    $emitters = \array_merge($this->emitters, $this->patternEmitters);
-
-                    $this->connect = null;
-                    $this->emitters = [];
-                    $this->patternEmitters = [];
-
-                    foreach ($emitters as $emitterGroup) {
-                        foreach ($emitterGroup as $emitter) {
-                            $emitter->fail($error);
+                        foreach (\array_keys($patternQueues) as $pattern) {
+                            $socket->reference();
+                            $socket->write('psubscribe', $pattern);
                         }
-                    }
 
-                    throw $error;
+                        while ([$response] = $socket->read()) {
+                            switch ($response[0]) {
+                                case 'message':
+                                    $backpressure = [];
+                                    foreach ($queues[$response[1]] ?? [] as $queue) {
+                                        $backpressure[] = $queue->pushAsync($response[2]);
+                                    }
+                                    Future\awaitAll($backpressure);
+                                    break;
+
+                                case 'pmessage':
+                                    $backpressure = [];
+                                    foreach ($this->patternQueues[$response[1]] ?? [] as $queue) {
+                                        $backpressure[] = $queue->pushAsync([$response[3], $response[2]]);
+                                    }
+                                    Future\awaitAll($backpressure);
+                                    break;
+                            }
+                        }
+                    } catch (\Throwable) {
+                        // Attempt to reconnect after failure.
+                    } finally {
+                        $socket = null;
+                    }
                 }
-            });
+            } catch (\Throwable $exception) {
+                $exception = new SocketException($exception->getMessage(), 0, $exception);
 
-            return $resp;
+                $queueGroups = \array_merge($this->queues, $this->patternQueues);
+
+                $queues = [];
+                $patternQueues = [];
+
+                foreach ($queueGroups as $queueGroup) {
+                    foreach ($queueGroup as $queue) {
+                        $queue->fail($exception);
+                    }
+                }
+
+                $running = false;
+            }
         });
+
+        $this->running = true;
     }
 
     private function isIdle(): bool
     {
-        return !$this->emitters && !$this->patternEmitters;
+        return !$this->queues && !$this->patternQueues;
     }
 
-    private function unloadEmitter(PipelineSource $emitter, string $channel): void
+    private function unloadEmitter(Queue $queue, string $channel): void
     {
-        $hash = \spl_object_hash($emitter);
+        $hash = \spl_object_id($queue);
 
-        if (isset($this->emitters[$channel][$hash])) {
-            unset($this->emitters[$channel][$hash]);
+        if (isset($this->queues[$channel][$hash])) {
+            unset($this->queues[$channel][$hash]);
 
-            $emitter->complete();
+            $queue->complete();
 
-            if (empty($this->emitters[$channel])) {
-                unset($this->emitters[$channel]);
+            if (empty($this->queues[$channel])) {
+                unset($this->queues[$channel]);
 
-                defer(function () use ($channel): void {
+                async(function () use ($channel): void {
                     try {
-                        /** @var RespSocket $resp */
-                        $resp = await($this->connect());
-
-                        if (empty($this->emitters[$channel])) {
-                            $resp->reference();
-                            $resp->write('unsubscribe', $channel);
+                        if (empty($this->queues[$channel])) {
+                            $this->socket?->reference();
+                            $this->socket?->write('unsubscribe', $channel);
                         }
 
                         if ($this->isIdle()) {
-                            $resp->unreference();
+                            $this->socket?->unreference();
                         }
                     } catch (RedisException $exception) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
                     }
-                });
+                })->ignore();
             }
         }
     }
 
-    private function unloadPatternEmitter(PipelineSource $emitter, string $pattern): void
+    private function unloadPatternEmitter(Queue $queue, string $pattern): void
     {
-        $hash = \spl_object_hash($emitter);
+        $hash = \spl_object_id($queue);
 
-        if (isset($this->patternEmitters[$pattern][$hash])) {
-            unset($this->patternEmitters[$pattern][$hash]);
+        if (isset($this->patternQueues[$pattern][$hash])) {
+            unset($this->patternQueues[$pattern][$hash]);
 
-            $emitter->complete();
+            $queue->complete();
 
-            if (empty($this->patternEmitters[$pattern])) {
-                unset($this->patternEmitters[$pattern]);
+            if (empty($this->patternQueues[$pattern])) {
+                unset($this->patternQueues[$pattern]);
 
-                defer(function () use ($pattern): void {
+                async(function () use ($pattern): void {
                     try {
-                        /** @var RespSocket $resp */
-                        $resp = await($this->connect());
-
-                        if (empty($this->patternEmitters[$pattern])) {
-                            $resp->reference();
-                            $resp->write('punsubscribe', $pattern);
+                        if (empty($this->patternQueues[$pattern])) {
+                            $this->socket?->reference();
+                            $this->socket?->write('punsubscribe', $pattern);
                         }
 
                         if ($this->isIdle()) {
-                            $resp->unreference();
+                            $this->socket?->unreference();
                         }
-                    } catch (RedisException $exception) {
+                    } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
                     }
-                });
+                })->ignore();
             }
         }
     }

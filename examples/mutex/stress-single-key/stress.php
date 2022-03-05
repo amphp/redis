@@ -5,7 +5,7 @@ require __DIR__ . '/../../../vendor/autoload.php';
 use Amp\Redis\Config;
 use Amp\Redis\RemoteExecutorFactory;
 
-$executorFactory = new RemoteExecutorFactory(Config::fromUri('redis://'));
+$executorFactory = new RemoteExecutorFactory(Config::fromUri('redis://localhost'));
 
 $redis = new Amp\Redis\Redis($executorFactory->createQueryExecutor());
 $mutex = new Amp\Redis\Mutex\Mutex($executorFactory);

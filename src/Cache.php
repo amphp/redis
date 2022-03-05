@@ -4,32 +4,37 @@ namespace Amp\Redis;
 
 use Amp\Cache\Cache as CacheInterface;
 use Amp\Cache\CacheException;
+use Amp\Serialization\NativeSerializer;
+use Amp\Serialization\Serializer;
 
 final class Cache implements CacheInterface
 {
     /** @var Redis */
-    private Redis $redis;
+    private readonly Redis $redis;
 
-    /**
-     * @param Redis $redis
-     */
-    public function __construct(Redis $redis)
+    private readonly Serializer $serializer;
+
+    public function __construct(Redis $redis, ?Serializer $serializer = null)
     {
         $this->redis = $redis;
+        $this->serializer = $serializer ?? new NativeSerializer();
     }
 
-    /** @inheritdoc */
-    public function get(string $key): ?string
+    public function get(string $key): mixed
     {
         try {
-            return $this->redis->get($key);
+            $data = $this->redis->get($key);
+            if ($data === null) {
+                return null;
+            }
+
+            return $this->serializer->unserialize($data);
         } catch (RedisException $e) {
             throw new CacheException("Fetching '${key}' from cache failed", 0, $e);
         }
     }
 
-    /** @inheritdoc */
-    public function set(string $key, string $value, int $ttl = null): void
+    public function set(string $key, mixed $value, int $ttl = null): void
     {
         if ($ttl !== null && $ttl < 0) {
             throw new \Error('Invalid TTL: ' . $ttl);
@@ -46,13 +51,12 @@ final class Cache implements CacheInterface
                 $options = $options->withTtl($ttl);
             }
 
-            $this->redis->set($key, $value, $options);
+            $this->redis->set($key, $this->serializer->serialize($value), $options);
         } catch (RedisException $e) {
             throw new CacheException("Storing '{$key}' to cache failed", 0, $e);
         }
     }
 
-    /** @inheritdoc */
     public function delete(string $key): bool
     {
         try {

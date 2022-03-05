@@ -20,19 +20,21 @@
         "issues": "https://github.com/amphp/redis/issues"
     },
     "require": {
-        "php": ">=8",
-        "amphp/amp": "^3-dev",
-        "amphp/cache": "^2-dev",
-        "amphp/socket": "^2-dev",
-        "amphp/sync": "^2-dev",
+        "php": ">=8.1",
+        "amphp/amp": "^3",
+        "amphp/cache": "^2",
+        "amphp/pipeline": "^1",
+        "amphp/socket": "^2",
+        "amphp/sync": "^2",
         "league/uri-parser": "^1.4"
     },
     "require-dev": {
-        "amphp/phpunit-util": "^2-dev",
+        "amphp/phpunit-util": "^3",
+        "amphp/process": "^2",
         "phpunit/phpunit": "^9",
-        "amphp/php-cs-fixer-config": "dev-master"
+        "amphp/php-cs-fixer-config": "^2-dev"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "beta",
     "prefer-stable": true,
     "autoload": {
         "psr-4": {

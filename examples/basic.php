@@ -1,4 +1,4 @@
-<?php /** @noinspection ForgottenDebugOutputInspection */
+<?php
 
 require __DIR__ . '/../vendor/autoload.php';
 

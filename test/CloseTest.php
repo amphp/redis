@@ -3,7 +3,6 @@
 namespace Amp\Redis;
 
 use function Amp\async;
-use function Amp\await;
 
 class CloseTest extends IntegrationTest
 {
@@ -21,7 +20,7 @@ class CloseTest extends IntegrationTest
         $this->assertEquals('PONG', $redis->echo('PONG'));
         $quitPromise = async(fn() => $redis->quit());
         $promise = async(fn() => $redis->echo('PONG'));
-        await($quitPromise);
-        $this->assertEquals('PONG', await($promise));
+        $quitPromise->await();
+        $this->assertEquals('PONG', $promise->await());
     }
 }
