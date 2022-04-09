@@ -4,13 +4,10 @@ namespace Amp\Redis;
 
 final class RedisList
 {
-    private QueryExecutor $queryExecutor;
-    private string $key;
-
-    public function __construct(QueryExecutor $queryExecutor, string $key)
-    {
-        $this->queryExecutor = $queryExecutor;
-        $this->key = $key;
+    public function __construct(
+        private readonly QueryExecutor $queryExecutor,
+        private readonly string $key,
+    ) {
     }
 
     /**

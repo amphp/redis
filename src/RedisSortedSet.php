@@ -6,8 +6,8 @@ use Amp\Pipeline\Pipeline;
 
 final class RedisSortedSet
 {
-    private QueryExecutor $queryExecutor;
-    private string $key;
+    private readonly QueryExecutor $queryExecutor;
+    private readonly string $key;
 
     public function __construct(QueryExecutor $queryExecutor, string $key)
     {

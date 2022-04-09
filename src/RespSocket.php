@@ -11,9 +11,9 @@ use Revolt\EventLoop;
 
 final class RespSocket
 {
-    private Socket $socket;
+    private readonly Socket $socket;
 
-    private ConcurrentIterator $iterator;
+    private readonly ConcurrentIterator $iterator;
 
     private Future $backpressure;
 
@@ -62,11 +62,8 @@ final class RespSocket
             throw new ClosedException('Redis connection already closed');
         }
 
-        $payload = '';
-        foreach ($args as $arg) {
-            $payload .= '$' . \strlen($arg) . "\r\n{$arg}\r\n";
-        }
-        $payload = '*' . \count($args) . "\r\n{$payload}";
+        $payload = \implode("\r\n", \array_map(fn (string $arg) => '$' . \strlen($arg) . "\r\n" . $arg, $args));
+        $payload = '*' . \count($args) . "\r\n{$payload}\r\n";
 
         $this->socket->write($payload);
     }

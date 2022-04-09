@@ -11,14 +11,14 @@ final class RespParser
     public const TYPE_BULK_STRING = '$';
     public const TYPE_INTEGER = ':';
 
-    private $responseCallback;
+    private readonly \Closure $responseCallback;
     private string $buffer = '';
     private ?array $currentResponse = null;
     private array $arrayStack = [];
     private int $currentSize = 0;
     private array $arraySizes = [];
 
-    public function __construct(callable $responseCallback)
+    public function __construct(\Closure $responseCallback)
     {
         $this->responseCallback = $responseCallback;
     }
@@ -109,8 +109,7 @@ final class RespParser
 
                 while (--$this->currentSize === 0) {
                     if (\count($this->arrayStack) === 0) {
-                        $cb = $this->responseCallback;
-                        $cb($this->currentResponse);
+                        ($this->responseCallback)($this->currentResponse);
                         $this->currentResponse = null;
                         break;
                     }
@@ -127,15 +126,12 @@ final class RespParser
                     $this->currentSize = $payload;
                     $this->arrayStack = $this->arraySizes = $this->currentResponse = [];
                 } elseif ($payload === 0) {
-                    $cb = $this->responseCallback;
-                    $cb([]);
+                    ($this->responseCallback)([]);
                 } else {
-                    $cb = $this->responseCallback;
-                    $cb(null);
+                    ($this->responseCallback)(null);
                 }
             } else { // single data type response
-                $cb = $this->responseCallback;
-                $cb($payload);
+                ($this->responseCallback)($payload);
             }
         } while (isset($this->buffer[0]));
     }

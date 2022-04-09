@@ -6,14 +6,12 @@ use Amp\Pipeline\Pipeline;
 
 final class Redis
 {
-    private QueryExecutor $queryExecutor;
-
     /** @var string[] */
     private array $evalCache = [];
 
-    public function __construct(QueryExecutor $queryExecutor)
-    {
-        $this->queryExecutor = $queryExecutor;
+    public function __construct(
+        private readonly QueryExecutor $queryExecutor
+    ) {
     }
 
     public function getHyperLogLog(string $key): RedisHyperLogLog

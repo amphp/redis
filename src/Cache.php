@@ -9,14 +9,10 @@ use Amp\Serialization\Serializer;
 
 final class Cache implements CacheInterface
 {
-    private readonly Redis $redis;
-
-    private readonly Serializer $serializer;
-
-    public function __construct(Redis $redis, ?Serializer $serializer = null)
-    {
-        $this->redis = $redis;
-        $this->serializer = $serializer ?? new NativeSerializer();
+    public function __construct(
+        private readonly Redis $redis,
+        private readonly Serializer $serializer = new NativeSerializer(),
+    ) {
     }
 
     public function get(string $key): mixed
