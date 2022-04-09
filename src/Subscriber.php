@@ -4,7 +4,6 @@ namespace Amp\Redis;
 
 use Amp\Future;
 use Amp\Pipeline\Queue;
-use Amp\Socket\SocketConnector;
 use Revolt\EventLoop;
 use function Amp\async;
 
@@ -22,7 +21,7 @@ final class Subscriber
 
     public function __construct(
         private readonly Config $config,
-        private readonly ?SocketConnector $connector = null,
+        private readonly ?RedisConnector $connector = null,
     ) {
     }
 
@@ -87,7 +86,7 @@ final class Subscriber
     private function run(): void
     {
         $config = $this->config;
-        $connector = $this->connector;
+        $connector = $this->connector ?? redisConnector();
         $running = &$this->running;
         $socket = &$this->socket;
         $queues = &$this->queues;
@@ -103,7 +102,7 @@ final class Subscriber
         ): void {
             try {
                 while ($running) {
-                    $socket = connect($config, $connector);
+                    $socket = $connector->connect($config);
                     $socket->unreference();
 
                     try {

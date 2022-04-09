@@ -6,7 +6,6 @@ use Amp\ByteStream\StreamException;
 use Amp\DeferredFuture;
 use Amp\Future;
 use Amp\Socket;
-use Amp\Socket\SocketConnector;
 use Revolt\EventLoop;
 
 final class RemoteExecutor implements QueryExecutor
@@ -22,7 +21,7 @@ final class RemoteExecutor implements QueryExecutor
 
     public function __construct(
         private readonly Config $config,
-        private readonly ?SocketConnector $connector = null,
+        private readonly ?RedisConnector $connector = null,
     ) {
         $this->database = $config->getDatabase();
         $this->queue = new \SplQueue();
@@ -82,7 +81,7 @@ final class RemoteExecutor implements QueryExecutor
     private function run(): void
     {
         $config = $this->config;
-        $connector = $this->connector;
+        $connector = $this->connector ?? redisConnector();
         $queue = $this->queue;
         $running = &$this->running;
         $socket = &$this->socket;
@@ -90,7 +89,7 @@ final class RemoteExecutor implements QueryExecutor
         EventLoop::queue(static function () use (&$socket, &$running, &$database, $queue, $config, $connector): void {
             try {
                 while ($running) {
-                    $socket = connect($config->withDatabase($database), $connector);
+                    $socket = $connector->connect($config->withDatabase($database));
                     $socket->unreference();
 
                     try {

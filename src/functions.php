@@ -2,8 +2,9 @@
 
 namespace Amp\Redis;
 
-use Amp\Socket;
+use Amp\Cancellation;
 use Amp\Socket\ConnectContext;
+use Revolt\EventLoop;
 
 function toFloat(mixed $response): ?float
 {
@@ -45,44 +46,28 @@ function toNull(mixed $response): void
 }
 
 /**
+ * Set or access the global RedisConnector instance.
+ */
+function redisConnector(?RedisConnector $connector = null): RedisConnector
+{
+    static $map;
+    $map ??= new \WeakMap();
+    $driver = EventLoop::getDriver();
+
+    if ($connector) {
+        return $map[$driver] = $connector;
+    }
+
+    return $map[$driver] ??= new RedisSocketConnector();
+}
+
+/**
  * @throws RedisException
  */
-function connect(Config $config, ?Socket\SocketConnector $connector = null): RespSocket
-{
-    try {
-        $connectContext = (new ConnectContext)->withConnectTimeout($config->getTimeout());
-        $resp = new RespSocket(
-            ($connector ?? Socket\socketConnector())->connect($config->getConnectUri(), $connectContext)
-        );
-    } catch (Socket\SocketException $e) {
-        throw new SocketException(
-            'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
-            0,
-            $e
-        );
-    }
-
-    $readsNeeded = 0;
-
-    if ($config->hasPassword()) {
-        $readsNeeded++;
-        $resp->write('AUTH', $config->getPassword());
-    }
-
-    if ($config->getDatabase() !== 0) {
-        $readsNeeded++;
-        $resp->write('SELECT', (string) $config->getDatabase());
-    }
-
-    for ($i = 0; $i < $readsNeeded; $i++) {
-        if ([$response] = $resp->read()) {
-            if ($response instanceof \Throwable) {
-                throw $response;
-            }
-        } else {
-            throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
-        }
-    }
-
-    return $resp;
+function connect(
+    Config $config,
+    ?ConnectContext $context = null,
+    ?Cancellation $cancellation = null,
+): RespSocket {
+    return redisConnector()->connect($config, $context, $cancellation);
 }
