@@ -2,36 +2,34 @@
 
 namespace Amp\Redis;
 
-use function League\Uri\parse;
+use League\Uri\Uri;
 
 final class Config
 {
     public const DEFAULT_HOST = 'localhost';
-    public const DEFAULT_PORT = '6379';
+    public const DEFAULT_PORT = 6379;
+    public const DEFAULT_TIMEOUT = 5;
 
     /**
      * @throws RedisException
      */
-    public static function fromUri(string $uri): self
+    public static function fromUri(string $uri, float $timeout = self::DEFAULT_TIMEOUT): self
     {
-        if (\stripos($uri, 'tcp://') !== 0 && \stripos($uri, 'unix://') !== 0 && \stripos($uri, 'redis://') !== 0) {
-            throw new RedisException('Invalid redis configuration URI, must start with tcp://, unix:// or redis://');
-        }
-
-        return new self($uri);
+        return new self($uri, $timeout);
     }
 
     private string $uri;
-    private string $password = '';
-    private int $database = 0;
-    private int $timeout = 5000;
+    private string $password;
+    private int $database;
+    private float $timeout;
 
     /**
      * @throws RedisException
      */
-    private function __construct(string $uri)
+    private function __construct(string $uri, float $timeout)
     {
         $this->applyUri($uri);
+        $this->timeout = $timeout;
     }
 
     public function getConnectUri(): string
@@ -39,7 +37,7 @@ final class Config
         return $this->uri;
     }
 
-    public function getTimeout(): int
+    public function getTimeout(): float
     {
         return $this->timeout;
     }
@@ -59,7 +57,7 @@ final class Config
         return $this->database;
     }
 
-    public function withTimeout(int $timeout): self
+    public function withTimeout(float $timeout): self
     {
         $clone = clone $this;
         $clone->timeout = $timeout;
@@ -96,62 +94,41 @@ final class Config
      */
     private function applyUri(string $uri): void
     {
-        if ($uri === 'redis://') {
-            $uri = 'redis://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
-        }
-
         try {
-            $parsedUri = parse($uri);
-        } catch (\Exception $exception) {
+            $uri = Uri::createFromString($uri);
+        } catch (\Exception) {
             throw new RedisException('Invalid redis configuration URI: ' . $uri);
         }
 
-        \parse_str($parsedUri['query'] ?? '', $query);
+        $scheme = match (\strtolower($uri->getScheme())) {
+            'tcp', 'redis' => 'tcp',
+            'unix' => 'unix',
+            default => throw new RedisException(
+                'Invalid scheme for redis URI, must be tcp, unix, or redis, got ' . $uri->getScheme()
+            ),
+        };
 
-        switch (\strtolower($parsedUri['scheme'])) {
-            case 'tcp':
-                $this->uri = 'tcp://' . \strtolower($parsedUri['host']) . ':' . (int) $parsedUri['port'];
-                $this->database = (int) ($query['database'] ?? $query['db'] ?? 0);
-                $this->password = $query['password'] ?? $query['pass'] ?? '';
+        \parse_str($uri->getQuery() ?? '', $query);
 
-                break;
+        [, $password] = \explode(':', $uri->getUserInfo() ?? '', 2) + [null, null];
+        $this->password = $password ?? $query['password'] ?? $query['pass'] ?? '';
 
-            case 'unix':
-                $this->uri = 'unix://' . $parsedUri['path'];
-                $this->database = (int) ($query['database'] ?? $query['db'] ?? 0);
-                $this->password = $query['password'] ?? $query['pass'] ?? '';
+        $this->database = ($query['database'] ?? $query['db'] ?? 0);
 
-                break;
-
-            case 'redis':
-                $host = \strtolower($parsedUri['host'] ?? self::DEFAULT_HOST);
-                $port = (int) ($parsedUri['port'] ?? self::DEFAULT_PORT);
-
-                if ($host === '') {
-                    $host = self::DEFAULT_HOST;
-                }
-
-                if ($port === 0) {
-                    $port = self::DEFAULT_PORT;
-                }
-
-                $this->uri = 'tcp://' . $host . ':' . $port;
-
-                if (\ltrim($parsedUri['path'], '/') !== '') {
-                    $this->database = (int) \ltrim($parsedUri['path'], '/');
-                } else {
-                    $this->database = (int) ($query['db'] ?? 0);
-                }
-
-                if (isset($parsedUri['pass']) && $parsedUri['pass'] !== '') {
-                    $this->password = $parsedUri['pass'];
-                } else {
-                    $this->password = $query['password'] ?? '';
-                }
-
-                break;
+        if ($scheme === 'unix') {
+            $this->uri = 'unix://' . $uri->getPath();
+            return;
         }
 
-        $this->timeout = (int) ($query['timeout'] ?? $this->timeout);
+        $path = \ltrim($uri->getPath(), '/');
+        if ($path !== '') {
+            $this->database = (int) $path;
+        }
+
+        $this->uri = \sprintf(
+            'tcp://%s:%d',
+            $uri->getHost() ?: self::DEFAULT_HOST,
+            $uri->getPort() ?: self::DEFAULT_PORT,
+        );
     }
 }

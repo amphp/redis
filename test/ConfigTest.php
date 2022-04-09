@@ -11,12 +11,13 @@ class ConfigTest extends TestCase
      */
     public function test(
         string $uri,
+        float $timeout,
         string $expectedUri,
         int $expectedDatabase,
-        int $expectedTimeout,
+        float $expectedTimeout,
         string $expectedPassword
     ): void {
-        $config = Config::fromUri($uri);
+        $config = Config::fromUri($uri, $timeout);
 
         self::assertSame($expectedUri, $config->getConnectUri());
         self::assertSame($expectedDatabase, $config->getDatabase());
@@ -48,8 +49,8 @@ class ConfigTest extends TestCase
     {
         $config = Config::fromUri('redis://');
 
-        $this->assertSame(5000, $config->getTimeout());
-        $this->assertSame(3000, $config->withTimeout(3000)->getTimeout());
+        $this->assertSame(5.0, $config->getTimeout());
+        $this->assertSame(3.0, $config->withTimeout(3)->getTimeout());
     }
 
     public function testWithPassword(): void
@@ -63,20 +64,20 @@ class ConfigTest extends TestCase
     public function provideData(): array
     {
         return [
-            ['tcp://localhost:6379', 'tcp://localhost:6379', 0, 5000, ''],
-            ['tcp://localhost:6379?database=1', 'tcp://localhost:6379', 1, 5000, ''],
-            ['tcp://localhost:6379?database=1&pass=foobar', 'tcp://localhost:6379', 1, 5000, 'foobar'],
-            ['redis://', 'tcp://localhost:6379', 0, 5000, ''],
-            ['redis://localhost', 'tcp://localhost:6379', 0, 5000, ''],
-            ['redis://localhost:0', 'tcp://localhost:6379', 0, 5000, ''],
-            ['redis://localhost:6379', 'tcp://localhost:6379', 0, 5000, ''],
-            ['redis://localhost:6379?db=2', 'tcp://localhost:6379', 2, 5000, ''],
-            ['redis://:secret@localhost:6379', 'tcp://localhost:6379', 0, 5000, 'secret'],
-            ['redis://:secret@localhost:6379/3', 'tcp://localhost:6379', 3, 5000, 'secret'],
-            ['redis://:secret@:6379/3?timeout=10000', 'tcp://localhost:6379', 3, 10000, 'secret'],
-            ['redis://:secret@foobar/3?timeout=10000', 'tcp://foobar:6379', 3, 10000, 'secret'],
-            ['unix:///run/redis.sock', 'unix:///run/redis.sock', 0, 5000, ''],
-            ['unix:///run/redis.sock?db=2&password=123', 'unix:///run/redis.sock', 2, 5000, '123'],
+            ['tcp://localhost:6379', 5, 'tcp://localhost:6379', 0, 5, ''],
+            ['tcp://localhost:6379?database=1', 5, 'tcp://localhost:6379', 1, 5, ''],
+            ['tcp://localhost:6379?database=1&pass=foobar', 5, 'tcp://localhost:6379', 1, 5, 'foobar'],
+            ['redis://', 5, 'tcp://localhost:6379', 0, 5, ''],
+            ['redis://localhost', 5, 'tcp://localhost:6379', 0, 5, ''],
+            ['redis://localhost:0', 5, 'tcp://localhost:6379', 0, 5, ''],
+            ['redis://localhost:6379', 5, 'tcp://localhost:6379', 0, 5, ''],
+            ['redis://localhost:6379?db=2', 5, 'tcp://localhost:6379', 2, 5, ''],
+            ['redis://:secret@localhost:6379', 5, 'tcp://localhost:6379', 0, 5, 'secret'],
+            ['redis://:secret@localhost:6379/3', 5, 'tcp://localhost:6379', 3, 5, 'secret'],
+            ['redis://:secret@:6379/3', 10, 'tcp://localhost:6379', 3, 10, 'secret'],
+            ['redis://:secret@foobar/3', 10, 'tcp://foobar:6379', 3, 10, 'secret'],
+            ['unix:///run/redis.sock', 5, 'unix:///run/redis.sock', 0, 5, ''],
+            ['unix:///run/redis.sock?db=2&password=123', 5, 'unix:///run/redis.sock', 2, 5, '123'],
         ];
     }
 }
