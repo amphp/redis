@@ -45,6 +45,11 @@ final class Subscription implements ConcurrentIterator
         return $this->iterator->getIterator();
     }
 
+    public function isComplete(): bool
+    {
+        return $this->iterator->isComplete();
+    }
+
     public function dispose(): void
     {
         if ($this->unsubscribe) {
