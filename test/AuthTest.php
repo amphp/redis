@@ -51,7 +51,7 @@ class AuthTest extends AsyncTestCase
         ));
         $this->expectException(SocketException::class);
 
-        $this->expectDeprecationMessage('ERR invalid password');
+        $this->expectExceptionMessage('invalid');
 
         $redis->echo('PONG');
     }
