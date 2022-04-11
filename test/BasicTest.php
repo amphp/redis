@@ -11,7 +11,7 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $config = Config::fromUri($this->getUri());
+        $config = RedisConfig::fromUri($this->getUri());
         $resp = connect($config);
 
         $resp->write('PING');
@@ -30,7 +30,7 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $config = Config::fromUri($this->getUri());
+        $config = RedisConfig::fromUri($this->getUri());
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -44,7 +44,7 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $config = Config::fromUri($this->getUri());
+        $config = RedisConfig::fromUri($this->getUri());
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -60,7 +60,7 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $config = Config::fromUri($this->getUri());
+        $config = RedisConfig::fromUri($this->getUri());
         $resp = connect($config);
 
         $resp->write('QUIT');
@@ -78,7 +78,7 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $config = Config::fromUri($this->getUri());
+        $config = RedisConfig::fromUri($this->getUri());
         $resp = connect($config);
 
         $resp->write('QUIT');

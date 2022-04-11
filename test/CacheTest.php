@@ -6,9 +6,9 @@ use function Amp\delay;
 
 class CacheTest extends IntegrationTest
 {
-    protected function createCache(): Cache
+    protected function createCache(): RedisCache
     {
-        return new Cache($this->createInstance());
+        return new RedisCache($this->createInstance());
     }
 
     public function testGet(): void

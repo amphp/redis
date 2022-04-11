@@ -38,7 +38,7 @@ class AuthTest extends AsyncTestCase
     public function testSuccess(): void
     {
         $redis = new Redis(new RemoteExecutor(
-            Config::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD))
+            RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD))
         ));
         $this->assertSame('PONG', $redis->echo('PONG'));
         $redis->quit();
@@ -47,7 +47,7 @@ class AuthTest extends AsyncTestCase
     public function testFailure(): void
     {
         $redis = new Redis(new RemoteExecutor(
-            Config::fromUri(\sprintf(self::URI_FORMAT, self::PORT, 'wrong'))
+            RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, 'wrong'))
         ));
         $this->expectException(SocketException::class);
 

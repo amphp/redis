@@ -2,12 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\Cache\Cache as CacheInterface;
+use Amp\Cache\Cache;
 use Amp\Cache\CacheException;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 
-final class Cache implements CacheInterface
+final class RedisCache implements Cache
 {
     public function __construct(
         private readonly Redis $redis,

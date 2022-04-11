@@ -11,7 +11,7 @@ interface RedisConnector
      * @throws RedisException
      */
     public function connect(
-        Config $config,
+        RedisConfig $config,
         ?ConnectContext $context = null,
         ?Cancellation $cancellation = null,
     ): RespSocket;

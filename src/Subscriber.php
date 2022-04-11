@@ -20,7 +20,7 @@ final class Subscriber
     private array $patternQueues = [];
 
     public function __construct(
-        private readonly Config $config,
+        private readonly RedisConfig $config,
         private readonly ?RedisConnector $connector = null,
     ) {
     }

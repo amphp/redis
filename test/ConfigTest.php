@@ -17,7 +17,7 @@ class ConfigTest extends TestCase
         float $expectedTimeout,
         string $expectedPassword
     ): void {
-        $config = Config::fromUri($uri, $timeout);
+        $config = RedisConfig::fromUri($uri, $timeout);
 
         self::assertSame($expectedUri, $config->getConnectUri());
         self::assertSame($expectedDatabase, $config->getDatabase());
@@ -35,19 +35,19 @@ class ConfigTest extends TestCase
     {
         $this->expectException(RedisException::class);
 
-        Config::fromUri('test://');
+        RedisConfig::fromUri('test://');
     }
 
     public function testInvalidUri(): void
     {
         $this->expectException(RedisException::class);
 
-        Config::fromUri('redis://\0/#\0#');
+        RedisConfig::fromUri('redis://\0/#\0#');
     }
 
     public function testWithTimeout(): void
     {
-        $config = Config::fromUri('redis://');
+        $config = RedisConfig::fromUri('redis://');
 
         $this->assertSame(5.0, $config->getTimeout());
         $this->assertSame(3.0, $config->withTimeout(3)->getTimeout());
@@ -55,7 +55,7 @@ class ConfigTest extends TestCase
 
     public function testWithPassword(): void
     {
-        $config = Config::fromUri('redis://');
+        $config = RedisConfig::fromUri('redis://');
 
         $this->assertSame('', $config->getPassword());
         $this->assertSame('foobar', $config->withPassword('foobar')->getPassword());

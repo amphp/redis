@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use League\Uri\Uri;
 
-final class Config
+final class RedisConfig
 {
     public const DEFAULT_HOST = 'localhost';
     public const DEFAULT_PORT = 6379;
@@ -113,7 +113,7 @@ final class Config
         [, $password] = \explode(':', $uri->getUserInfo() ?? '', 2) + [null, null];
         $this->password = $password ?? $query['password'] ?? $query['pass'] ?? '';
 
-        $this->database = ($query['database'] ?? $query['db'] ?? 0);
+        $this->database = (int) ($query['database'] ?? $query['db'] ?? 0);
 
         if ($scheme === 'unix') {
             $this->uri = 'unix://' . $uri->getPath();

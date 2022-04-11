@@ -25,7 +25,7 @@ class PubSubTest extends IntegrationTest
 
     public function testBasic(): void
     {
-        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
+        $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
 
@@ -47,7 +47,7 @@ class PubSubTest extends IntegrationTest
 
     public function testDoubleCancel(): void
     {
-        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
+        $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
         $subscription->dispose();
@@ -60,7 +60,7 @@ class PubSubTest extends IntegrationTest
 
     public function testMulti(): void
     {
-        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
+        $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription1 = $subscriber->subscribe('foo');
         $subscription2 = $subscriber->subscribe('foo');
@@ -85,7 +85,7 @@ class PubSubTest extends IntegrationTest
 
     public function testStream(): void
     {
-        $subscriber = new Subscriber(Config::fromUri($this->getUri()));
+        $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
 

@@ -14,8 +14,11 @@ class RedisSocketConnector implements RedisConnector
     ) {
     }
 
-    function connect(Config $config, ?ConnectContext $context = null, ?Cancellation $cancellation = null): RespSocket
-    {
+    function connect(
+        RedisConfig $config,
+        ?ConnectContext $context = null,
+        ?Cancellation $cancellation = null,
+    ): RespSocket {
         try {
             $context = ($context ?? new ConnectContext)->withConnectTimeout($config->getTimeout());
             $respSocket = new RespSocket(

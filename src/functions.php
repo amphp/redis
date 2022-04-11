@@ -65,7 +65,7 @@ function redisConnector(?RedisConnector $connector = null): RedisConnector
  * @throws RedisException
  */
 function connect(
-    Config $config,
+    RedisConfig $config,
     ?ConnectContext $context = null,
     ?Cancellation $cancellation = null,
 ): RespSocket {

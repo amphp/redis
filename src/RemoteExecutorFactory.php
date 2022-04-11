@@ -5,7 +5,7 @@ namespace Amp\Redis;
 final class RemoteExecutorFactory implements QueryExecutorFactory
 {
     public function __construct(
-        private readonly Config $config,
+        private readonly RedisConfig $config,
         private readonly ?RedisConnector $connector = null,
     ) {
     }

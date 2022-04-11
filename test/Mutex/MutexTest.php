@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Mutex;
 
-use Amp\Redis\Config;
+use Amp\Redis\RedisConfig;
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RemoteExecutorFactory;
 use Revolt\EventLoop;
@@ -22,7 +22,7 @@ class MutexTest extends IntegrationTest
     {
         $this->setMinimumRuntime($this->options->getLockTimeout());
 
-        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())), $this->options);
+        $mutex = new Mutex(new RemoteExecutorFactory(RedisConfig::fromUri($this->getUri())), $this->options);
 
         $this->assertSame(0, $mutex->getNumberOfLocks());
         $this->assertSame(0, $mutex->getNumberOfAttempts());
@@ -48,7 +48,7 @@ class MutexTest extends IntegrationTest
 
     public function testFree(): void
     {
-        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())), $this->options);
+        $mutex = new Mutex(new RemoteExecutorFactory(RedisConfig::fromUri($this->getUri())), $this->options);
 
         $lock1 = $mutex->acquire('foo2');
 
@@ -64,7 +64,7 @@ class MutexTest extends IntegrationTest
 
     public function testRenew(): void
     {
-        $mutex = new Mutex(new RemoteExecutorFactory(Config::fromUri($this->getUri())), $this->options);
+        $mutex = new Mutex(new RemoteExecutorFactory(RedisConfig::fromUri($this->getUri())), $this->options);
 
         $lock1 = $mutex->acquire('foo3');
 

@@ -20,7 +20,7 @@ final class RemoteExecutor implements QueryExecutor
     private ?RespSocket $socket = null;
 
     public function __construct(
-        private readonly Config $config,
+        private readonly RedisConfig $config,
         private readonly ?RedisConnector $connector = null,
     ) {
         $this->database = $config->getDatabase();

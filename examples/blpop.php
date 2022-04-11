@@ -4,7 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use function Amp\async;
 
-$config = Amp\Redis\Config::fromUri('redis://');
+$config = Amp\Redis\RedisConfig::fromUri('redis://');
 
 $future = async(function () use ($config): void {
     $popClient = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
