@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\Pipeline\ConcurrentIterableIterator;
+use Amp\Pipeline\ConcurrentIterator;
 use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\delay;
@@ -14,13 +16,13 @@ class PubSubTest extends IntegrationTest
         $this->setTimeout(1);
     }
 
-    private function getNextValue(Subscription $subscription): string
+    private function getNextValue(ConcurrentIterator $concurrentIterator): string
     {
-        if (!$subscription->continue()) {
+        if (!$concurrentIterator->continue()) {
             self::fail('Expected value from redis subscription');
         }
 
-        return $subscription->getValue();
+        return $concurrentIterator->getValue();
     }
 
     public function testBasic(): void
@@ -28,9 +30,10 @@ class PubSubTest extends IntegrationTest
         $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
+        $iterator = new ConcurrentIterableIterator($subscription);
 
         // Use async() to not block, because we publish in the same coroutine
-        $promise = async(fn () => $this->getNextValue($subscription));
+        $promise = async(fn () => $this->getNextValue($iterator));
 
         delay(0.1); // Enter event loop so subscriber has time to connect.
 
@@ -38,7 +41,7 @@ class PubSubTest extends IntegrationTest
 
         delay(0.1); // Enter event loop so subscription has time to receive publish.
 
-        $subscription->dispose();
+        $subscription->unsubscribe();
 
         delay(0.1);
 
@@ -50,8 +53,8 @@ class PubSubTest extends IntegrationTest
         $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
-        $subscription->dispose();
-        $subscription->dispose();
+        $subscription->unsubscribe();
+        $subscription->unsubscribe();
 
         delay(0.1); // Ensure cancel request has completed.
 
@@ -63,22 +66,24 @@ class PubSubTest extends IntegrationTest
         $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription1 = $subscriber->subscribe('foo');
+        $iterator1 = new ConcurrentIterableIterator($subscription1);
         $subscription2 = $subscriber->subscribe('foo');
+        $iterator2 = new ConcurrentIterableIterator($subscription2);
 
         delay(0.1); // Enter event loop so subscriber has time to connect.
 
         $this->redis->publish('foo', 'bar');
 
-        $this->assertEquals('bar', $this->getNextValue($subscription1));
-        $this->assertEquals('bar', $this->getNextValue($subscription2));
+        $this->assertEquals('bar', $this->getNextValue($iterator1));
+        $this->assertEquals('bar', $this->getNextValue($iterator2));
 
-        $subscription1->dispose();
+        $subscription1->unsubscribe();
 
         $this->redis->publish('foo', 'xxx');
 
-        $this->assertEquals('xxx', $this->getNextValue($subscription2));
+        $this->assertEquals('xxx', $this->getNextValue($iterator2));
 
-        $subscription2->dispose();
+        $subscription2->unsubscribe();
 
         delay(0.1); // Ensure cancel request has completed.
     }
@@ -88,6 +93,7 @@ class PubSubTest extends IntegrationTest
         $subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
 
         $subscription = $subscriber->subscribe('foo');
+        $iterator = new ConcurrentIterableIterator($subscription);
 
         $producer = EventLoop::repeat(0.1, function (): void {
             $this->redis->publish('foo', 'bar');
@@ -95,10 +101,10 @@ class PubSubTest extends IntegrationTest
 
         $consumed = 0;
 
-        while ($lastResult = $this->getNextValue($subscription)) {
+        while ($lastResult = $this->getNextValue($iterator)) {
             $consumed++;
             if ($consumed === 3) {
-                $subscription->dispose();
+                $subscription->unsubscribe();
                 break;
             }
         }

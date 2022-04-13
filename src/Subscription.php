@@ -2,11 +2,10 @@
 
 namespace Amp\Redis;
 
-use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Revolt\EventLoop;
 
-final class Subscription implements ConcurrentIterator
+final class Subscription implements \IteratorAggregate
 {
     private ?\Closure $unsubscribe;
 
@@ -25,32 +24,12 @@ final class Subscription implements ConcurrentIterator
         }
     }
 
-    public function continue(?Cancellation $cancellation = null): bool
-    {
-        return $this->iterator->continue($cancellation);
-    }
-
-    public function getValue(): string
-    {
-        return $this->iterator->getValue();
-    }
-
-    public function getPosition(): int
-    {
-        return $this->iterator->getPosition();
-    }
-
     public function getIterator(): \Traversable
     {
-        return $this->iterator->getIterator();
+        return $this->iterator;
     }
 
-    public function isComplete(): bool
-    {
-        return $this->iterator->isComplete();
-    }
-
-    public function dispose(): void
+    public function unsubscribe(): void
     {
         if ($this->unsubscribe) {
             ($this->unsubscribe)();
