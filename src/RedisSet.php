@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline\Pipeline;
-
 final class RedisSet
 {
     public function __construct(
@@ -93,29 +91,27 @@ final class RedisSet
 
     public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return Pipeline::fromIterable(function () use ($pattern, $count) {
-            $cursor = 0;
+        $cursor = 0;
 
-            do {
-                $query = ['SSCAN', $this->key, $cursor];
+        do {
+            $query = ['SSCAN', $this->key, $cursor];
 
-                if ($pattern !== null) {
-                    $query[] = 'MATCH';
-                    $query[] = $pattern;
-                }
+            if ($pattern !== null) {
+                $query[] = 'MATCH';
+                $query[] = $pattern;
+            }
 
-                if ($count !== null) {
-                    $query[] = 'COUNT';
-                    $query[] = $count;
-                }
+            if ($count !== null) {
+                $query[] = 'COUNT';
+                $query[] = $count;
+            }
 
-                [$cursor, $keys] = $this->queryExecutor->execute($query);
+            [$cursor, $keys] = $this->queryExecutor->execute($query);
 
-                foreach ($keys as $key) {
-                    yield $key;
-                }
-            } while ($cursor !== '0');
-        });
+            foreach ($keys as $key) {
+                yield $key;
+            }
+        } while ($cursor !== '0');
     }
 
     /**

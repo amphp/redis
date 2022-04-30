@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline\Pipeline;
-
 final class RedisSortedSet
 {
     private readonly QueryExecutor $queryExecutor;
@@ -117,32 +115,30 @@ final class RedisSortedSet
      */
     public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return Pipeline::fromIterable(function () use ($pattern, $count) {
-            $cursor = 0;
+        $cursor = 0;
 
-            do {
-                $query = ['ZSCAN', $this->key, $cursor];
+        do {
+            $query = ['ZSCAN', $this->key, $cursor];
 
-                if ($pattern !== null) {
-                    $query[] = 'MATCH';
-                    $query[] = $pattern;
-                }
+            if ($pattern !== null) {
+                $query[] = 'MATCH';
+                $query[] = $pattern;
+            }
 
-                if ($count !== null) {
-                    $query[] = 'COUNT';
-                    $query[] = $count;
-                }
+            if ($count !== null) {
+                $query[] = 'COUNT';
+                $query[] = $count;
+            }
 
-                [$cursor, $keys] = $this->queryExecutor->execute($query);
+            [$cursor, $keys] = $this->queryExecutor->execute($query);
 
-                $count = \count($keys);
-                \assert($count % 2 === 0);
+            $count = \count($keys);
+            \assert($count % 2 === 0);
 
-                for ($i = 0; $i < $count; $i += 2) {
-                    yield [$keys[$i], (float) $keys[$i + 1]];
-                }
-            } while ($cursor !== '0');
-        });
+            for ($i = 0; $i < $count; $i += 2) {
+                yield [$keys[$i], (float) $keys[$i + 1]];
+            }
+        } while ($cursor !== '0');
     }
 
     public function getScore(string $member): ?float

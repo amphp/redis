@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline\Pipeline;
-
 final class Redis
 {
     /** @var string[] */
@@ -183,8 +181,8 @@ final class Redis
     }
 
     /**
-     * @param string $pattern
-     * @param int    $count
+     * @param string|null $pattern
+     * @param int|null $count
      *
      * @return \Traversable<string>
      *
@@ -192,29 +190,27 @@ final class Redis
      */
     public function scan(?string $pattern = null, ?int $count = null): \Traversable
     {
-        return Pipeline::fromIterable(function () use ($pattern, $count) {
-            $cursor = 0;
+        $cursor = 0;
 
-            do {
-                $query = ['SCAN', $cursor];
+        do {
+            $query = ['SCAN', $cursor];
 
-                if ($pattern !== null) {
-                    $query[] = 'MATCH';
-                    $query[] = $pattern;
-                }
+            if ($pattern !== null) {
+                $query[] = 'MATCH';
+                $query[] = $pattern;
+            }
 
-                if ($count !== null) {
-                    $query[] = 'COUNT';
-                    $query[] = $count;
-                }
+            if ($count !== null) {
+                $query[] = 'COUNT';
+                $query[] = $count;
+            }
 
-                [$cursor, $keys] = $this->queryExecutor->execute($query);
+            [$cursor, $keys] = $this->queryExecutor->execute($query);
 
-                foreach ($keys as $key) {
-                    yield $key;
-                }
-            } while ($cursor !== '0');
-        });
+            foreach ($keys as $key) {
+                yield $key;
+            }
+        } while ($cursor !== '0');
     }
 
     /**
