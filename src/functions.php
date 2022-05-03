@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\Cancellation;
-use Amp\Socket\ConnectContext;
 use Revolt\EventLoop;
 
 function toFloat(mixed $response): ?float
@@ -59,15 +57,4 @@ function redisConnector(?RedisConnector $connector = null): RedisConnector
     }
 
     return $map[$driver] ??= new RedisSocketConnector();
-}
-
-/**
- * @throws RedisException
- */
-function connect(
-    RedisConfig $config,
-    ?ConnectContext $context = null,
-    ?Cancellation $cancellation = null,
-): RespSocket {
-    return redisConnector()->connect($config, $context, $cancellation);
 }

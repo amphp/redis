@@ -1,40 +1,32 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Connection;
 
 use Amp\ByteStream\ClosedException;
-use Amp\Future;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
-final class RespSocket
+final class DefaultRespSocket implements RespSocket
 {
     private readonly Socket $socket;
 
     private readonly ConcurrentIterator $iterator;
 
-    private Future $backpressure;
-
     public function __construct(Socket $socket)
     {
-        $queue = new Queue();
-        $this->backpressure = Future::complete();
-        $backpressure = &$this->backpressure;
-
         $this->socket = $socket;
+
+        $queue = new Queue();
         $this->iterator = $queue->iterate();
 
-        $parser = new RespParser(static function ($message) use ($queue, &$backpressure): void {
-            $backpressure = $queue->pushAsync([$message]);
-        });
+        EventLoop::queue(static function () use ($socket, $queue): void {
+            $parser = new RespParser($queue);
 
-        EventLoop::queue(static function () use (&$backpressure, $socket, $parser, $queue): void {
             try {
                 while (null !== $chunk = $socket->read()) {
                     $parser->append($chunk);
-                    $backpressure->await();
                 }
 
                 $queue->complete();
@@ -43,11 +35,10 @@ final class RespSocket
             }
 
             $socket->close();
-            $parser->reset();
         });
     }
 
-    public function read(): ?array
+    public function read(): ?RespPayload
     {
         if (!$this->iterator->continue()) {
             return null;

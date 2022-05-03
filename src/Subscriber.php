@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Future;
 use Amp\Pipeline\Queue;
+use Amp\Redis\Connection\RespSocket;
 use Revolt\EventLoop;
 use function Amp\async;
 
@@ -116,7 +117,7 @@ final class Subscriber
                             $socket->write('psubscribe', $pattern);
                         }
 
-                        while ([$response] = $socket->read()) {
+                        while ($response = $socket->read()?->unwrap()) {
                             switch ($response[0]) {
                                 case 'message':
                                     $backpressure = [];

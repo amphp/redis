@@ -7,16 +7,25 @@ use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
+    private RedisConnector $connector;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->connector = new RedisSocketConnector();
+    }
+
     public function testRaw(): void
     {
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = connect($config);
+        $resp = $this->connector->connect($config);
 
         $resp->write('PING');
 
-        $this->assertEquals(['PONG'], $resp->read());
+        $this->assertSame('PONG', $resp->read()->unwrap());
 
         $resp->close();
 
@@ -31,11 +40,11 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = connect($config);
+        $resp = $this->connector->connect($config);
 
         $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], $resp->read());
+        $this->assertSame('OK', $resp->read()->unwrap());
 
         $this->assertNull($resp->read());
     }
@@ -45,11 +54,11 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = connect($config);
+        $resp = $this->connector->connect($config);
 
         $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], $resp->read());
+        $this->assertSame('OK', $resp->read()->unwrap());
 
         $resp->close();
 
@@ -61,11 +70,11 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = connect($config);
+        $resp = $this->connector->connect($config);
 
         $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], $resp->read());
+        $this->assertSame('OK', $resp->read()->unwrap());
 
         delay(0);
 
@@ -79,11 +88,11 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = connect($config);
+        $resp = $this->connector->connect($config);
 
         $resp->write('QUIT');
 
-        $this->assertEquals(['OK'], $resp->read());
+        $this->assertSame('OK', $resp->read()->unwrap());
 
         delay(0);
 
@@ -97,7 +106,7 @@ class BasicTest extends IntegrationTest
 
     public function testConnect(): void
     {
-        $this->assertEquals('PONG', $this->createInstance()->echo('PONG'));
+        $this->assertSame('PONG', $this->createInstance()->echo('PONG'));
     }
 
     public function testLongPayload(): void
@@ -105,7 +114,7 @@ class BasicTest extends IntegrationTest
         $redis = $this->createInstance();
         $payload = \str_repeat('a', 6000000);
         $redis->set('foobar', $payload);
-        $this->assertEquals($payload, $redis->get('foobar'));
+        $this->assertSame($payload, $redis->get('foobar'));
     }
 
     public function testAcceptsOnlyScalars(): void
@@ -121,7 +130,7 @@ class BasicTest extends IntegrationTest
     {
         $redis = $this->createInstance();
         $redis->echo('1');
-        $this->assertEquals('2', ($redis->echo('2')));
+        $this->assertSame('2', $redis->echo('2'));
     }
 
     /**
@@ -132,6 +141,6 @@ class BasicTest extends IntegrationTest
         $redis = $this->createInstance();
         $redis->echo('1');
         delay(0.1);
-        $this->assertEquals('2', ($redis->echo('2')));
+        $this->assertSame('2', $redis->echo('2'));
     }
 }

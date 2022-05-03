@@ -3,8 +3,10 @@
 namespace Amp\Redis;
 
 use Amp\Cancellation;
-use Amp\Socket\ConnectContext;
+use Amp\Redis\Connection\DefaultRespSocket;
+use Amp\Redis\Connection\RespSocket;
 use Amp\Socket;
+use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;
 
 class RedisSocketConnector implements RedisConnector
@@ -21,7 +23,7 @@ class RedisSocketConnector implements RedisConnector
     ): RespSocket {
         try {
             $context = ($context ?? new ConnectContext)->withConnectTimeout($config->getTimeout());
-            $respSocket = new RespSocket(
+            $respSocket = new DefaultRespSocket(
                 ($this->connector ?? Socket\socketConnector())->connect($config->getConnectUri(), $context)
             );
         } catch (Socket\SocketException $e) {
@@ -45,11 +47,7 @@ class RedisSocketConnector implements RedisConnector
         }
 
         for ($i = 0; $i < $readsNeeded; $i++) {
-            if ([$response] = $respSocket->read()) {
-                if ($response instanceof \Throwable) {
-                    throw $response;
-                }
-            } else {
+            if (!($respSocket->read()?->unwrap())) {
                 throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
             }
         }

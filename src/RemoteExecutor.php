@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\ByteStream\StreamException;
 use Amp\DeferredFuture;
 use Amp\Future;
+use Amp\Redis\Connection\RespSocket;
 use Amp\Socket;
 use Revolt\EventLoop;
 
@@ -98,17 +99,17 @@ final class RemoteExecutor implements QueryExecutor
                             $socket->write(...$args);
                         }
 
-                        while ([$response] = $socket->read()) {
+                        while ($response = $socket->read()) {
                             /** @var DeferredFuture $deferred */
                             [$deferred] = $queue->shift();
                             if ($queue->isEmpty()) {
                                 $socket->unreference();
                             }
 
-                            if ($response instanceof \Throwable) {
-                                $deferred->error($response);
-                            } else {
-                                $deferred->complete($response);
+                            try {
+                                $deferred->complete($response->unwrap());
+                            } catch (\Throwable $exception) {
+                                $deferred->error($exception);
                             }
                         }
                     } catch (\Throwable) {

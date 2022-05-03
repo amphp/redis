@@ -1,6 +1,10 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Connection;
+
+use Amp\Pipeline\Queue;
+use Amp\Redis\ParserException;
+use Amp\Redis\QueryException;
 
 final class RespParser
 {
@@ -11,35 +15,24 @@ final class RespParser
     public const TYPE_BULK_STRING = '$';
     public const TYPE_INTEGER = ':';
 
-    private readonly \Closure $responseCallback;
     private string $buffer = '';
     private ?array $currentResponse = null;
     private array $arrayStack = [];
     private int $currentSize = 0;
     private array $arraySizes = [];
 
-    public function __construct(\Closure $responseCallback)
-    {
-        $this->responseCallback = $responseCallback;
+    public function __construct(
+        private readonly Queue $queue,
+    ) {
     }
 
-    public function reset(): void
+    public function append(string $data): void
     {
-        $this->buffer = '';
-        $this->currentResponse = null;
-        $this->arrayStack = [];
-        $this->currentSize = 0;
-        $this->arraySizes = [];
-    }
+        $this->buffer .= $data;
 
-    public function append(string $str): void
-    {
-        $this->buffer .= $str;
-
-        do {
+        while (\strlen($this->buffer)) {
             $type = $this->buffer[0];
             $pos = \strpos($this->buffer, self::CRLF);
-
             if ($pos === false) {
                 return;
             }
@@ -59,21 +52,19 @@ final class RespParser
                     if ($length === -1) {
                         $payload = null;
                         $remove = $pos + 2;
-                    } else {
-                        if (\strlen($this->buffer) < $pos + $length + 4) {
-                            return;
-                        }
-
-                        $payload = \substr($this->buffer, $pos + 2, $length);
-                        $remove = $pos + $length + 4;
+                        break;
                     }
 
+                    if (\strlen($this->buffer) < $pos + $length + 4) {
+                        return; // Entire payload not received.
+                    }
+
+                    $payload = \substr($this->buffer, $pos + 2, $length);
+                    $remove = $pos + $length + 4;
                     break;
 
                 default:
-                    throw new ParserException(
-                        \sprintf('unknown resp data type: %s', $type)
-                    );
+                    throw new ParserException('Unknown resp data type: ' . $type);
             }
 
             $this->buffer = \substr($this->buffer, $remove);
@@ -85,8 +76,8 @@ final class RespParser
                     break;
 
                 case self::TYPE_ERROR:
-                    $payload = new QueryException($payload);
-                    break;
+                    $this->queue->push(new RespError(new QueryException($payload)));
+                    continue 2;
 
                 default:
                     break;
@@ -109,7 +100,7 @@ final class RespParser
 
                 while (--$this->currentSize === 0) {
                     if (\count($this->arrayStack) === 0) {
-                        ($this->responseCallback)($this->currentResponse);
+                        $this->queue->push(new RespValue($this->currentResponse));
                         $this->currentResponse = null;
                         break;
                     }
@@ -126,13 +117,13 @@ final class RespParser
                     $this->currentSize = $payload;
                     $this->arrayStack = $this->arraySizes = $this->currentResponse = [];
                 } elseif ($payload === 0) {
-                    ($this->responseCallback)([]);
+                    $this->queue->push(new RespValue([]));
                 } else {
-                    ($this->responseCallback)(null);
+                    $this->queue->push(new RespValue(null));
                 }
             } else { // single data type response
-                ($this->responseCallback)($payload);
+                $this->queue->push(new RespValue($payload));
             }
-        } while (isset($this->buffer[0]));
+        }
     }
 }

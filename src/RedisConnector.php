@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Cancellation;
+use Amp\Redis\Connection\RespSocket;
 use Amp\Socket\ConnectContext;
 
 interface RedisConnector
