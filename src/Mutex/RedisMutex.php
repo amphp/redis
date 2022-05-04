@@ -17,7 +17,7 @@ use function Amp\delay;
  *
  * @author Niklas Keller <me@kelunik.com>
  */
-final class Mutex implements KeyedMutex
+final class RedisMutex implements KeyedMutex
 {
     private const LOCK = <<<LOCK
 local lock = KEYS[1]
