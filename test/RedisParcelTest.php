@@ -45,8 +45,8 @@ class RedisParcelTest extends IntegrationTest
     {
         $config = RedisConfig::fromUri($this->getUri());
         $executorFactory = new RemoteExecutorFactory($config);
-        $mutex = new RedisMutex($executorFactory);
+        $mutex = new RedisMutex($executorFactory->createQueryExecutor());
 
-        return RedisParcel::create($executorFactory, $mutex, \bin2hex(\random_bytes(8)), $value);
+        return RedisParcel::create($mutex, \bin2hex(\random_bytes(8)), $value);
     }
 }

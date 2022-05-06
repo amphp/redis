@@ -22,31 +22,28 @@ final class RedisParcel implements Parcel
     private Serializer $serializer;
 
     public static function create(
-        QueryExecutorFactory $executorFactory,
         RedisMutex $mutex,
         string $key,
         mixed $value,
         ?Serializer $serializer = null,
     ): self {
-        return (new self($executorFactory, $mutex, $key, $serializer))->init($value);
+        return (new self($mutex, $key, $serializer))->init($value);
     }
 
     public static function use(
-        QueryExecutorFactory $executorFactory,
         RedisMutex $mutex,
         string $key,
         ?Serializer $serializer = null,
     ): self {
-        return (new self($executorFactory, $mutex, $key, $serializer))->open();
+        return (new self($mutex, $key, $serializer))->open();
     }
 
     private function __construct(
-        QueryExecutorFactory $executorFactory,
         RedisMutex $mutex,
         string $key,
         ?Serializer $serializer = null
     ) {
-        $this->redis = new Redis($executorFactory->createQueryExecutor());
+        $this->redis = new Redis($mutex->getQueryExecutor());
         $this->mutex = $mutex;
         $this->key = $key;
         $this->serializer = $serializer ?? new NativeSerializer();
@@ -85,6 +82,11 @@ final class RedisParcel implements Parcel
     public function __destruct()
     {
         $this->free();
+    }
+
+    public function getQueryExecutor(): QueryExecutor
+    {
+        return $this->mutex->getQueryExecutor();
     }
 
     public function unwrap(): mixed

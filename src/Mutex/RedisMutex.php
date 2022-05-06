@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Mutex;
 
-use Amp\Redis\QueryExecutorFactory;
+use Amp\Redis\QueryExecutor;
 use Amp\Redis\Redis;
 use Amp\Redis\RedisException;
 use Amp\Sync\KeyedMutex;
@@ -102,7 +102,7 @@ RENEW;
 
     private readonly MutexOptions $options;
 
-    private readonly Redis $sharedConnection;
+    private readonly Redis $redis;
 
     /** @var array<string, array{string, string}> */
     private array $locks = [];
@@ -119,12 +119,12 @@ RENEW;
      * Constructs a new Mutex instance. A single instance can be used to create as many locks as you need.
      */
     public function __construct(
-        QueryExecutorFactory $queryExecutorFactory,
+        private readonly QueryExecutor $queryExecutor,
         ?MutexOptions $options = null,
         ?PsrLogger $logger = null,
     ) {
         $this->options = $options ?? new MutexOptions;
-        $this->sharedConnection = new Redis($queryExecutorFactory->createQueryExecutor());
+        $this->redis = new Redis($queryExecutor);
         $this->logger = $logger ?? new NullLogger;
     }
 
@@ -133,6 +133,11 @@ RENEW;
         if ($this->watcher !== null) {
             EventLoop::cancel($this->watcher);
         }
+    }
+
+    public function getQueryExecutor(): QueryExecutor
+    {
+        return $this->queryExecutor;
     }
 
     /**
@@ -157,7 +162,7 @@ RENEW;
             $attempts++;
             $this->numberOfAttempts++;
 
-            $result = $this->sharedConnection->eval(
+            $result = $this->redis->eval(
                 self::LOCK,
                 ["{$prefix}lock:{$key}", "{$prefix}lock-queue:{$key}"],
                 [$token, $this->options->getLockExpiration() * 1000, ($this->options->getLockExpiration() + $this->options->getLockTimeout()) * 1000]
@@ -168,7 +173,7 @@ RENEW;
                     // In very rare cases we might not get the lock, but are at the head of the queue and another
                     // client moves us into the lock position. Deleting the token from the queue and afterwards
                     // unlocking solves this. No yield required, because we use the same connection.
-                    $this->sharedConnection->getList("{$prefix}lock-queue:{$key}")->remove($token);
+                    $this->redis->getList("{$prefix}lock-queue:{$key}")->remove($token);
                     $this->unlock($key, $token);
 
                     throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() * 1000 . ' ms');
@@ -226,7 +231,7 @@ RENEW;
 
         for ($attempt = 0; $attempt < 2; $attempt++) {
             try {
-                $result = $this->sharedConnection->eval(
+                $result = $this->redis->eval(
                     self::UNLOCK,
                     ["{$prefix}lock:{$key}"],
                     [$token]
@@ -251,11 +256,11 @@ RENEW;
     {
         $locks = &$this->locks;
         $options = $this->options;
-        $sharedConnection = $this->sharedConnection;
+        $redis = $this->redis;
 
         $this->watcher = EventLoop::repeat(
             $options->getLockRenewInterval(),
-            static function () use (&$locks, $options, $sharedConnection): void {
+            static function () use (&$locks, $options, $redis): void {
                 \assert(!empty($locks));
 
                 $keys = [];
@@ -269,7 +274,7 @@ RENEW;
                 }
 
                 try {
-                    $sharedConnection->eval(self::RENEW, $keys, $arguments);
+                    $redis->eval(self::RENEW, $keys, $arguments);
                 } catch (RedisException $e) {
                     $this->logger->error('Renew operation failed, locks might expire', [
                         'exception' => $e,
