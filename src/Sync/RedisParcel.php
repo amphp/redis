@@ -12,16 +12,6 @@ use Revolt\EventLoop;
 
 final class RedisParcel implements Parcel
 {
-    private string $key;
-
-    private Redis $redis;
-
-    private RedisMutex $mutex;
-
-    private int $initiator = 0;
-
-    private Serializer $serializer;
-
     public static function create(
         RedisMutex $mutex,
         string $key,
@@ -39,14 +29,18 @@ final class RedisParcel implements Parcel
         return (new self($mutex, $key, $serializer))->open();
     }
 
+    private readonly Redis $redis;
+
+    private int $initiator = 0;
+
+    private readonly Serializer $serializer;
+
     private function __construct(
-        RedisMutex $mutex,
-        string $key,
+        private readonly RedisMutex $mutex,
+        private readonly string $key,
         ?Serializer $serializer = null
     ) {
         $this->redis = new Redis($mutex->getQueryExecutor());
-        $this->mutex = $mutex;
-        $this->key = $key;
         $this->serializer = $serializer ?? new NativeSerializer();
     }
 
