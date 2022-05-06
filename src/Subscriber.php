@@ -130,7 +130,7 @@ final class Subscriber
                                     break;
 
                                 case 'pmessage':
-                                    self::mapToQueues($queues[$response[1]] ?? [], [$response[3], $response[2]]);
+                                    self::mapToQueues($patternQueues[$response[1]] ?? [], [$response[3], $response[2]]);
                                     break;
                             }
                         }
