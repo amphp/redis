@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Redis\Mutex;
+namespace Amp\Redis\Sync;
 
 use Amp\Redis\RedisConfig;
 use Amp\Redis\IntegrationTest;
@@ -8,7 +8,7 @@ use Amp\Redis\RemoteExecutorFactory;
 use Revolt\EventLoop;
 use function Amp\delay;
 
-class MutexTest extends IntegrationTest
+class RedisMutexTest extends IntegrationTest
 {
     private MutexOptions $options;
 

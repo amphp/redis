@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Redis\Mutex;
+namespace Amp\Redis\Sync;
 
 use Amp\Redis\RedisException;
 

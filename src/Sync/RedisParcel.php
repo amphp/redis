@@ -1,8 +1,9 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Sync;
 
-use Amp\Redis\Mutex\RedisMutex;
+use Amp\Redis\QueryExecutor;
+use Amp\Redis\Redis;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 use Amp\Sync\Parcel;

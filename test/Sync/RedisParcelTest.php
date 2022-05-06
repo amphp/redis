@@ -1,8 +1,10 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Sync;
 
-use Amp\Redis\Mutex\RedisMutex;
+use Amp\Redis\IntegrationTest;
+use Amp\Redis\RedisConfig;
+use Amp\Redis\RemoteExecutorFactory;
 use function Amp\async;
 use function Amp\delay;
 
