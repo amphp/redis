@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\ByteStream\StreamException;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RespSocket;
@@ -134,7 +135,7 @@ final class Subscriber
                                     break;
                             }
                         }
-                    } catch (\Throwable) {
+                    } catch (StreamException) {
                         // Attempt to reconnect after failure.
                     } finally {
                         $socket = null;

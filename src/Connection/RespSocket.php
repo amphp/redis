@@ -9,6 +9,9 @@ interface RespSocket
 {
     /**
      * @return RespPayload|null
+     *
+     * @throws SocketException
+     * @throws StreamException
      */
     public function read(): ?RespPayload;
 
