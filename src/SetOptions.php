@@ -5,7 +5,7 @@ namespace Amp\Redis;
 final class SetOptions
 {
     private ?int $ttl = null;
-    private string $ttlUnit;
+    private string $ttlUnit = 'EX';
     private ?string $existenceFlag = null;
 
     public function withTtl(int $seconds): self

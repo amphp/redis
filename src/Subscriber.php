@@ -118,21 +118,19 @@ final class Subscriber
                         }
 
                         while ($response = $socket->read()?->unwrap()) {
+                            /** @psalm-suppress RedundantCondition */
+                            \assert(
+                                \is_array($response) && \array_is_list($response),
+                                'Expected a list from RespSocket on subscription',
+                            );
+
                             switch ($response[0]) {
                                 case 'message':
-                                    $backpressure = [];
-                                    foreach ($queues[$response[1]] ?? [] as $queue) {
-                                        $backpressure[] = $queue->pushAsync($response[2]);
-                                    }
-                                    Future\awaitAll($backpressure);
+                                    self::mapToQueues($queues[$response[1]] ?? [], $response[2]);
                                     break;
 
                                 case 'pmessage':
-                                    $backpressure = [];
-                                    foreach ($this->patternQueues[$response[1]] ?? [] as $queue) {
-                                        $backpressure[] = $queue->pushAsync([$response[3], $response[2]]);
-                                    }
-                                    Future\awaitAll($backpressure);
+                                    self::mapToQueues($queues[$response[1]] ?? [], [$response[3], $response[2]]);
                                     break;
                             }
                         }
@@ -226,5 +224,18 @@ final class Subscriber
                 })->ignore();
             }
         }
+    }
+
+    /**
+     * @param array<int, Queue> $queues
+     * @param mixed $value
+     */
+    private static function mapToQueues(array $queues, mixed $value): void
+    {
+        $backpressure = [];
+        foreach ($queues as $queue) {
+            $backpressure[] = $queue->pushAsync($value);
+        }
+        Future\awaitAll($backpressure);
     }
 }

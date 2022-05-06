@@ -100,7 +100,7 @@ final class RedisConfig
             throw new RedisException('Invalid redis configuration URI: ' . $uri);
         }
 
-        $scheme = match (\strtolower($uri->getScheme())) {
+        $scheme = match (\strtolower($uri->getScheme() ?? '')) {
             'tcp', 'redis' => 'tcp',
             'unix' => 'unix',
             default => throw new RedisException(

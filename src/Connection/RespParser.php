@@ -76,7 +76,7 @@ final class RespParser
                     break;
 
                 case self::TYPE_ERROR:
-                    $this->queue->push(new RespError(new QueryException($payload)));
+                    $this->queue->push(new RespError(new QueryException($payload ?? 'Unknown error')));
                     continue 2;
 
                 default:
@@ -85,6 +85,7 @@ final class RespParser
 
             if ($this->currentResponse !== null) { // extend array response
                 if ($type === self::TYPE_ARRAY) {
+                    \assert(\is_int($payload));
                     if ($payload >= 0) {
                         $this->arraySizes[] = $this->currentSize;
                         $this->arrayStack[] = &$this->currentResponse;
@@ -113,6 +114,7 @@ final class RespParser
                     unset($this->arrayStack[$key]);
                 }
             } elseif ($type === self::TYPE_ARRAY) { // start new array response
+                \assert(\is_int($payload));
                 if ($payload > 0) {
                     $this->currentSize = $payload;
                     $this->arrayStack = $this->arraySizes = $this->currentResponse = [];

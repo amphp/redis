@@ -89,7 +89,7 @@ final class RedisParcel implements Parcel
 
     public function unwrap(): mixed
     {
-        $value = $this->redis->get($this->key);
+        $value = $this->redis->get($this->key) ?? throw new ParcelException('Could not unwrap parcel: key not found');
         return $this->serializer->unserialize($value);
     }
 

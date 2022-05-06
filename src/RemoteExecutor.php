@@ -47,14 +47,13 @@ final class RemoteExecutor implements QueryExecutor
 
         $command = \strtolower($query[0] ?? '');
 
-        $future = $this->enqueue(...$query);
-
-        if ($command === 'quit') {
-            $socket = $this->socket;
-            $future->finally(static fn () => $socket->close());
+        try {
+            $response = $this->enqueue(...$query)->await();
+        } finally {
+            if ($command === 'quit') {
+                $this->socket?->close();
+            }
         }
-
-        $response = $future->await();
 
         if ($command === 'select') {
             $this->database = (int) $query[1];
