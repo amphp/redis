@@ -2,22 +2,19 @@
 
 namespace Amp\Redis\Connection;
 
-use Amp\ByteStream\StreamException;
-use Amp\Redis\SocketException;
+use Amp\Redis\RedisException;
 
 interface RespSocket
 {
     /**
      * @return RespPayload|null
      *
-     * @throws SocketException
-     * @throws StreamException
+     * @throws RedisException If reading from the socket fails.
      */
     public function read(): ?RespPayload;
 
     /**
-     * @throws SocketException
-     * @throws StreamException
+     * @throws RedisException If writing to the socket fails.
      */
     public function write(string ...$args): void;
 

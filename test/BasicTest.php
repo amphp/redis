@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\ByteStream\ClosedException;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest
@@ -29,7 +28,7 @@ class BasicTest extends IntegrationTest
 
         $resp->close();
 
-        $this->expectException(ClosedException::class);
+        $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
         $resp->write('PING');
@@ -78,7 +77,7 @@ class BasicTest extends IntegrationTest
 
         delay(0);
 
-        $this->expectException(ClosedException::class);
+        $this->expectException(RedisException::class);
 
         $resp->write('PING');
     }
@@ -98,7 +97,7 @@ class BasicTest extends IntegrationTest
 
         $resp->close();
 
-        $this->expectException(ClosedException::class);
+        $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
         $resp->write('PING');
