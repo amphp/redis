@@ -2,8 +2,6 @@
 
 namespace Amp\Redis;
 
-use Revolt\EventLoop;
-
 function toFloat(mixed $response): ?float
 {
     if ($response === null) {
@@ -41,20 +39,4 @@ function toMap(?array $values): ?array
 function toNull(mixed $response): void
 {
     // nothing to do
-}
-
-/**
- * Set or access the global RedisConnector instance.
- */
-function redisConnector(?RedisConnector $connector = null): RedisConnector
-{
-    static $map;
-    $map ??= new \WeakMap();
-    $driver = EventLoop::getDriver();
-
-    if ($connector) {
-        return $map[$driver] = $connector;
-    }
-
-    return $map[$driver] ??= new RedisSocketConnector();
 }

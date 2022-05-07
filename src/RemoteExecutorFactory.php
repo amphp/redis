@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\Redis\Connection\RedisConnector;
+
 final class RemoteExecutorFactory implements QueryExecutorFactory
 {
     public function __construct(

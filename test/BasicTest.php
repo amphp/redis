@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\Redis\Connection\RedisConnector;
+use Amp\Redis\Connection\RedisSocketConnector;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest

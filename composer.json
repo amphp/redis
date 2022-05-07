@@ -42,6 +42,7 @@
             "Amp\\Redis\\": "src"
         },
         "files": [
+            "src/Connection/functions.php",
             "src/functions.php"
         ]
     },

@@ -1,9 +1,10 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Connection;
 
 use Amp\Cancellation;
-use Amp\Redis\Connection\RespSocket;
+use Amp\Redis\RedisConfig;
+use Amp\Redis\RedisException;
 use Amp\Socket\ConnectContext;
 
 interface RedisConnector

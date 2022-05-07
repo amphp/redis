@@ -1,10 +1,11 @@
 <?php
 
-namespace Amp\Redis;
+namespace Amp\Redis\Connection;
 
 use Amp\Cancellation;
-use Amp\Redis\Connection\DefaultRespSocket;
-use Amp\Redis\Connection\RespSocket;
+use Amp\Redis\RedisConfig;
+use Amp\Redis\RedisException;
+use Amp\Redis\SocketException;
 use Amp\Socket;
 use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;

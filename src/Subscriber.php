@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\ByteStream\StreamException;
 use Amp\Future;
 use Amp\Pipeline\Queue;
+use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\RespSocket;
 use Revolt\EventLoop;
 use function Amp\async;
@@ -88,7 +89,7 @@ final class Subscriber
     private function run(): void
     {
         $config = $this->config;
-        $connector = $this->connector ?? redisConnector();
+        $connector = $this->connector ?? Connection\redisConnector();
         $running = &$this->running;
         $socket = &$this->socket;
         $queues = &$this->queues;

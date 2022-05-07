@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\ByteStream\StreamException;
 use Amp\DeferredFuture;
 use Amp\Future;
+use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\RespSocket;
 use Amp\Socket;
 use Revolt\EventLoop;
@@ -81,7 +82,7 @@ final class RemoteExecutor implements QueryExecutor
     private function run(): void
     {
         $config = $this->config;
-        $connector = $this->connector ?? redisConnector();
+        $connector = $this->connector ?? Connection\redisConnector();
         $queue = $this->queue;
         $running = &$this->running;
         $socket = &$this->socket;
