@@ -22,10 +22,15 @@
     "require": {
         "php": ">=8.1",
         "amphp/amp": "^3",
+        "amphp/byte-stream": "^2",
         "amphp/cache": "^2",
         "amphp/pipeline": "^1",
+        "amphp/serialization": "^1",
         "amphp/socket": "^2",
         "amphp/sync": "^2",
+        "revolt/event-loop": "^0.2.4",
+        "psr/log": "^3.0",
+        "league/uri": "^6.5",
         "league/uri-parser": "^1.4"
     },
     "require-dev": {
