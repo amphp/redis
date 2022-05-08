@@ -5,7 +5,7 @@ namespace Amp\Redis\Connection;
 use Amp\Cancellation;
 use Amp\Redis\RedisConfig;
 use Amp\Redis\RedisException;
-use Amp\Redis\SocketException;
+use Amp\Redis\RedisSocketException;
 use Amp\Socket;
 use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;
@@ -28,7 +28,7 @@ class RedisSocketConnector implements RedisConnector
                 ($this->connector ?? Socket\socketConnector())->connect($config->getConnectUri(), $context)
             );
         } catch (Socket\SocketException $e) {
-            throw new SocketException(
+            throw new RedisSocketException(
                 'Failed to connect to redis instance (' . $config->getConnectUri() . ')',
                 0,
                 $e

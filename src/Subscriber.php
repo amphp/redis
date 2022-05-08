@@ -142,7 +142,7 @@ final class Subscriber
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new SocketException($exception->getMessage(), 0, $exception);
+                $exception = new RedisSocketException($exception->getMessage(), 0, $exception);
 
                 $queueGroups = \array_merge($this->queues, $this->patternQueues);
 

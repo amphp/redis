@@ -117,7 +117,7 @@ final class RemoteExecutor implements QueryExecutor
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new SocketException($exception->getMessage(), 0, $exception);
+                $exception = new RedisSocketException($exception->getMessage(), 0, $exception);
 
                 while (!$queue->isEmpty()) {
                     /** @var DeferredFuture $deferred */

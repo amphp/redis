@@ -49,7 +49,7 @@ class AuthTest extends AsyncTestCase
         $redis = new Redis(new RemoteExecutor(
             RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, 'wrong'))
         ));
-        $this->expectException(SocketException::class);
+        $this->expectException(RedisSocketException::class);
 
         $this->expectExceptionMessage('invalid');
 

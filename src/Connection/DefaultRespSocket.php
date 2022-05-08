@@ -5,7 +5,7 @@ namespace Amp\Redis\Connection;
 use Amp\ByteStream\StreamException;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
-use Amp\Redis\SocketException;
+use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
@@ -32,7 +32,7 @@ final class DefaultRespSocket implements RespSocket
 
                 $queue->complete();
             } catch (StreamException $e) {
-                $queue->error(new SocketException($e->getMessage(), 0, $e));
+                $queue->error(new RedisSocketException($e->getMessage(), 0, $e));
             }
 
             $socket->close();
@@ -51,7 +51,7 @@ final class DefaultRespSocket implements RespSocket
     public function write(string ...$args): void
     {
         if ($this->socket->isClosed()) {
-            throw new SocketException('Redis connection already closed');
+            throw new RedisSocketException('Redis connection already closed');
         }
 
         $payload = \implode("\r\n", \array_map(fn (string $arg) => '$' . \strlen($arg) . "\r\n" . $arg, $args));
@@ -60,7 +60,7 @@ final class DefaultRespSocket implements RespSocket
         try {
             $this->socket->write($payload);
         } catch (StreamException $e) {
-            throw new SocketException($e->getMessage(), 0, $e);
+            throw new RedisSocketException($e->getMessage(), 0, $e);
         }
     }
 
