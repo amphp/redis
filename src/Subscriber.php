@@ -2,7 +2,6 @@
 
 namespace Amp\Redis;
 
-use Amp\ByteStream\StreamException;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RedisConnector;
@@ -136,7 +135,7 @@ final class Subscriber
                                     break;
                             }
                         }
-                    } catch (StreamException) {
+                    } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
                         $socket = null;
@@ -190,7 +189,7 @@ final class Subscriber
                         if ($this->isIdle()) {
                             $this->socket?->unreference();
                         }
-                    } catch (RedisException $exception) {
+                    } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
                     }
                 })->ignore();

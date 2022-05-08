@@ -2,12 +2,10 @@
 
 namespace Amp\Redis;
 
-use Amp\ByteStream\StreamException;
 use Amp\DeferredFuture;
 use Amp\Future;
 use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\RespSocket;
-use Amp\Socket;
 use Revolt\EventLoop;
 
 final class RemoteExecutor implements QueryExecutor
@@ -72,7 +70,7 @@ final class RemoteExecutor implements QueryExecutor
 
         try {
             $this->socket?->write(...$args);
-        } catch (Socket\SocketException|StreamException $exception) {
+        } catch (RedisException) {
             $this->socket = null;
         }
 
@@ -112,7 +110,7 @@ final class RemoteExecutor implements QueryExecutor
                                 $deferred->error($exception);
                             }
                         }
-                    } catch (\Throwable) {
+                    } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
                         $socket = null;
