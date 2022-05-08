@@ -66,7 +66,7 @@ jobs:
             composer info -D
 
       - name: Run tests
-        run: AMPHP_TEST_REDIS_INSTANCE=tcp://localhost:6379 vendor/bin/phpunit ${{ matrix.phpunit-flags }}
+        run: AMPHP_TEST_REDIS_INSTANCE=tcp://redis:6379 vendor/bin/phpunit ${{ matrix.phpunit-flags }}
 
       - name: Run static analysis
         run: vendor/bin/psalm.phar
