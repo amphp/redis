@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Sync;
 
-final class MutexOptions
+final class RedisMutexOptions
 {
     private string $keyPrefix = '';
     private float $lockRenewInterval = 1;

@@ -100,7 +100,7 @@ for i=1,#KEYS do
 end
 RENEW;
 
-    private readonly MutexOptions $options;
+    private readonly RedisMutexOptions $options;
 
     private readonly Redis $redis;
 
@@ -120,10 +120,10 @@ RENEW;
      */
     public function __construct(
         private readonly QueryExecutor $queryExecutor,
-        ?MutexOptions $options = null,
+        ?RedisMutexOptions $options = null,
         ?PsrLogger $logger = null,
     ) {
-        $this->options = $options ?? new MutexOptions;
+        $this->options = $options ?? new RedisMutexOptions;
         $this->redis = new Redis($queryExecutor);
         $this->logger = $logger ?? new NullLogger;
     }
@@ -176,7 +176,7 @@ RENEW;
                     $this->redis->getList("{$prefix}lock-queue:{$key}")->remove($token);
                     $this->unlock($key, $token);
 
-                    throw new LockException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() * 1000 . ' ms');
+                    throw new RedisMutexException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() * 1000 . ' ms');
                 }
 
                 // A negative integer as reply means we're still in the queue and indicates the queue position.

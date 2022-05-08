@@ -10,14 +10,14 @@ use function Amp\delay;
 
 class RedisMutexTest extends IntegrationTest
 {
-    private MutexOptions $options;
+    private RedisMutexOptions $options;
 
     private RedisMutex $mutex;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->options = (new MutexOptions())->withLockTimeout(1);
+        $this->options = (new RedisMutexOptions())->withLockTimeout(1);
         $executorFactory = new RemoteExecutorFactory(RedisConfig::fromUri($this->getUri()));
 
         $this->mutex = new RedisMutex($executorFactory->createQueryExecutor(), $this->options);
