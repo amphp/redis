@@ -229,7 +229,6 @@ final class Subscriber
 
     /**
      * @param array<int, Queue> $queues
-     * @param mixed $value
      */
     private static function mapToQueues(array $queues, mixed $value): void
     {

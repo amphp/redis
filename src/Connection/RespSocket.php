@@ -7,8 +7,6 @@ use Amp\Redis\RedisException;
 interface RespSocket
 {
     /**
-     * @return RespPayload|null
-     *
      * @throws RedisException If reading from the socket fails.
      */
     public function read(): ?RespPayload;

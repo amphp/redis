@@ -2,8 +2,8 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\RedisConfig;
 use Amp\Redis\IntegrationTest;
+use Amp\Redis\RedisConfig;
 use Amp\Redis\RemoteExecutorFactory;
 use Revolt\EventLoop;
 use function Amp\delay;

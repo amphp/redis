@@ -17,7 +17,7 @@ class RedisSocketConnector implements RedisConnector
     ) {
     }
 
-    function connect(
+    public function connect(
         RedisConfig $config,
         ?ConnectContext $context = null,
         ?Cancellation $cancellation = null,

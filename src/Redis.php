@@ -181,9 +181,6 @@ final class Redis
     }
 
     /**
-     * @param string|null $pattern
-     * @param int|null $count
-     *
      * @return \Traversable<string>
      *
      * @link https://redis.io/commands/scan
