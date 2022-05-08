@@ -428,7 +428,7 @@ final class Redis
         return $this->queryExecutor->execute(['setnx', $key, $value], toBool(...));
     }
 
-    public function set(string $key, string $value, ?SetOptions $options = null): bool
+    public function set(string $key, string $value, ?RedisSetOptions $options = null): bool
     {
         $query = ['set', $key, $value];
 

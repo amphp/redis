@@ -4,11 +4,11 @@ namespace Amp\Redis;
 
 use PHPUnit\Framework\TestCase;
 
-class SetOptionsTest extends TestCase
+class RedisSetOptionsTest extends TestCase
 {
     public function test(): void
     {
-        $options = new SetOptions;
+        $options = new RedisSetOptions;
 
         $this->assertSame([], $options->toQuery());
         $this->assertSame(['EX', 3], $options->withTtl(3)->toQuery());

@@ -4,11 +4,11 @@ namespace Amp\Redis;
 
 use PHPUnit\Framework\TestCase;
 
-class SortOptionsTest extends TestCase
+class RedisSortOptionsTest extends TestCase
 {
     public function test(): void
     {
-        $options = new SortOptions;
+        $options = new RedisSortOptions;
 
         $this->assertFalse($options->hasLimit());
         $this->assertTrue($options->withLimit(0, 100)->hasLimit());

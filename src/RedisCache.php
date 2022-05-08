@@ -40,7 +40,7 @@ final class RedisCache implements Cache
         }
 
         try {
-            $options = new SetOptions;
+            $options = new RedisSetOptions;
 
             if ($ttl !== null) {
                 $options = $options->withTtl($ttl);

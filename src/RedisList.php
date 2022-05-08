@@ -164,8 +164,8 @@ final class RedisList
     /**
      * @link https://redis.io/commands/sort
      */
-    public function sort(?SortOptions $sort = null): array
+    public function sort(?RedisSortOptions $sort = null): array
     {
-        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new SortOptions)->toQuery()));
+        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new RedisSortOptions)->toQuery()));
     }
 }

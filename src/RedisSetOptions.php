@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-final class SetOptions
+final class RedisSetOptions
 {
     private ?int $ttl = null;
     private string $ttlUnit = 'EX';
