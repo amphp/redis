@@ -11,28 +11,28 @@ final class Subscription implements \IteratorAggregate
 
     public function __construct(
         private readonly ConcurrentIterator $iterator,
-        \Closure $unsubscribe
+        \Closure $unsubscribe,
     ) {
         $this->unsubscribe = $unsubscribe;
     }
 
     public function __destruct()
     {
-        if ($this->unsubscribe) {
-            $unsubscribe = $this->unsubscribe;
-            EventLoop::queue($unsubscribe);
-        }
+        $this->unsubscribe();
     }
 
+    /**
+     * Using a Generator to maintain a reference to $this.
+     */
     public function getIterator(): \Traversable
     {
-        return $this->iterator;
+        yield from $this->iterator;
     }
 
     public function unsubscribe(): void
     {
         if ($this->unsubscribe) {
-            ($this->unsubscribe)();
+            EventLoop::queue($this->unsubscribe);
             $this->unsubscribe = null;
         }
 
