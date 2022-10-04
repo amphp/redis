@@ -25,6 +25,19 @@ class RedisSortedSetTest extends IntegrationTest
         $this->assertSame(1, $set->count(1, 1));
         $this->assertSame(1, $set->count(3, 3));
 
+        $this->assertSame(['foo'], $set->getRange(0, 0));
+        $this->assertSame(['foo', 'bar'], $set->getRange(0, 1));
+        $this->assertSame(['bar'], $set->getRange(1, 2));
+
+        $this->assertSame(['foo'], $set->getRangeByScore(1, 2));
+        $this->assertSame(['foo', 'bar'], $set->getRangeByScore(1, 4));
+
+        $this->assertSame(['bar', 'foo'], $set->getReverseRange(0, 1));
+        $this->assertSame(['foo'], $set->getReverseRange(1, 2));
+
+        $this->assertSame(['foo'], $set->getReverseRangeByScore(2, 1));
+        $this->assertSame(['bar', 'foo'], $set->getReverseRangeByScore(4, 1));
+
         $this->assertSame(0, $set->getRank('foo'));
         $this->assertSame(1, $set->getRank('bar'));
 
