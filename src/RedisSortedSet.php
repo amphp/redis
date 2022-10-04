@@ -37,6 +37,50 @@ final class RedisSortedSet
     }
 
     /**
+     * @param int $start
+     * @param int $end
+     *
+     * @return Promise
+     */
+    public function getRange(int $start, int $end): Promise
+    {
+        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end]);
+    }
+
+    /**
+     * @param int $start
+     * @param int $end
+     *
+     * @return Promise
+     */
+    public function getReverseRange(int $start, int $end): Promise
+    {
+        return $this->queryExecutor->execute(['zrevrange', $this->key, $start, $end]);
+    }
+
+    /**
+     * @param float $min
+     * @param float $max
+     *
+     * @return Promise
+     */
+    public function getRangeByScore(float $min, float $max): Promise
+    {
+        return $this->queryExecutor->execute(['zrangebyscore', $this->key, $min, $max]);
+    }
+
+    /**
+     * @param float $min
+     * @param float $max
+     *
+     * @return Promise
+     */
+    public function getReverseRangeByScore(float $min, float $max): Promise
+    {
+        return $this->queryExecutor->execute(['ZREVRANGEBYSCORE', $this->key, $min, $max]);
+    }
+
+    /**
      * @return Promise<int>
      */
     public function getSize(): Promise
