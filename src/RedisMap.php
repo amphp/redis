@@ -123,7 +123,7 @@ final class RedisMap
     /**
      * @param string $field
      *
-     * @return Promise<string>
+     * @return Promise<string|null>
      *
      * @link https://redis.io/commands/hget
      */

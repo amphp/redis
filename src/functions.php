@@ -11,6 +11,7 @@ const toFloat = __NAMESPACE__ . '\toFloat';
 const toBool = __NAMESPACE__ . '\toBool';
 const toNull = __NAMESPACE__ . '\toNull';
 const toMap = __NAMESPACE__ . '\toMap';
+const toFloatMap = __NAMESPACE__ . '\toFloatMap';
 
 function toFloat($response): ?float
 {
@@ -41,6 +42,22 @@ function toMap(?array $values): ?array
 
     for ($i = 0; $i < $size; $i += 2) {
         $result[$values[$i]] = $values[$i + 1];
+    }
+
+    return $result;
+}
+
+function toFloatMap(?array $values): ?array
+{
+    if ($values === null) {
+        return null;
+    }
+
+    $size = \count($values);
+    $result = [];
+
+    for ($i = 0; $i < $size; $i += 2) {
+        $result[$values[$i]] = (float)$values[$i + 1];
     }
 
     return $result;
