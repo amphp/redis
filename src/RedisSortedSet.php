@@ -42,9 +42,14 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getRange(int $start, int $end): Promise
+    public function getRange(int $start, int $end, RangeOptions $options = null): Promise
     {
-        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end]);
+        $query = ['zrange', $this->key, $start, $end];
+        if ($options !== null) {
+            $query = \array_merge($query, $options->toQuery());
+        }
+
+        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
     }
 
     /**
@@ -53,9 +58,14 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getReverseRange(int $start, int $end): Promise
+    public function getReverseRange(int $start, int $end, RangeOptions $options = null): Promise
     {
-        return $this->queryExecutor->execute(['zrevrange', $this->key, $start, $end]);
+        $query = ['zrevrange', $this->key, $start, $end];
+        if ($options !== null) {
+            $query = \array_merge($query, $options->toQuery());
+        }
+
+        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
     }
 
     /**
@@ -64,9 +74,14 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getRangeByScore(float $min, float $max): Promise
+    public function getRangeByScore(float $min, float $max, RangeByScoreOptions $options = null): Promise
     {
-        return $this->queryExecutor->execute(['zrangebyscore', $this->key, $min, $max]);
+        $query = ['zrangebyscore', $this->key, $min, $max];
+        if ($options !== null) {
+            $query = \array_merge($query, $options->toQuery());
+        }
+
+        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
     }
 
     /**
@@ -75,9 +90,14 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getReverseRangeByScore(float $min, float $max): Promise
+    public function getReverseRangeByScore(float $min, float $max, RangeByScoreOptions $options = null): Promise
     {
-        return $this->queryExecutor->execute(['ZREVRANGEBYSCORE', $this->key, $min, $max]);
+        $query = ['zrevrangebyscore', $this->key, $min, $max];
+        if ($options !== null) {
+            $query = \array_merge($query, $options->toQuery());
+        }
+
+        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
     }
 
     /**
@@ -89,12 +109,12 @@ final class RedisSortedSet
     }
 
     /**
-     * @param int $min
-     * @param int $max
+     * @param float $min
+     * @param float $max
      *
      * @return Promise<int>
      */
-    public function count(int $min, int $max): Promise
+    public function count(float $min, float $max): Promise
     {
         return $this->queryExecutor->execute(['zcount', $this->key, $min, $max]);
     }

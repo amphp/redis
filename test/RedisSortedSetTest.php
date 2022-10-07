@@ -28,16 +28,20 @@ class RedisSortedSetTest extends IntegrationTest
         $this->assertSame(1, yield $set->count(3, 3));
 
         $this->assertSame(['foo'], yield $set->getRange(0, 0));
+        $this->assertSame(['foo' => 1.0], yield $set->getRange(0, 0, (new RangeOptions())->withScores()));
         $this->assertSame(['foo', 'bar'], yield $set->getRange(0, 1));
         $this->assertSame(['bar'], yield $set->getRange(1, 2));
 
         $this->assertSame(['foo'], yield $set->getRangeByScore(1, 2));
+        $this->assertSame(['foo' => 1.0], yield $set->getRangeByScore(1, 2, (new RangeByScoreOptions())->withScores()));
         $this->assertSame(['foo', 'bar'], yield $set->getRangeByScore(1, 4));
 
         $this->assertSame(['bar', 'foo'], yield $set->getReverseRange(0, 1));
+        $this->assertSame(['bar' => 3.0], yield $set->getReverseRange(0, 0, (new RangeOptions())->withScores()));
         $this->assertSame(['foo'], yield $set->getReverseRange(1, 2));
 
         $this->assertSame(['foo'], yield $set->getReverseRangeByScore(2, 1));
+        $this->assertSame(['bar' => 3.0, 'foo' => 1.0], yield $set->getReverseRangeByScore(4, 1, (new RangeByScoreOptions())->withScores()));
         $this->assertSame(['bar', 'foo'], yield $set->getReverseRangeByScore(4, 1));
 
         $this->assertSame(0, yield $set->getRank('foo'));

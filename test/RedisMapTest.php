@@ -20,6 +20,7 @@ class RedisMapTest extends IntegrationTest
             'rofl' => 'lol',
         ]));
 
+        $this->assertSame(null, yield $map->getValue('does_not_exist'));
         $this->assertSame('bar', yield $map->getValue('foo'));
         $this->assertSame('lol', yield $map->getValue('rofl'));
         $this->assertSame(2, yield $map->getSize());
