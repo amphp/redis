@@ -29,7 +29,7 @@
         "amphp/socket": "^2",
         "amphp/sync": "^2",
         "revolt/event-loop": "^0.2.4",
-        "psr/log": "^3.0",
+        "psr/log": "^1|^2|^3",
         "league/uri": "^6.5",
         "league/uri-parser": "^1.4"
     },
