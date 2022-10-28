@@ -42,7 +42,7 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getRange(int $start, int $end, RangeOptions $options = null): Promise
+    public function getRange(int $start, int $end, ?RangeByScoreOptions $options = null): Promise
     {
         $query = ['zrange', $this->key, $start, $end];
         if ($options !== null) {
@@ -58,7 +58,7 @@ final class RedisSortedSet
      *
      * @return Promise
      */
-    public function getReverseRange(int $start, int $end, RangeOptions $options = null): Promise
+    public function getReverseRange(int $start, int $end, ?RangeByScoreOptions $options = null): Promise
     {
         $query = ['zrevrange', $this->key, $start, $end];
         if ($options !== null) {
