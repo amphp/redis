@@ -32,6 +32,7 @@ final class Subscription implements \IteratorAggregate
     public function unsubscribe(): void
     {
         if ($this->unsubscribe) {
+            /** @psalm-suppress InvalidArgument */
             EventLoop::queue($this->unsubscribe);
             $this->unsubscribe = null;
         }
