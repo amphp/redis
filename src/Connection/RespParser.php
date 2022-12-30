@@ -7,9 +7,6 @@ use Amp\Pipeline\Queue;
 use Amp\Redis\ParserException;
 use Amp\Redis\QueryException;
 
-/**
- * @psalm-import-type RedisValue from RespPayload
- */
 final class RespParser extends Parser
 {
     private const CRLF = "\r\n";
@@ -41,9 +38,9 @@ final class RespParser extends Parser
     }
 
     /**
-     * @return string|int|null|\Generator<int, int|string, string, RedisValue>
+     * @return int|string|\Generator<int, int|string, string, string|null|list<mixed>>
      */
-    private static function parseValue(string $type, string $payload): \Generator|string|int|null
+    private static function parseValue(string $type, string $payload): \Generator|int|string
     {
         return match ($type) {
             self::TYPE_SIMPLE_STRING => $payload,
@@ -56,7 +53,7 @@ final class RespParser extends Parser
     }
 
     /**
-     * @return \Generator<int, int|string, string, string>
+     * @return \Generator<int, int|string, string, string|null>
      */
     private static function parseString(int $length): \Generator
     {
@@ -79,7 +76,7 @@ final class RespParser extends Parser
     }
 
     /**
-     * @return \Generator<int, int|string, string, list<mixed>>
+     * @return \Generator<int, int|string, string, list<mixed>|null>
      */
     private static function parseArray(int $count): \Generator
     {
