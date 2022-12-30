@@ -38,7 +38,7 @@
         "amphp/process": "^2",
         "phpunit/phpunit": "^9",
         "amphp/php-cs-fixer-config": "^2-dev",
-        "psalm/phar": "^4.22"
+        "psalm/phar": "^5.4"
     },
     "minimum-stability": "beta",
     "prefer-stable": true,
@@ -53,8 +53,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\Redis\\": "test",
-            "Amp\\Cache\\Test\\": "vendor/amphp/cache/test"
+            "Amp\\Redis\\": "test"
         }
     }
 }

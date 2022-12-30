@@ -10,6 +10,10 @@ use Amp\Sync\Parcel;
 use Amp\Sync\ParcelException;
 use Revolt\EventLoop;
 
+/**
+ * @template T
+ * @implements Parcel<T>
+ */
 final class RedisParcel implements Parcel
 {
     public static function create(

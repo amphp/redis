@@ -7,6 +7,10 @@ use Amp\Cache\CacheException;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 
+/**
+ * @template T
+ * @implements Cache<T>
+ */
 final class RedisCache implements Cache
 {
     public function __construct(

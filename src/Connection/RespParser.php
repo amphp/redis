@@ -6,6 +6,9 @@ use Amp\Pipeline\Queue;
 use Amp\Redis\ParserException;
 use Amp\Redis\QueryException;
 
+/**
+ * @psalm-suppress UnsupportedReferenceUsage
+ */
 final class RespParser
 {
     public const CRLF = "\r\n";

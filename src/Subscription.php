@@ -5,10 +5,17 @@ namespace Amp\Redis;
 use Amp\Pipeline\ConcurrentIterator;
 use Revolt\EventLoop;
 
+/**
+ * @implements \IteratorAggregate<int, string>
+ */
 final class Subscription implements \IteratorAggregate
 {
+    /** @var null|\Closure():void */
     private ?\Closure $unsubscribe;
 
+    /**
+     * @param \Closure():void $unsubscribe
+     */
     public function __construct(
         private readonly ConcurrentIterator $iterator,
         \Closure $unsubscribe,
@@ -32,7 +39,6 @@ final class Subscription implements \IteratorAggregate
     public function unsubscribe(): void
     {
         if ($this->unsubscribe) {
-            /** @psalm-suppress InvalidArgument */
             EventLoop::queue($this->unsubscribe);
             $this->unsubscribe = null;
         }
