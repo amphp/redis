@@ -24,6 +24,7 @@
         "amphp/amp": "^3",
         "amphp/byte-stream": "^2",
         "amphp/cache": "^2",
+        "amphp/parser": "^1",
         "amphp/pipeline": "^1",
         "amphp/serialization": "^1",
         "amphp/socket": "^2",

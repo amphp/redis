@@ -5,6 +5,7 @@ namespace Amp\Redis\Connection;
 use Amp\ByteStream\StreamException;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
+use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
@@ -27,12 +28,13 @@ final class DefaultRespSocket implements RespSocket
 
             try {
                 while (null !== $chunk = $socket->read()) {
-                    $parser->append($chunk);
+                    $parser->push($chunk);
                 }
 
+                $parser->cancel();
                 $queue->complete();
-            } catch (StreamException $e) {
-                $queue->error(new RedisSocketException($e->getMessage(), 0, $e));
+            } catch (RedisException $e) {
+                $queue->error($e);
             }
 
             $socket->close();

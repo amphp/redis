@@ -29,7 +29,7 @@ final class RedisCache implements Cache
 
             return $this->serializer->unserialize($data);
         } catch (RedisException $e) {
-            throw new CacheException("Fetching '${key}' from cache failed", 0, $e);
+            throw new CacheException("Fetching '$key' from cache failed", 0, $e);
         }
     }
 
