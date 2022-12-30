@@ -7,6 +7,9 @@ use Amp\Pipeline\Queue;
 use Amp\Redis\ParserException;
 use Amp\Redis\QueryException;
 
+/**
+ * @psalm-import-type RedisValue from RespPayload
+ */
 final class RespParser extends Parser
 {
     private const CRLF = "\r\n";
@@ -22,22 +25,26 @@ final class RespParser extends Parser
         parent::__construct(self::parser($queue));
     }
 
-    public static function parser(Queue $queue): \Generator
+    /**
+     * @return \Generator<int, int|string, string, void>
+     */
+    private static function parser(Queue $queue): \Generator
     {
         while (true) {
             try {
-                $queue->push(new RespValue(yield from self::consume()));
+                $value = self::parseValue(yield 1, yield self::CRLF);
+                $queue->push(new RespValue($value instanceof \Generator ? yield from $value : $value));
             } catch (QueryException $e) {
                 $queue->push(new RespError($e));
             }
         }
     }
 
-    private static function consume(): \Generator
+    /**
+     * @return string|int|null|\Generator<int, int|string, string, RedisValue>
+     */
+    private static function parseValue(string $type, string $payload): \Generator|string|int|null
     {
-        $type = yield 1;
-        $payload = yield self::CRLF;
-
         switch ($type) {
             case self::TYPE_SIMPLE_STRING:
                 return $payload;
@@ -48,32 +55,28 @@ final class RespParser extends Parser
             case self::TYPE_BULK_STRING:
                 $length = (int) $payload;
 
+                if ($length < -1) {
+                    throw new ParserException('Invalid string length: ' . $length);
+                }
+
                 if ($length === -1) {
                     return null;
                 }
 
-                $payload = match ($length) {
-                    0 => '',
-                    default => yield $length,
-                };
-
-                yield self::CRLF;
-
-                return $payload;
+                return self::parseString($length);
 
             case self::TYPE_ARRAY:
                 $count = (int) $payload;
+
+                if ($count < -1) {
+                    throw new ParserException('Invalid array length: ' . $count);
+                }
 
                 if ($count === -1) {
                     return null;
                 }
 
-                $payload = [];
-                for ($i = 0; $i < $count; $i++) {
-                    $payload[] = yield from self::consume();
-                }
-
-                return $payload;
+                return self::parseArray($count);
 
             case self::TYPE_ERROR:
                 throw new QueryException($payload);
@@ -81,5 +84,34 @@ final class RespParser extends Parser
             default:
                 throw new ParserException('Unknown resp data type: ' . $type);
         }
+    }
+
+    /**
+     * @return \Generator<int, int|string, string, string>
+     */
+    private static function parseString(int $length): \Generator
+    {
+        $payload = match ($length) {
+            0 => '',
+            default => yield $length,
+        };
+
+        yield self::CRLF;
+
+        return $payload;
+    }
+
+    /**
+     * @return \Generator<int, int|string, string, list<mixed>>
+     */
+    private static function parseArray(int $count): \Generator
+    {
+        $payload = [];
+        for ($i = 0; $i < $count; $i++) {
+            $value = self::parseValue(yield 1, yield self::CRLF);
+            $payload[] = $value instanceof \Generator ? yield from $value : $value;
+        }
+
+        return $payload;
     }
 }

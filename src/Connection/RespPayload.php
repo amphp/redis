@@ -2,10 +2,13 @@
 
 namespace Amp\Redis\Connection;
 
+/**
+ * @psalm-type RedisValue = int|string|list<mixed>|null
+ */
 interface RespPayload
 {
     /**
-     * @return int|string|list<int>|list<string>|null
+     * @return RedisValue
      */
     public function unwrap(): int|string|array|null;
 }
