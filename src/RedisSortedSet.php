@@ -1,4 +1,5 @@
-<?php /** @noinspection DuplicatedCode */
+<?php declare(strict_types=1);
+/** @noinspection DuplicatedCode */
 
 namespace Amp\Redis;
 
