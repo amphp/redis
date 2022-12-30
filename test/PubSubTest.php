@@ -2,8 +2,8 @@
 
 namespace Amp\Redis;
 
-use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
+use Amp\Pipeline\Pipeline;
 use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\delay;
@@ -32,7 +32,7 @@ class PubSubTest extends IntegrationTest
     public function testBasic(): void
     {
         $subscription = $this->subscriber->subscribe('foo');
-        $iterator = new ConcurrentIterableIterator($subscription);
+        $iterator = Pipeline::fromIterable($subscription)->getIterator();
 
         // Use async() to not block, because we publish in the same coroutine
         $promise = async(fn () => $this->getNextValue($iterator));
@@ -64,9 +64,9 @@ class PubSubTest extends IntegrationTest
     public function testMulti(): void
     {
         $subscription1 = $this->subscriber->subscribe('foo');
-        $iterator1 = new ConcurrentIterableIterator($subscription1);
+        $iterator1 = Pipeline::fromIterable($subscription1)->getIterator();
         $subscription2 = $this->subscriber->subscribe('foo');
-        $iterator2 = new ConcurrentIterableIterator($subscription2);
+        $iterator2 = Pipeline::fromIterable($subscription2)->getIterator();
 
         delay(0.1); // Enter event loop so subscriber has time to connect.
 
@@ -89,7 +89,7 @@ class PubSubTest extends IntegrationTest
     public function testStream(): void
     {
         $subscription = $this->subscriber->subscribe('foo');
-        $iterator = new ConcurrentIterableIterator($subscription);
+        $iterator = Pipeline::fromIterable($subscription)->getIterator();
 
         $producer = EventLoop::repeat(0.1, function (): void {
             $this->redis->publish('foo', 'bar');
