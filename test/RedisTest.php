@@ -46,11 +46,12 @@ class RedisTest extends IntegrationTest
         $this->assertSame('', $this->redis->getRange('string', 2));
         $this->assertSame("\xF0", $this->redis->getRange('string', 0, -2));
 
-        $this->assertTrue($this->redis->set('number', 3));
+        $this->assertSame(3, $this->redis->increment('number', 3));
+        $this->assertSame('3', $this->redis->get('number'));
         $this->assertSame(2, $this->redis->decrement('number'));
         $this->assertSame(4, $this->redis->increment('number', 2));
         $this->assertSame(2, $this->redis->decrement('number', 2));
-        $this->assertSame('2', $this->redis->getAndSet('number', 3));
+        $this->assertSame('2', $this->redis->getAndSet('number', '3'));
         $this->assertSame('3', $this->redis->get('number'));
         $this->assertSame(4, $this->redis->increment('number'));
         $this->assertSame(6, $this->redis->increment('number', 2));

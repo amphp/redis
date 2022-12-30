@@ -25,7 +25,7 @@ class RedisMapTest extends IntegrationTest
         $this->assertSame(1, $map->remove('foo'));
         $this->assertFalse($map->hasKey('foo'));
 
-        $this->assertTrue($map->setValue('number', 1));
+        $this->assertTrue($map->setValue('number', '1'));
         $this->assertSame(2, $map->increment('number'));
         $this->assertSame(3.5, $map->incrementByFloat('number', 1.5));
 

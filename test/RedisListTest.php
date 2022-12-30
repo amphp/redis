@@ -16,8 +16,8 @@ class RedisListTest extends IntegrationTest
         $this->assertSame(['b', 'a'], $list->getRange());
         $this->assertSame(['b'], $list->getRange(0, 0));
         $this->assertSame(['a'], $list->getRange(1));
-        $this->assertSame('b', $list->get(0));
-        $this->assertSame('a', $list->get(1));
+        $this->assertSame('b', $list->get('0'));
+        $this->assertSame('a', $list->get('1'));
         $list->set(0, 'b+');
         $this->assertSame(3, $list->pushTail('c'));
         $this->assertSame('c', $list->popTail());

@@ -7,7 +7,7 @@ class KeyTest extends IntegrationTest
     public function testKeys(): void
     {
         $this->assertEquals([], $this->redis->getKeys());
-        $this->redis->set('foo', 42);
+        $this->redis->set('foo', '42');
         $this->assertEquals(['foo'], $this->redis->getKeys());
     }
 
