@@ -45,45 +45,14 @@ final class RespParser extends Parser
      */
     private static function parseValue(string $type, string $payload): \Generator|string|int|null
     {
-        switch ($type) {
-            case self::TYPE_SIMPLE_STRING:
-                return $payload;
-
-            case self::TYPE_INTEGER:
-                return (int) $payload;
-
-            case self::TYPE_BULK_STRING:
-                $length = (int) $payload;
-
-                if ($length < -1) {
-                    throw new ParserException('Invalid string length: ' . $length);
-                }
-
-                if ($length === -1) {
-                    return null;
-                }
-
-                return self::parseString($length);
-
-            case self::TYPE_ARRAY:
-                $count = (int) $payload;
-
-                if ($count < -1) {
-                    throw new ParserException('Invalid array length: ' . $count);
-                }
-
-                if ($count === -1) {
-                    return null;
-                }
-
-                return self::parseArray($count);
-
-            case self::TYPE_ERROR:
-                throw new QueryException($payload);
-
-            default:
-                throw new ParserException('Unknown resp data type: ' . $type);
-        }
+        return match ($type) {
+            self::TYPE_SIMPLE_STRING => $payload,
+            self::TYPE_INTEGER => (int) $payload,
+            self::TYPE_BULK_STRING => self::parseString((int) $payload),
+            self::TYPE_ARRAY => self::parseArray((int) $payload),
+            self::TYPE_ERROR => throw new QueryException($payload),
+            default => throw new ParserException('Unknown resp data type: ' . $type),
+        };
     }
 
     /**
@@ -91,12 +60,20 @@ final class RespParser extends Parser
      */
     private static function parseString(int $length): \Generator
     {
+        if ($length < -1) {
+            throw new ParserException('Invalid string length: ' . $length);
+        }
+
+        if ($length === -1) {
+            return null;
+        }
+
         $payload = match ($length) {
             0 => '',
             default => yield $length,
         };
 
-        yield self::CRLF;
+        yield 2; // Remove trailing CRLF
 
         return $payload;
     }
@@ -106,6 +83,14 @@ final class RespParser extends Parser
      */
     private static function parseArray(int $count): \Generator
     {
+        if ($count < -1) {
+            throw new ParserException('Invalid array length: ' . $count);
+        }
+
+        if ($count === -1) {
+            return null;
+        }
+
         $payload = [];
         for ($i = 0; $i < $count; $i++) {
             $value = self::parseValue(yield 1, yield self::CRLF);
