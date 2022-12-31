@@ -3,7 +3,6 @@
 namespace Amp\Redis\Connection;
 
 use Amp\Parser\Parser;
-use Amp\Pipeline\Queue;
 use Amp\Redis\ParserException;
 use Amp\Redis\QueryException;
 
@@ -17,22 +16,27 @@ final class RespParser extends Parser
     private const TYPE_BULK_STRING = '$';
     private const TYPE_INTEGER = ':';
 
-    public function __construct(Queue $queue)
+    /**
+     * @param \Closure(RespPayload):void $push
+     */
+    public function __construct(\Closure $push)
     {
-        parent::__construct(self::parser($queue));
+        parent::__construct(self::parser($push));
     }
 
     /**
+     * @param \Closure(RespPayload):void $push
+     *
      * @return \Generator<int, int|string, string, void>
      */
-    private static function parser(Queue $queue): \Generator
+    private static function parser(\Closure $push): \Generator
     {
         while (true) {
             try {
                 $value = self::parseValue(yield 1, yield self::CRLF);
-                $queue->push(new RespValue($value instanceof \Generator ? yield from $value : $value));
+                $push(new RespValue($value instanceof \Generator ? yield from $value : $value));
             } catch (QueryException $e) {
-                $queue->push(new RespError($e));
+                $push(new RespError($e));
             }
         }
     }

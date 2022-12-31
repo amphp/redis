@@ -24,7 +24,8 @@ final class DefaultRespSocket implements RespSocket
         $this->iterator = $queue->iterate();
 
         EventLoop::queue(static function () use ($socket, $queue): void {
-            $parser = new RespParser($queue);
+            /** @psalm-suppress InvalidArgument */
+            $parser = new RespParser($queue->push(...));
 
             try {
                 while (null !== $chunk = $socket->read()) {

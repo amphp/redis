@@ -19,7 +19,7 @@ class ParserTest extends TestCase
         parent::setUp();
 
         $this->queue = new Queue(10);
-        $this->parser = new RespParser($this->queue);
+        $this->parser = new RespParser($this->queue->push(...));
         $this->iterator = $this->queue->iterate();
     }
 
