@@ -65,7 +65,7 @@ final class RedisSortedSet
     /**
      * @return Promise<list<string>>
      */
-    public function getRangeByScore(RangeBoundary $start, RangeBoundary $end, ?RangeOptions $options = null): Promise
+    public function getRangeByScore(ScoreBoundary $start, ScoreBoundary $end, ?RangeOptions $options = null): Promise
     {
         $query = ['zrange', $this->key, $start->toQuery(), $end->toQuery(), 'BYSCORE'];
         if ($options !== null) {
@@ -78,7 +78,7 @@ final class RedisSortedSet
     /**
      * @return Promise<array<string, float>>
      */
-    public function getRangeByScoreWithScores(RangeBoundary $start, RangeBoundary $end, ?RangeOptions $options = null): Promise
+    public function getRangeByScoreWithScores(ScoreBoundary $start, ScoreBoundary $end, ?RangeOptions $options = null): Promise
     {
         $query = ['zrange', $this->key, $start->toQuery(), $end->toQuery(), 'BYSCORE', 'WITHSCORES'];
         if ($options !== null) {
@@ -226,7 +226,7 @@ final class RedisSortedSet
     /**
      * @return Promise<int>
      */
-    public function removeRangeByScore(RangeBoundary $min, RangeBoundary $max): Promise
+    public function removeRangeByScore(ScoreBoundary $min, ScoreBoundary $max): Promise
     {
         return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery()]);
     }

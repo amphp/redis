@@ -32,19 +32,19 @@ class RedisSortedSetTest extends IntegrationTest
         $this->assertSame(['foo', 'bar'], yield $set->getRange(0, 1));
         $this->assertSame(['bar'], yield $set->getRange(1, 2));
 
-        $this->assertSame(['foo'], yield $set->getRangeByScore(RangeBoundary::inclusive(1), RangeBoundary::inclusive(2)));
-        $this->assertSame(['foo' => 1.0], yield $set->getRangeByScoreWithScores(RangeBoundary::inclusive(1), RangeBoundary::exclusive(3)));
-        $this->assertSame(['foo', 'bar'], yield $set->getRangeByScore(RangeBoundary::negativeInfinity(), RangeBoundary::inclusive(3)));
-        $this->assertSame(['foo'], yield $set->getRangeByScore(RangeBoundary::inclusive(1), RangeBoundary::exclusive(3)));
+        $this->assertSame(['foo'], yield $set->getRangeByScore(ScoreBoundary::inclusive(1), ScoreBoundary::inclusive(2)));
+        $this->assertSame(['foo' => 1.0], yield $set->getRangeByScoreWithScores(ScoreBoundary::inclusive(1), ScoreBoundary::exclusive(3)));
+        $this->assertSame(['foo', 'bar'], yield $set->getRangeByScore(ScoreBoundary::negativeInfinity(), ScoreBoundary::inclusive(3)));
+        $this->assertSame(['foo'], yield $set->getRangeByScore(ScoreBoundary::inclusive(1), ScoreBoundary::exclusive(3)));
 
 
         $this->assertSame(['bar', 'foo'], yield $set->getRange(0, 1, (new RangeOptions())->withReverseOrder()));
         $this->assertSame(['bar' => 3.0], yield $set->getRangeWithScores(0, 0, (new RangeOptions())->withReverseOrder()));
         $this->assertSame(['foo'], yield $set->getRange(1, 2, (new RangeOptions())->withReverseOrder()));
 
-        $this->assertSame(['foo'], yield $set->getRangeByScore(RangeBoundary::inclusive(2), RangeBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
-        $this->assertSame(['bar' => 3.0, 'foo' => 1.0], yield $set->getRangeByScoreWithScores(RangeBoundary::positiveInfinity(), RangeBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
-        $this->assertSame(['bar', 'foo'], yield $set->getRangeByScore(RangeBoundary::inclusive(3), RangeBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
+        $this->assertSame(['foo'], yield $set->getRangeByScore(ScoreBoundary::inclusive(2), ScoreBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
+        $this->assertSame(['bar' => 3.0, 'foo' => 1.0], yield $set->getRangeByScoreWithScores(ScoreBoundary::positiveInfinity(), ScoreBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
+        $this->assertSame(['bar', 'foo'], yield $set->getRangeByScore(ScoreBoundary::inclusive(3), ScoreBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
 
         $this->assertSame(0, yield $set->getRank('foo'));
         $this->assertSame(1, yield $set->getRank('bar'));
@@ -67,8 +67,8 @@ class RedisSortedSetTest extends IntegrationTest
             'baz' => 3.3,
         ]));
 
-        yield $set->removeRangeByScore(RangeBoundary::exclusive(2.2), RangeBoundary::positiveInfinity());
-        $this->assertSame(['foo', 'bar'], yield $set->getRangeByScore(RangeBoundary::negativeInfinity(), RangeBoundary::positiveInfinity()));
+        yield $set->removeRangeByScore(ScoreBoundary::exclusive(2.2), ScoreBoundary::positiveInfinity());
+        $this->assertSame(['foo', 'bar'], yield $set->getRangeByScore(ScoreBoundary::negativeInfinity(), ScoreBoundary::positiveInfinity()));
     }
 
     public function testLexSet(): \Generator
