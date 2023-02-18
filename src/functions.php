@@ -20,7 +20,7 @@ function toBool(mixed $response): ?bool
     return (bool) $response;
 }
 
-function toMap(?array $values): ?array
+function toMap(?array $values, ?\Closure $cast = null): ?array
 {
     if ($values === null) {
         return null;
@@ -30,7 +30,8 @@ function toMap(?array $values): ?array
     $result = [];
 
     for ($i = 0; $i < $size; $i += 2) {
-        $result[$values[$i]] = $values[$i + 1];
+        $value = $values[$i + 1];
+        $result[$values[$i]] = $cast ? $cast($value) : $value;
     }
 
     return $result;

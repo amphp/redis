@@ -1,5 +1,4 @@
 <?php declare(strict_types=1);
-/** @noinspection DuplicatedCode */
 
 namespace Amp\Redis;
 
@@ -14,6 +13,11 @@ final class RedisSortedSet
         $this->key = $key;
     }
 
+    /**
+     * @param array<string, int|float> $data
+     *
+     * @return int Number of items added.
+     */
     public function add(array $data): int
     {
         $payload = ['zadd', $this->key];
@@ -26,24 +30,68 @@ final class RedisSortedSet
         return $this->queryExecutor->execute($payload);
     }
 
-    public function getRange(int $start, int $end): array
+    /**
+     * @return list<string>
+     */
+    public function getRange(int $start, int $end, ?RangeOptions $options = null): array
     {
-        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end]);
+        $options ??= new RangeOptions();
+        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end, ...$options->toQuery()]);
     }
 
-    public function getReverseRange(int $start, int $end): array
+    /**
+     * @return array<string, float>
+     */
+    public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): array
     {
-        return $this->queryExecutor->execute(['zrevrange', $this->key, $start, $end]);
+        $options ??= new RangeOptions();
+        return $this->queryExecutor->execute([
+            'zrange',
+            $this->key,
+            $start,
+            $end,
+            'WITHSCORES',
+            ...$options->toQuery(),
+        ], static fn ($values) => toMap($values, toFloat(...)));
     }
 
-    public function getRangeByScore(float $min, float $max): array
+    /**
+     * @return list<string>
+     */
+    public function getRangeByScore(RangeBoundary $min, RangeBoundary $max, ?RangeOptions $options = null): array
     {
-        return $this->queryExecutor->execute(['zrangebyscore', $this->key, $min, $max]);
+        $options ??= new RangeOptions();
+        return $this->queryExecutor->execute([
+            'zrange',
+            $this->key,
+            $min->toQuery(),
+            $max->toQuery(),
+            'BYSCORE',
+            ...$options->toQuery(),
+        ]);
     }
 
-    public function getReverseRangeByScore(float $min, float $max): array
+    /**
+     * @return array<string, float>
+     */
+    public function getRangeByScoreWithScores(RangeBoundary $min, RangeBoundary $max, ?RangeOptions $options = null): array
     {
-        return $this->queryExecutor->execute(['zrevrangebyscore', $this->key, $min, $max]);
+        $options ??= new RangeOptions();
+        return $this->queryExecutor->execute([
+            'zrange',
+            $this->key,
+            $min->toQuery(),
+            $max->toQuery(),
+            'BYSCORE',
+            'WITHSCORES',
+            ...$options->toQuery(),
+        ], static fn ($values) => toMap($values, toFloat(...)));
+    }
+
+    public function getRangeLexicographically(string $start, string $end, ?RangeOptions $options = null): array
+    {
+        $options ??= new RangeOptions();
+        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end, 'BYLEX', ...$options->toQuery()]);
     }
 
     public function getSize(): int
@@ -121,9 +169,9 @@ final class RedisSortedSet
         return $this->queryExecutor->execute(['zremrangebyrank', $this->key, $start, $stop]);
     }
 
-    public function removeScoreRange(float $min, float $max): int
+    public function removeRangeByScore(RangeBoundary $min, RangeBoundary $max): int
     {
-        return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min, $max]);
+        return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery()]);
     }
 
     public function getReversedRank(string $member): ?int
