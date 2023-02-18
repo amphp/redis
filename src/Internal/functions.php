@@ -1,7 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis;
+namespace Amp\Redis\Internal;
 
+/** @internal */
 function toFloat(mixed $response): ?float
 {
     if ($response === null) {
@@ -11,6 +12,7 @@ function toFloat(mixed $response): ?float
     return (float) $response;
 }
 
+/** @internal */
 function toBool(mixed $response): ?bool
 {
     if ($response === null) {
@@ -20,6 +22,7 @@ function toBool(mixed $response): ?bool
     return (bool) $response;
 }
 
+/** @internal */
 function toMap(?array $values, ?\Closure $cast = null): ?array
 {
     if ($values === null) {
@@ -37,6 +40,7 @@ function toMap(?array $values, ?\Closure $cast = null): ?array
     return $result;
 }
 
+/** @internal */
 function toNull(mixed $response): void
 {
     // nothing to do

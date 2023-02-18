@@ -24,7 +24,7 @@ final class RedisMap
      */
     public function hasKey(string $field): bool
     {
-        return $this->queryExecutor->execute(['hexists', $this->key, $field], toBool(...));
+        return $this->queryExecutor->execute(['hexists', $this->key, $field], Internal\toBool(...));
     }
 
     /**
@@ -40,7 +40,7 @@ final class RedisMap
      */
     public function incrementByFloat(string $field, float $increment): float
     {
-        return $this->queryExecutor->execute(['hincrbyfloat', $this->key, $field, $increment], toFloat(...));
+        return $this->queryExecutor->execute(['hincrbyfloat', $this->key, $field, $increment], Internal\toFloat(...));
     }
 
     /**
@@ -65,7 +65,7 @@ final class RedisMap
      */
     public function getAll(): array
     {
-        return $this->queryExecutor->execute(['hgetall', $this->key], toMap(...));
+        return $this->queryExecutor->execute(['hgetall', $this->key], Internal\toMap(...));
     }
 
     /**
@@ -80,7 +80,7 @@ final class RedisMap
             $array[] = $value;
         }
 
-        $this->queryExecutor->execute($array, toNull(...));
+        $this->queryExecutor->execute($array, Internal\toNull(...));
     }
 
     /**
@@ -104,7 +104,7 @@ final class RedisMap
      */
     public function setValue(string $field, string $value): bool
     {
-        return $this->queryExecutor->execute(['hset', $this->key, $field, $value], toBool(...));
+        return $this->queryExecutor->execute(['hset', $this->key, $field, $value], Internal\toBool(...));
     }
 
     /**
@@ -113,7 +113,7 @@ final class RedisMap
      */
     public function setValueWithoutOverwrite(string $field, string $value): bool
     {
-        return $this->queryExecutor->execute(['hsetnx', $this->key, $field, $value], toBool(...));
+        return $this->queryExecutor->execute(['hsetnx', $this->key, $field, $value], Internal\toBool(...));
     }
 
     /**

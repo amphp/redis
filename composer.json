@@ -51,7 +51,7 @@
         },
         "files": [
             "src/Connection/functions.php",
-            "src/functions.php"
+            "src/Internal/functions.php"
         ]
     },
     "autoload-dev": {

@@ -150,7 +150,7 @@ final class RedisList
      */
     public function set(int $index, string $value): void
     {
-        $this->queryExecutor->execute(['lset', $this->key, $index, $value], toNull(...));
+        $this->queryExecutor->execute(['lset', $this->key, $index, $value], Internal\toNull(...));
     }
 
     /**
@@ -159,7 +159,7 @@ final class RedisList
      */
     public function trim(int $start = 0, int $stop = -1): void
     {
-        $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop], toNull(...));
+        $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop], Internal\toNull(...));
     }
 
     /**

@@ -52,7 +52,7 @@ final class RedisSortedSet
             $end,
             'WITHSCORES',
             ...$options->toQuery(),
-        ], static fn ($values) => toMap($values, toFloat(...)));
+        ], static fn ($values) => Internal\toMap($values, Internal\toFloat(...)));
     }
 
     /**
@@ -85,7 +85,7 @@ final class RedisSortedSet
             'BYSCORE',
             'WITHSCORES',
             ...$options->toQuery(),
-        ], static fn ($values) => toMap($values, toFloat(...)));
+        ], static fn ($values) => Internal\toMap($values, Internal\toFloat(...)));
     }
 
     public function getLexicographicRange(LexBoundary $start, LexBoundary $end, ?RangeOptions $options = null): array
@@ -113,7 +113,7 @@ final class RedisSortedSet
 
     public function increment(string $member, float $increment = 1): float
     {
-        return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], toFloat(...));
+        return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], Internal\toFloat(...));
     }
 
     /**
@@ -219,7 +219,7 @@ final class RedisSortedSet
 
     public function getScore(string $member): ?float
     {
-        return $this->queryExecutor->execute(['zscore', $this->key, $member], toFloat(...));
+        return $this->queryExecutor->execute(['zscore', $this->key, $member], Internal\toFloat(...));
     }
 
     /**
