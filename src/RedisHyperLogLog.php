@@ -16,7 +16,12 @@ final class RedisHyperLogLog
      */
     public function add(string $element, string ...$elements): bool
     {
-        return $this->queryExecutor->execute(\array_merge(['pfadd', $this->key, $element], $elements), Internal\toBool(...));
+        return $this->queryExecutor->execute([
+            'pfadd',
+            $this->key,
+            $element,
+            ...\array_values($elements),
+        ], Internal\toBool(...));
     }
 
     /**
@@ -32,6 +37,11 @@ final class RedisHyperLogLog
      */
     public function storeUnion(string $sourceKey, string ...$sourceKeys): void
     {
-        $this->queryExecutor->execute(\array_merge(['pfmerge', $this->key, $sourceKey], $sourceKeys), Internal\toNull(...));
+        $this->queryExecutor->execute([
+            'pfmerge',
+            $this->key,
+            $sourceKey,
+            ...\array_values($sourceKeys),
+        ], Internal\toNull(...));
     }
 }

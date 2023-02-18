@@ -40,7 +40,7 @@ final class Redis
 
     public function query(string $arg, string ...$args): mixed
     {
-        return $this->queryExecutor->execute(\array_merge([$arg], $args));
+        return $this->queryExecutor->execute([$arg, ...\array_values($args)]);
     }
 
     /**
@@ -48,7 +48,7 @@ final class Redis
      */
     public function delete(string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['del', $key], $keys));
+        return $this->queryExecutor->execute(['del', $key, ...\array_values($keys)]);
     }
 
     /**
@@ -265,7 +265,7 @@ final class Redis
      */
     public function storeBitwiseAnd(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['bitop', 'and', $destination, $key], $keys));
+        return $this->queryExecutor->execute(['bitop', 'and', $destination, $key, ...\array_values($keys)]);
     }
 
     /**
@@ -273,7 +273,7 @@ final class Redis
      */
     public function storeBitwiseOr(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['bitop', 'or', $destination, $key], $keys));
+        return $this->queryExecutor->execute(['bitop', 'or', $destination, $key, ...\array_values($keys)]);
     }
 
     /**
@@ -281,7 +281,7 @@ final class Redis
      */
     public function storeBitwiseXor(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['bitop', 'xor', $destination, $key], $keys));
+        return $this->queryExecutor->execute(['bitop', 'xor', $destination, $key, ...\array_values($keys)]);
     }
 
     /**
@@ -384,7 +384,7 @@ final class Redis
      */
     public function getMultiple(string $key, string ...$keys): array
     {
-        $query = \array_merge(['mget', $key], $keys);
+        $query = ['mget', $key, ...\array_values($keys)];
 
         return $this->queryExecutor->execute($query, static function ($response) use ($keys) {
             return \array_combine($keys, $response);
@@ -393,6 +393,8 @@ final class Redis
 
     /**
      * @link https://redis.io/commands/mset
+     *
+     * @param array<string, int|float|string> $data
      */
     public function setMultiple(array $data): void
     {
@@ -408,6 +410,8 @@ final class Redis
 
     /**
      * @link https://redis.io/commands/msetnx
+     *
+     * @param array<string, int|float|string> $data
      */
     public function setMultipleWithoutOverwrite(array $data): void
     {
@@ -431,13 +435,8 @@ final class Redis
 
     public function set(string $key, string $value, ?RedisSetOptions $options = null): bool
     {
-        $query = ['set', $key, $value];
-
-        if ($options !== null) {
-            $query = \array_merge($query, $options->toQuery());
-        }
-
-        return $this->queryExecutor->execute($query, Internal\toBool(...));
+        $options ??= new RedisSetOptions();
+        return $this->queryExecutor->execute(['set', $key, $value, ...$options->toQuery()], Internal\toBool(...));
     }
 
     /**
@@ -497,7 +496,7 @@ final class Redis
      */
     public function getNumberOfSubscriptions(string ...$channels): array
     {
-        $query = \array_merge(['pubsub', 'numsub'], $channels);
+        $query = ['pubsub', 'numsub', ...\array_values($channels)];
 
         return $this->queryExecutor->execute($query, static function ($response) {
             $result = [];
@@ -788,12 +787,12 @@ final class Redis
     {
         try {
             $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
-            $query = \array_merge(['evalsha', $sha1, \count($keys)], $keys, $args);
+            $query = ['evalsha', $sha1, \count($keys), ...\array_values($keys), ...\array_values($args)];
 
             return $this->queryExecutor->execute($query);
         } catch (QueryException $e) {
             if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
-                $query = \array_merge(['eval', $script, \count($keys)], $keys, $args);
+                $query = ['eval', $script, \count($keys), ...\array_values($keys), ...\array_values($args)];
                 return $this->queryExecutor->execute($query);
             }
 

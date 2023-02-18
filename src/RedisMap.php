@@ -16,7 +16,7 @@ final class RedisMap
      */
     public function remove(string $field, string ...$fields): int
     {
-        return $this->queryExecutor->execute(\array_merge(['hdel', $this->key, $field], $fields));
+        return $this->queryExecutor->execute(['hdel', $this->key, $field, ...\array_values($fields)]);
     }
 
     /**
@@ -70,6 +70,8 @@ final class RedisMap
 
     /**
      * @link https://redis.io/commands/hmset
+     *
+     * @param array<string, int|float|string> $data
      */
     public function setValues(array $data): void
     {
@@ -96,7 +98,7 @@ final class RedisMap
      */
     public function getValues(string $field, string ...$fields): array
     {
-        return $this->queryExecutor->execute(\array_merge(['hmget', $this->key, $field], $fields));
+        return $this->queryExecutor->execute(['hmget', $this->key, $field, ...\array_values($fields)]);
     }
 
     /**

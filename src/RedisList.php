@@ -49,7 +49,7 @@ final class RedisList
      */
     public function pushHead(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(\array_merge(['lpush', $this->key, $value], $values));
+        return $this->queryExecutor->execute(['lpush', $this->key, $value, ...\array_values($values)]);
     }
 
     /**
@@ -57,7 +57,7 @@ final class RedisList
      */
     public function pushHeadIfExists(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(\array_merge(['lpushx', $this->key, $value], $values));
+        return $this->queryExecutor->execute(['lpushx', $this->key, $value, ...\array_values($values)]);
     }
 
     /**
@@ -65,7 +65,7 @@ final class RedisList
      */
     public function pushTail(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(\array_merge(['rpush', $this->key, $value], $values));
+        return $this->queryExecutor->execute(['rpush', $this->key, $value, ...\array_values($values)]);
     }
 
     /**
@@ -73,7 +73,7 @@ final class RedisList
      */
     public function pushTailIfExists(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(\array_merge(['rpushx', $this->key, $value], $values));
+        return $this->queryExecutor->execute(['rpushx', $this->key, $value, ...\array_values($values)]);
     }
 
     /**
@@ -165,8 +165,8 @@ final class RedisList
     /**
      * @link https://redis.io/commands/sort
      */
-    public function sort(?RedisSortOptions $sort = null): array
+    public function sort(?RedisSortOptions $options = null): array
     {
-        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new RedisSortOptions)->toQuery()));
+        return $this->queryExecutor->execute(['SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery()]);
     }
 }

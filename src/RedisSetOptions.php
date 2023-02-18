@@ -42,6 +42,9 @@ final class RedisSetOptions
         return $clone;
     }
 
+    /**
+     * @return list<int|string>
+     */
     public function toQuery(): array
     {
         $query = [];

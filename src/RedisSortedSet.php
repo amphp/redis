@@ -163,7 +163,7 @@ final class RedisSortedSet
 
     public function remove(string $member, string ...$members): int
     {
-        return $this->queryExecutor->execute(\array_merge(['zrem', $this->key, $member], $members));
+        return $this->queryExecutor->execute(['zrem', $this->key, $member, ...\array_values($members)]);
     }
 
     public function removeLexicographicRange(LexBoundary $min, LexBoundary $max): int
@@ -260,8 +260,8 @@ final class RedisSortedSet
     /**
      * @link https://redis.io/commands/sort
      */
-    public function sort(?RedisSortOptions $sort = null): array
+    public function sort(?RedisSortOptions $options = null): array
     {
-        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new RedisSortOptions)->toQuery()));
+        return $this->queryExecutor->execute(['SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery()]);
     }
 }

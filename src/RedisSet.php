@@ -13,7 +13,7 @@ final class RedisSet
 
     public function add(string $member, string ...$members): int
     {
-        return $this->queryExecutor->execute(\array_merge(['sadd', $this->key, $member], $members));
+        return $this->queryExecutor->execute(['sadd', $this->key, $member, ...\array_values($members)]);
     }
 
     public function getSize(): int
@@ -23,22 +23,22 @@ final class RedisSet
 
     public function diff(string ...$keys): array
     {
-        return $this->queryExecutor->execute(\array_merge(['sdiff', $this->key], $keys));
+        return $this->queryExecutor->execute(['sdiff', $this->key, ...\array_values($keys)]);
     }
 
     public function storeDiff(string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['sdiffstore', $this->key, $key], $keys));
+        return $this->queryExecutor->execute(['sdiffstore', $this->key, $key, ...\array_values($keys)]);
     }
 
     public function intersect(string ...$keys): array
     {
-        return $this->queryExecutor->execute(\array_merge(['sinter', $this->key], $keys));
+        return $this->queryExecutor->execute(['sinter', $this->key, ...\array_values($keys)]);
     }
 
     public function storeIntersection(string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['sinterstore', $this->key, $key], $keys));
+        return $this->queryExecutor->execute(['sinterstore', $this->key, $key, ...\array_values($keys)]);
     }
 
     public function contains(string $member): bool
@@ -77,17 +77,17 @@ final class RedisSet
 
     public function remove(string $member, string ...$members): int
     {
-        return $this->queryExecutor->execute(\array_merge(['srem', $this->key, $member], $members));
+        return $this->queryExecutor->execute(['srem', $this->key, $member, ...\array_values($members)]);
     }
 
     public function union(string ...$keys): array
     {
-        return $this->queryExecutor->execute(\array_merge(['sunion', $this->key], $keys));
+        return $this->queryExecutor->execute(['sunion', $this->key, ...\array_values($keys)]);
     }
 
     public function storeUnion(string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(\array_merge(['sunionstore', $this->key, $key], $keys));
+        return $this->queryExecutor->execute(['sunionstore', $this->key, $key, ...\array_values($keys)]);
     }
 
     public function scan(?string $pattern = null, ?int $count = null): \Traversable
@@ -116,12 +116,12 @@ final class RedisSet
     }
 
     /**
-     * @param RedisSortOptions $sort
+     * @param RedisSortOptions $options
      *
      * @link https://redis.io/commands/sort
      */
-    public function sort(?RedisSortOptions $sort = null): array
+    public function sort(?RedisSortOptions $options = null): array
     {
-        return $this->queryExecutor->execute(\array_merge(['SORT', $this->key], ($sort ?? new RedisSortOptions)->toQuery()));
+        return $this->queryExecutor->execute(['SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery()]);
     }
 }

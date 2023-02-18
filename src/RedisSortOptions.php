@@ -116,6 +116,9 @@ final class RedisSortOptions
         return $clone;
     }
 
+    /**
+     * @return list<int|string>
+     */
     public function toQuery(): array
     {
         $payload = [];

@@ -33,16 +33,14 @@ final class RemoteExecutor implements QueryExecutor
         $this->socket?->close();
     }
 
-    /**
-     * @param array<array-key, int|float|string> $query
-     */
     public function execute(array $query, ?\Closure $responseTransform = null): mixed
     {
         if (!$this->running) {
             $this->run();
         }
 
-        $query = \array_map(strval(...), $query);
+        /** @psalm-suppress RedundantFunctionCall */
+        $query = \array_map(\strval(...), \array_values($query));
 
         $command = \strtolower($query[0] ?? '');
 
@@ -55,7 +53,7 @@ final class RemoteExecutor implements QueryExecutor
         }
 
         if ($command === 'select') {
-            $this->database = (int) $query[1];
+            $this->database = (int) ($query[1] ?? 0);
         }
 
         return $responseTransform ? $responseTransform($response) : $response;
