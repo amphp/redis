@@ -14,6 +14,10 @@
         {
             "name": "Niklas Keller",
             "email": "me@kelunik.com"
+        },
+        {
+            "name": "Aaron Piotrowski",
+            "email": "aaron@trowski.com"
         }
     ],
     "support": {
@@ -38,11 +42,9 @@
         "amphp/phpunit-util": "^3",
         "amphp/process": "^2",
         "phpunit/phpunit": "^9",
-        "amphp/php-cs-fixer-config": "^2-dev",
+        "amphp/php-cs-fixer-config": "^2",
         "psalm/phar": "^5.4"
     },
-    "minimum-stability": "beta",
-    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\Redis\\": "src"
