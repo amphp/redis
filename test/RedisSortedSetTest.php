@@ -43,7 +43,6 @@ class RedisSortedSetTest extends IntegrationTest
         $this->assertSame(['bar' => 3.0, 'foo' => 1.0], $set->getRangeByScoreWithScores(ScoreBoundary::positiveInfinity(), ScoreBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
         $this->assertSame(['bar', 'foo'], $set->getRangeByScore(ScoreBoundary::inclusive(3), ScoreBoundary::inclusive(1), (new RangeOptions())->withReverseOrder()));
 
-
         $this->assertSame(0, $set->getRank('foo'));
         $this->assertSame(1, $set->getRank('bar'));
 
@@ -85,5 +84,4 @@ class RedisSortedSetTest extends IntegrationTest
         $this->assertSame(['b', 'c'], $set->getLexicographicRange(LexBoundary::exclusive('a'), LexBoundary::inclusive('c')));
         $this->assertSame(['a', 'b', 'c'], $set->getLexicographicRange(LexBoundary::negativeInfinity(), LexBoundary::exclusive('d')));
     }
-
 }
