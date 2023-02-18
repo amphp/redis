@@ -91,7 +91,7 @@ final class RedisSortedSet
     /**
      * @return Promise<list<string>>
      */
-    public function getRangeLexicographically(string $start, string $end, ?RangeOptions $options = null): Promise
+    public function getLexicographicRange(string $start, string $end, ?RangeOptions $options = null): Promise
     {
         $query = ['zrange', $this->key, $start, $end, 'BYLEX'];
         if ($options !== null) {

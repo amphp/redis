@@ -83,8 +83,8 @@ class RedisSortedSetTest extends IntegrationTest
             'd' => 0,
         ]));
 
-        $this->assertSame(['a', 'b', 'c'], yield $set->getRangeLexicographically('[a', '[c'));
-        $this->assertSame(['b', 'c'], yield $set->getRangeLexicographically('(a', '[c'));
-        $this->assertSame(['a', 'b', 'c'], yield $set->getRangeLexicographically('-', '(d'));
+        $this->assertSame(['a', 'b', 'c'], yield $set->getLexicographicRange('[a', '[c'));
+        $this->assertSame(['b', 'c'], yield $set->getLexicographicRange('(a', '[c'));
+        $this->assertSame(['a', 'b', 'c'], yield $set->getLexicographicRange('-', '(d'));
     }
 }
