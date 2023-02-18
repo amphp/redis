@@ -58,7 +58,7 @@ final class RedisSortedSet
     /**
      * @return list<string>
      */
-    public function getRangeByScore(RangeBoundary $min, RangeBoundary $max, ?RangeOptions $options = null): array
+    public function getRangeByScore(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
         return $this->queryExecutor->execute([
@@ -74,7 +74,7 @@ final class RedisSortedSet
     /**
      * @return array<string, float>
      */
-    public function getRangeByScoreWithScores(RangeBoundary $min, RangeBoundary $max, ?RangeOptions $options = null): array
+    public function getRangeByScoreWithScores(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
         return $this->queryExecutor->execute([
@@ -88,10 +88,17 @@ final class RedisSortedSet
         ], static fn ($values) => toMap($values, toFloat(...)));
     }
 
-    public function getRangeLexicographically(string $start, string $end, ?RangeOptions $options = null): array
+    public function getLexicographicRange(LexBoundary $start, LexBoundary $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute(['zrange', $this->key, $start, $end, 'BYLEX', ...$options->toQuery()]);
+        return $this->queryExecutor->execute([
+            'zrange',
+            $this->key,
+            $start->toQuery(),
+            $end->toQuery(),
+            'BYLEX',
+            ...$options->toQuery(),
+        ]);
     }
 
     public function getSize(): int
@@ -144,9 +151,9 @@ final class RedisSortedSet
         return $this->queryExecutor->execute($payload);
     }
 
-    public function countLexicographically(string $min, string $max): int
+    public function countLexicographicRange(LexBoundary $min, LexBoundary $max): int
     {
-        return $this->queryExecutor->execute(['zlexcount', $this->key, $min, $max]);
+        return $this->queryExecutor->execute(['zlexcount', $this->key, $min->toQuery(), $max->toQuery()]);
     }
 
     public function getRank(string $member): ?int
@@ -159,9 +166,9 @@ final class RedisSortedSet
         return $this->queryExecutor->execute(\array_merge(['zrem', $this->key, $member], $members));
     }
 
-    public function removeLexicographicRange(string $min, string $max): int
+    public function removeLexicographicRange(LexBoundary $min, LexBoundary $max): int
     {
-        return $this->queryExecutor->execute(['zremrangebylex', $this->key, $min, $max]);
+        return $this->queryExecutor->execute(['zremrangebylex', $this->key, $min->toQuery(), $max->toQuery()]);
     }
 
     public function removeRankRange(int $start, int $stop): int
@@ -169,7 +176,7 @@ final class RedisSortedSet
         return $this->queryExecutor->execute(['zremrangebyrank', $this->key, $start, $stop]);
     }
 
-    public function removeRangeByScore(RangeBoundary $min, RangeBoundary $max): int
+    public function removeRangeByScore(ScoreBoundary $min, ScoreBoundary $max): int
     {
         return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery()]);
     }

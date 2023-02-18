@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-final class RangeBoundary
+final class ScoreBoundary
 {
     public static function exclusive(float $value): self
     {
