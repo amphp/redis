@@ -20,7 +20,7 @@ final class RedisSortedSet
     }
 
     /**
-     * @param array $data
+     * @param array<string, int|float> $data
      *
      * @return Promise<int>
      */
@@ -37,67 +37,68 @@ final class RedisSortedSet
     }
 
     /**
-     * @param int $start
-     * @param int $end
-     *
-     * @return Promise
+     * @return Promise<list<string>>
      */
-    public function getRange(int $start, int $end, ?RangeByScoreOptions $options = null): Promise
+    public function getRange(int $start, int $end, ?RangeOptions $options = null): Promise
     {
         $query = ['zrange', $this->key, $start, $end];
         if ($options !== null) {
             $query = \array_merge($query, $options->toQuery());
         }
 
-        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
+        return $this->queryExecutor->execute($query);
     }
 
     /**
-     * @param int $start
-     * @param int $end
-     *
-     * @return Promise
+     * @return Promise<array<string, float>>
      */
-    public function getReverseRange(int $start, int $end, ?RangeByScoreOptions $options = null): Promise
+    public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): Promise
     {
-        $query = ['zrevrange', $this->key, $start, $end];
+        $query = ['zrange', $this->key, $start, $end, 'WITHSCORES'];
         if ($options !== null) {
             $query = \array_merge($query, $options->toQuery());
         }
 
-        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
+        return $this->queryExecutor->execute($query, toFloatMap);
     }
 
     /**
-     * @param float $min
-     * @param float $max
-     *
-     * @return Promise
+     * @return Promise<list<string>>
      */
-    public function getRangeByScore(float $min, float $max, RangeByScoreOptions $options = null): Promise
+    public function getRangeByScore(RangeBoundary $start, RangeBoundary $end, ?RangeOptions $options = null): Promise
     {
-        $query = ['zrangebyscore', $this->key, $min, $max];
+        $query = ['zrange', $this->key, $start->toQuery(), $end->toQuery(), 'BYSCORE'];
         if ($options !== null) {
             $query = \array_merge($query, $options->toQuery());
         }
 
-        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
+        return $this->queryExecutor->execute($query);
     }
 
     /**
-     * @param float $min
-     * @param float $max
-     *
-     * @return Promise
+     * @return Promise<array<string, float>>
      */
-    public function getReverseRangeByScore(float $min, float $max, RangeByScoreOptions $options = null): Promise
+    public function getRangeByScoreWithScores(RangeBoundary $start, RangeBoundary $end, ?RangeOptions $options = null): Promise
     {
-        $query = ['zrevrangebyscore', $this->key, $min, $max];
+        $query = ['zrange', $this->key, $start->toQuery(), $end->toQuery(), 'BYSCORE', 'WITHSCORES'];
         if ($options !== null) {
             $query = \array_merge($query, $options->toQuery());
         }
 
-        return $this->queryExecutor->execute($query, $options !== null && $options->isWithScores() ? toFloatMap : null);
+        return $this->queryExecutor->execute($query, toFloatMap);
+    }
+
+    /**
+     * @return Promise<list<string>>
+     */
+    public function getRangeLexicographically(string $start, string $end, ?RangeOptions $options = null): Promise
+    {
+        $query = ['zrange', $this->key, $start, $end, 'BYLEX'];
+        if ($options !== null) {
+            $query = \array_merge($query, $options->toQuery());
+        }
+
+        return $this->queryExecutor->execute($query);
     }
 
     /**
@@ -223,10 +224,20 @@ final class RedisSortedSet
     }
 
     /**
+     * @return Promise<int>
+     */
+    public function removeRangeByScore(RangeBoundary $min, RangeBoundary $max): Promise
+    {
+        return $this->queryExecutor->execute(['zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery()]);
+    }
+
+    /**
      * @param float $min
      * @param float $max
      *
      * @return Promise<int>
+     *
+     * @deprecated Use {@see removeRangeByScore()} instead.
      */
     public function removeScoreRange(float $min, float $max): Promise
     {
