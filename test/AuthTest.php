@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\Deferred;
+use Amp\Delayed;
 use Amp\PHPUnit\AsyncTestCase;
 
 class AuthTest extends AsyncTestCase
@@ -21,6 +23,17 @@ class AuthTest extends AsyncTestCase
             print \shell_exec("kill $pid");
             \sleep(2);
         }
+    }
+
+    public function testGarbageCollection(): \Generator
+    {
+        // This will hit stream select limits if garbage isn't collected as it should (e.g. due to circular references)
+        for ($i = 0; $i < 10000; $i++) {
+            $redis = new Redis(new RemoteExecutor(Config::fromUri('tcp://127.0.0.1:25325?password=secret')));
+            $this->assertSame('PONG', yield $redis->echo('PONG'));
+        }
+
+        yield $redis->quit();
     }
 
     public function testSuccess(): \Generator
