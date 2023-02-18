@@ -2,6 +2,7 @@
 
 namespace Amp\Redis\Connection;
 
+use Amp\ByteStream\ResourceStream;
 use Amp\ByteStream\StreamException;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
@@ -69,12 +70,16 @@ final class DefaultRespSocket implements RespSocket
 
     public function reference(): void
     {
-        $this->socket->reference();
+        if ($this->socket instanceof ResourceStream) {
+            $this->socket->reference();
+        }
     }
 
     public function unreference(): void
     {
-        $this->socket->unreference();
+        if ($this->socket instanceof ResourceStream) {
+            $this->socket->unreference();
+        }
     }
 
     public function close(): void

@@ -144,7 +144,7 @@ final class Subscriber
             } catch (\Throwable $exception) {
                 $exception = new RedisSocketException($exception->getMessage(), 0, $exception);
 
-                $queueGroups = \array_merge($this->queues, $this->patternQueues);
+                $queueGroups = \array_merge($queues, $patternQueues);
 
                 $queues = [];
                 $patternQueues = [];

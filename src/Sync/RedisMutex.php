@@ -257,10 +257,11 @@ RENEW;
         $locks = &$this->locks;
         $options = $this->options;
         $redis = $this->redis;
+        $logger = $this->logger;
 
         $this->watcher = EventLoop::repeat(
             $options->getLockRenewInterval(),
-            static function () use (&$locks, $options, $redis): void {
+            static function () use (&$locks, $options, $redis, $logger): void {
                 \assert(!empty($locks));
 
                 $keys = [];
@@ -276,7 +277,7 @@ RENEW;
                 try {
                     $redis->eval(self::RENEW, $keys, $arguments);
                 } catch (RedisException $e) {
-                    $this->logger->error('Renew operation failed, locks might expire', [
+                    $logger->error('Renew operation failed, locks might expire', [
                         'exception' => $e,
                     ]);
                 }
