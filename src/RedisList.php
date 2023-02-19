@@ -16,7 +16,7 @@ final class RedisList
      */
     public function get(string $index): string
     {
-        return $this->queryExecutor->execute(['lindex', $this->key, $index]);
+        return $this->queryExecutor->execute('lindex', $this->key, $index);
     }
 
     /**
@@ -24,7 +24,7 @@ final class RedisList
      */
     public function insertBefore(string $pivot, string $value): int
     {
-        return $this->queryExecutor->execute(['linsert', $this->key, 'BEFORE', $pivot, $value]);
+        return $this->queryExecutor->execute('linsert', $this->key, 'BEFORE', $pivot, $value);
     }
 
     /**
@@ -32,7 +32,7 @@ final class RedisList
      */
     public function insertAfter(string $pivot, string $value): int
     {
-        return $this->queryExecutor->execute(['linsert', $this->key, 'AFTER', $pivot, $value]);
+        return $this->queryExecutor->execute('linsert', $this->key, 'AFTER', $pivot, $value);
     }
 
     /**
@@ -41,7 +41,7 @@ final class RedisList
      */
     public function getSize(): int
     {
-        return $this->queryExecutor->execute(['llen', $this->key]);
+        return $this->queryExecutor->execute('llen', $this->key);
     }
 
     /**
@@ -49,7 +49,7 @@ final class RedisList
      */
     public function pushHead(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(['lpush', $this->key, $value, ...\array_values($values)]);
+        return $this->queryExecutor->execute('lpush', $this->key, $value, ...$values);
     }
 
     /**
@@ -57,7 +57,7 @@ final class RedisList
      */
     public function pushHeadIfExists(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(['lpushx', $this->key, $value, ...\array_values($values)]);
+        return $this->queryExecutor->execute('lpushx', $this->key, $value, ...$values);
     }
 
     /**
@@ -65,7 +65,7 @@ final class RedisList
      */
     public function pushTail(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(['rpush', $this->key, $value, ...\array_values($values)]);
+        return $this->queryExecutor->execute('rpush', $this->key, $value, ...$values);
     }
 
     /**
@@ -73,7 +73,7 @@ final class RedisList
      */
     public function pushTailIfExists(string $value, string ...$values): int
     {
-        return $this->queryExecutor->execute(['rpushx', $this->key, $value, ...\array_values($values)]);
+        return $this->queryExecutor->execute('rpushx', $this->key, $value, ...$values);
     }
 
     /**
@@ -82,7 +82,7 @@ final class RedisList
      */
     public function popHead(): ?string
     {
-        return $this->queryExecutor->execute(['lpop', $this->key]);
+        return $this->queryExecutor->execute('lpop', $this->key);
     }
 
     /**
@@ -90,7 +90,7 @@ final class RedisList
      */
     public function popHeadBlocking(int $timeout = 0): ?string
     {
-        $response = $this->queryExecutor->execute(['blpop', $this->key, $timeout]);
+        $response = $this->queryExecutor->execute('blpop', $this->key, $timeout);
         return $response[1] ?? null;
     }
 
@@ -99,7 +99,7 @@ final class RedisList
      */
     public function popTail(): ?string
     {
-        return $this->queryExecutor->execute(['rpop', $this->key]);
+        return $this->queryExecutor->execute('rpop', $this->key);
     }
 
     /**
@@ -107,7 +107,7 @@ final class RedisList
      */
     public function popTailBlocking(int $timeout = 0): ?string
     {
-        $response = $this->queryExecutor->execute(['brpop', $this->key, $timeout]);
+        $response = $this->queryExecutor->execute('brpop', $this->key, $timeout);
         return $response[1] ?? null;
     }
 
@@ -116,7 +116,7 @@ final class RedisList
      */
     public function popTailPushHead(string $destination): string
     {
-        return $this->queryExecutor->execute(['rpoplpush', $this->key, $destination]);
+        return $this->queryExecutor->execute('rpoplpush', $this->key, $destination);
     }
 
     /**
@@ -124,7 +124,7 @@ final class RedisList
      */
     public function popTailPushHeadBlocking(string $destination, int $timeout = 0): ?string
     {
-        return $this->queryExecutor->execute(['brpoplpush', $this->key, $destination, $timeout]);
+        return $this->queryExecutor->execute('brpoplpush', $this->key, $destination, $timeout);
     }
 
     /**
@@ -132,7 +132,7 @@ final class RedisList
      */
     public function getRange(int $start = 0, int $end = -1): array
     {
-        return $this->queryExecutor->execute(['lrange', $this->key, $start, $end]);
+        return $this->queryExecutor->execute('lrange', $this->key, $start, $end);
     }
 
     /**
@@ -140,7 +140,7 @@ final class RedisList
      */
     public function remove(string $value, int $count = 0): int
     {
-        return $this->queryExecutor->execute(['lrem', $this->key, $count, $value]);
+        return $this->queryExecutor->execute('lrem', $this->key, $count, $value);
     }
 
     /**
@@ -148,7 +148,7 @@ final class RedisList
      */
     public function set(int $index, string $value): void
     {
-        $this->queryExecutor->execute(['lset', $this->key, $index, $value]);
+        $this->queryExecutor->execute('lset', $this->key, $index, $value);
     }
 
     /**
@@ -157,7 +157,7 @@ final class RedisList
      */
     public function trim(int $start = 0, int $stop = -1): void
     {
-        $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop]);
+        $this->queryExecutor->execute('ltrim', $this->key, $start, $stop);
     }
 
     /**
@@ -165,6 +165,6 @@ final class RedisList
      */
     public function sort(?RedisSortOptions $options = null): array
     {
-        return $this->queryExecutor->execute(['SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery()]);
+        return $this->queryExecutor->execute('SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery());
     }
 }

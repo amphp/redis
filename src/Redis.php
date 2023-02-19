@@ -40,7 +40,7 @@ final class Redis
 
     public function query(string $arg, string ...$args): mixed
     {
-        return $this->queryExecutor->execute([$arg, ...\array_values($args)]);
+        return $this->queryExecutor->execute($arg, ...$args);
     }
 
     /**
@@ -48,7 +48,7 @@ final class Redis
      */
     public function delete(string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(['del', $key, ...\array_values($keys)]);
+        return $this->queryExecutor->execute('del', $key, ...$keys);
     }
 
     /**
@@ -56,7 +56,7 @@ final class Redis
      */
     public function dump(string $key): string
     {
-        return $this->queryExecutor->execute(['dump', $key]);
+        return $this->queryExecutor->execute('dump', $key);
     }
 
     /**
@@ -64,7 +64,7 @@ final class Redis
      */
     public function has(string $key): bool
     {
-        return (bool) $this->queryExecutor->execute(['exists', $key]);
+        return (bool) $this->queryExecutor->execute('exists', $key);
     }
 
     /**
@@ -72,7 +72,7 @@ final class Redis
      */
     public function expireIn(string $key, int $seconds): bool
     {
-        return (bool) $this->queryExecutor->execute(['expire', $key, $seconds]);
+        return (bool) $this->queryExecutor->execute('expire', $key, $seconds);
     }
 
     /**
@@ -80,7 +80,7 @@ final class Redis
      */
     public function expireInMillis(string $key, int $millis): bool
     {
-        return (bool) $this->queryExecutor->execute(['pexpire', $key, $millis]);
+        return (bool) $this->queryExecutor->execute('pexpire', $key, $millis);
     }
 
     /**
@@ -88,7 +88,7 @@ final class Redis
      */
     public function expireAt(string $key, int $timestamp): bool
     {
-        return (bool) $this->queryExecutor->execute(['expireat', $key, $timestamp]);
+        return (bool) $this->queryExecutor->execute('expireat', $key, $timestamp);
     }
 
     /**
@@ -96,7 +96,7 @@ final class Redis
      */
     public function expireAtMillis(string $key, int $timestamp): bool
     {
-        return (bool) $this->queryExecutor->execute(['pexpireat', $key, $timestamp]);
+        return (bool) $this->queryExecutor->execute('pexpireat', $key, $timestamp);
     }
 
     /**
@@ -106,7 +106,7 @@ final class Redis
      */
     public function getKeys(string $pattern = '*'): array
     {
-        return $this->queryExecutor->execute(['keys', $pattern]);
+        return $this->queryExecutor->execute('keys', $pattern);
     }
 
     /**
@@ -114,7 +114,7 @@ final class Redis
      */
     public function move(string $key, int $db): bool
     {
-        return (bool) $this->queryExecutor->execute(['move', $key, $db]);
+        return (bool) $this->queryExecutor->execute('move', $key, $db);
     }
 
     /**
@@ -122,7 +122,7 @@ final class Redis
      */
     public function getObjectRefcount(string $key): int
     {
-        return $this->queryExecutor->execute(['object', 'refcount', $key]);
+        return $this->queryExecutor->execute('object', 'refcount', $key);
     }
 
     /**
@@ -130,7 +130,7 @@ final class Redis
      */
     public function getObjectEncoding(string $key): string
     {
-        return $this->queryExecutor->execute(['object', 'encoding', $key]);
+        return $this->queryExecutor->execute('object', 'encoding', $key);
     }
 
     /**
@@ -138,7 +138,7 @@ final class Redis
      */
     public function getObjectIdletime(string $key): int
     {
-        return $this->queryExecutor->execute(['object', 'idletime', $key]);
+        return $this->queryExecutor->execute('object', 'idletime', $key);
     }
 
     /**
@@ -146,7 +146,7 @@ final class Redis
      */
     public function persist(string $key): bool
     {
-        return (bool) $this->queryExecutor->execute(['persist', $key]);
+        return (bool) $this->queryExecutor->execute('persist', $key);
     }
 
     /**
@@ -154,7 +154,7 @@ final class Redis
      */
     public function getRandomKey(): ?string
     {
-        return $this->queryExecutor->execute(['randomkey']);
+        return $this->queryExecutor->execute('randomkey');
     }
 
     /**
@@ -162,7 +162,7 @@ final class Redis
      */
     public function rename(string $key, string $newKey): void
     {
-        $this->queryExecutor->execute(['rename', $key, $newKey]);
+        $this->queryExecutor->execute('rename', $key, $newKey);
     }
 
     /**
@@ -170,7 +170,7 @@ final class Redis
      */
     public function renameWithoutOverwrite(string $key, string $newKey): void
     {
-        $this->queryExecutor->execute(['renamenx', $key, $newKey]);
+        $this->queryExecutor->execute('renamenx', $key, $newKey);
     }
 
     /**
@@ -178,7 +178,7 @@ final class Redis
      */
     public function restore(string $key, string $serializedValue, int $ttl = 0): void
     {
-        $this->queryExecutor->execute(['restore', $key, $ttl, $serializedValue]);
+        $this->queryExecutor->execute('restore', $key, $ttl, $serializedValue);
     }
 
     /**
@@ -191,7 +191,7 @@ final class Redis
         $cursor = 0;
 
         do {
-            $query = ['SCAN', $cursor];
+            $query = [$cursor];
 
             if ($pattern !== null) {
                 $query[] = 'MATCH';
@@ -203,7 +203,7 @@ final class Redis
                 $query[] = $count;
             }
 
-            [$cursor, $keys] = $this->queryExecutor->execute($query);
+            [$cursor, $keys] = $this->queryExecutor->execute('SCAN', ...$query);
 
             foreach ($keys as $key) {
                 yield $key;
@@ -216,7 +216,7 @@ final class Redis
      */
     public function getTtl(string $key): int
     {
-        return $this->queryExecutor->execute(['ttl', $key]);
+        return $this->queryExecutor->execute('ttl', $key);
     }
 
     /**
@@ -224,7 +224,7 @@ final class Redis
      */
     public function getTtlInMillis(string $key): int
     {
-        return $this->queryExecutor->execute(['pttl', $key]);
+        return $this->queryExecutor->execute('pttl', $key);
     }
 
     /**
@@ -232,7 +232,7 @@ final class Redis
      */
     public function getType(string $key): string
     {
-        return $this->queryExecutor->execute(['type', $key]);
+        return $this->queryExecutor->execute('type', $key);
     }
 
     /**
@@ -240,7 +240,7 @@ final class Redis
      */
     public function append(string $key, string $value): int
     {
-        return $this->queryExecutor->execute(['append', $key, $value]);
+        return $this->queryExecutor->execute('append', $key, $value);
     }
 
     /**
@@ -248,7 +248,7 @@ final class Redis
      */
     public function countBits(string $key, ?int $start = null, ?int $end = null): int
     {
-        $cmd = ['bitcount', $key];
+        $cmd = [$key];
 
         if (isset($start, $end)) {
             $cmd[] = $start;
@@ -257,7 +257,7 @@ final class Redis
             throw new \Error('Start and end must both be set or unset in countBits(), got start = ' . $start . ' and end = ' . $end);
         }
 
-        return $this->queryExecutor->execute($cmd);
+        return $this->queryExecutor->execute('bitcount', ...$cmd);
     }
 
     /**
@@ -265,7 +265,7 @@ final class Redis
      */
     public function storeBitwiseAnd(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(['bitop', 'and', $destination, $key, ...\array_values($keys)]);
+        return $this->queryExecutor->execute('bitop', 'and', $destination, $key, ...$keys);
     }
 
     /**
@@ -273,7 +273,7 @@ final class Redis
      */
     public function storeBitwiseOr(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(['bitop', 'or', $destination, $key, ...\array_values($keys)]);
+        return $this->queryExecutor->execute('bitop', 'or', $destination, $key, ...$keys);
     }
 
     /**
@@ -281,7 +281,7 @@ final class Redis
      */
     public function storeBitwiseXor(string $destination, string $key, string ...$keys): int
     {
-        return $this->queryExecutor->execute(['bitop', 'xor', $destination, $key, ...\array_values($keys)]);
+        return $this->queryExecutor->execute('bitop', 'xor', $destination, $key, ...$keys);
     }
 
     /**
@@ -289,7 +289,7 @@ final class Redis
      */
     public function storeBitwiseNot(string $destination, string $key): int
     {
-        return $this->queryExecutor->execute(['bitop', 'not', $destination, $key]);
+        return $this->queryExecutor->execute('bitop', 'not', $destination, $key);
     }
 
     /**
@@ -297,7 +297,7 @@ final class Redis
      */
     public function getBitPosition(string $key, bool $bit, ?int $start = null, ?int $end = null): int
     {
-        $payload = ['bitpos', $key, $bit ? 1 : 0];
+        $payload = [$key, $bit ? 1 : 0];
 
         if ($start !== null) {
             $payload[] = $start;
@@ -307,7 +307,7 @@ final class Redis
             }
         }
 
-        return $this->queryExecutor->execute($payload);
+        return $this->queryExecutor->execute('bitpos', ...$payload);
     }
 
     /**
@@ -316,10 +316,10 @@ final class Redis
     public function decrement(string $key, int $decrement = 1): int
     {
         if ($decrement === 1) {
-            return $this->queryExecutor->execute(['decr', $key]);
+            return $this->queryExecutor->execute('decr', $key);
         }
 
-        return $this->queryExecutor->execute(['decrby', $key, $decrement]);
+        return $this->queryExecutor->execute('decrby', $key, $decrement);
     }
 
     /**
@@ -327,7 +327,7 @@ final class Redis
      */
     public function get(string $key): ?string
     {
-        return $this->queryExecutor->execute(['get', $key]);
+        return $this->queryExecutor->execute('get', $key);
     }
 
     /**
@@ -335,7 +335,7 @@ final class Redis
      */
     public function getBit(string $key, int $offset): bool
     {
-        return (bool) $this->queryExecutor->execute(['getbit', $key, $offset]);
+        return (bool) $this->queryExecutor->execute('getbit', $key, $offset);
     }
 
     /**
@@ -343,7 +343,7 @@ final class Redis
      */
     public function getRange(string $key, int $start = 0, int $end = -1): string
     {
-        return $this->queryExecutor->execute(['getrange', $key, $start, $end]);
+        return $this->queryExecutor->execute('getrange', $key, $start, $end);
     }
 
     /**
@@ -351,7 +351,7 @@ final class Redis
      */
     public function getAndSet(string $key, string $value): string
     {
-        return $this->queryExecutor->execute(['getset', $key, $value]);
+        return $this->queryExecutor->execute('getset', $key, $value);
     }
 
     /**
@@ -360,10 +360,10 @@ final class Redis
     public function increment(string $key, int $increment = 1): int
     {
         if ($increment === 1) {
-            return $this->queryExecutor->execute(['incr', $key]);
+            return $this->queryExecutor->execute('incr', $key);
         }
 
-        return $this->queryExecutor->execute(['incrby', $key, $increment]);
+        return $this->queryExecutor->execute('incrby', $key, $increment);
     }
 
     /**
@@ -371,7 +371,7 @@ final class Redis
      */
     public function incrementByFloat(string $key, float $increment): float
     {
-        return (float) $this->queryExecutor->execute(['incrbyfloat', $key, $increment]);
+        return (float) $this->queryExecutor->execute('incrbyfloat', $key, $increment);
     }
 
     /**
@@ -381,7 +381,7 @@ final class Redis
      */
     public function getMultiple(string $key, string ...$keys): array
     {
-        return \array_combine($keys, $this->queryExecutor->execute(['mget', $key, ...\array_values($keys)]));
+        return \array_combine($keys, $this->queryExecutor->execute('mget', $key, ...$keys));
     }
 
     /**
@@ -391,14 +391,14 @@ final class Redis
      */
     public function setMultiple(array $data): void
     {
-        $payload = ['mset'];
+        $payload = [];
 
         foreach ($data as $key => $value) {
             $payload[] = $key;
             $payload[] = $value;
         }
 
-        $this->queryExecutor->execute($payload);
+        $this->queryExecutor->execute('mset', ...$payload);
     }
 
     /**
@@ -408,14 +408,14 @@ final class Redis
      */
     public function setMultipleWithoutOverwrite(array $data): void
     {
-        $payload = ['msetnx'];
+        $payload = [];
 
         foreach ($data as $key => $value) {
             $payload[] = $key;
             $payload[] = $value;
         }
 
-        $this->queryExecutor->execute($payload);
+        $this->queryExecutor->execute('msetnx', ...$payload);
     }
 
     /**
@@ -423,13 +423,13 @@ final class Redis
      */
     public function setWithoutOverwrite(string $key, string $value): bool
     {
-        return (bool) $this->queryExecutor->execute(['setnx', $key, $value]);
+        return (bool) $this->queryExecutor->execute('setnx', $key, $value);
     }
 
     public function set(string $key, string $value, ?RedisSetOptions $options = null): bool
     {
         $options ??= new RedisSetOptions();
-        return (bool) $this->queryExecutor->execute(['set', $key, $value, ...$options->toQuery()]);
+        return (bool) $this->queryExecutor->execute('set', $key, $value, ...$options->toQuery());
     }
 
     /**
@@ -437,7 +437,7 @@ final class Redis
      */
     public function setBit(string $key, int $offset, bool $value): int
     {
-        return $this->queryExecutor->execute(['setbit', $key, $offset, (int) $value]);
+        return $this->queryExecutor->execute('setbit', $key, $offset, (int) $value);
     }
 
     /**
@@ -447,7 +447,7 @@ final class Redis
      */
     public function setRange(string $key, int $offset, string $value): int
     {
-        return $this->queryExecutor->execute(['setrange', $key, $offset, $value]);
+        return $this->queryExecutor->execute('setrange', $key, $offset, $value);
     }
 
     /**
@@ -455,7 +455,7 @@ final class Redis
      */
     public function getLength(string $key): int
     {
-        return $this->queryExecutor->execute(['strlen', $key]);
+        return $this->queryExecutor->execute('strlen', $key);
     }
 
     /**
@@ -463,7 +463,7 @@ final class Redis
      */
     public function publish(string $channel, string $message): int
     {
-        return $this->queryExecutor->execute(['publish', $channel, $message]);
+        return $this->queryExecutor->execute('publish', $channel, $message);
     }
 
     /**
@@ -473,13 +473,13 @@ final class Redis
      */
     public function getActiveChannels(?string $pattern = null): array
     {
-        $payload = ['pubsub', 'channels'];
+        $payload = ['channels'];
 
         if ($pattern !== null) {
             $payload[] = $pattern;
         }
 
-        return $this->queryExecutor->execute($payload);
+        return $this->queryExecutor->execute('pubsub', ...$payload);
     }
 
     /**
@@ -489,8 +489,7 @@ final class Redis
      */
     public function getNumberOfSubscriptions(string ...$channels): array
     {
-        $query = ['pubsub', 'numsub', ...\array_values($channels)];
-        return Internal\toMap($this->queryExecutor->execute($query));
+        return Internal\toMap($this->queryExecutor->execute('pubsub', 'numsub', ...$channels));
     }
 
     /**
@@ -498,7 +497,7 @@ final class Redis
      */
     public function getNumberOfPatternSubscriptions(): int
     {
-        return $this->queryExecutor->execute(['pubsub', 'numpat']);
+        return $this->queryExecutor->execute('pubsub', 'numpat');
     }
 
     /**
@@ -506,7 +505,7 @@ final class Redis
      */
     public function ping(): void
     {
-        $this->queryExecutor->execute(['ping']);
+        $this->queryExecutor->execute('ping');
     }
 
     /**
@@ -514,7 +513,7 @@ final class Redis
      */
     public function quit(): void
     {
-        $this->queryExecutor->execute(['quit']);
+        $this->queryExecutor->execute('quit');
     }
 
     /**
@@ -522,7 +521,7 @@ final class Redis
      */
     public function rewriteAofAsync(): void
     {
-        $this->queryExecutor->execute(['bgrewriteaof']);
+        $this->queryExecutor->execute('bgrewriteaof');
     }
 
     /**
@@ -530,7 +529,7 @@ final class Redis
      */
     public function saveAsync(): void
     {
-        $this->queryExecutor->execute(['bgsave']);
+        $this->queryExecutor->execute('bgsave');
     }
 
     /**
@@ -538,7 +537,7 @@ final class Redis
      */
     public function getName(): string
     {
-        return $this->queryExecutor->execute(['client', 'getname']);
+        return $this->queryExecutor->execute('client', 'getname');
     }
 
     /**
@@ -546,7 +545,7 @@ final class Redis
      */
     public function pauseMillis(int $timeInMillis): void
     {
-        $this->queryExecutor->execute(['client', 'pause', $timeInMillis]);
+        $this->queryExecutor->execute('client', 'pause', $timeInMillis);
     }
 
     /**
@@ -554,7 +553,7 @@ final class Redis
      */
     public function setName(string $name): void
     {
-        $this->queryExecutor->execute(['client', 'setname', $name]);
+        $this->queryExecutor->execute('client', 'setname', $name);
     }
 
     /**
@@ -562,7 +561,7 @@ final class Redis
      */
     public function getConfig(string $parameter): array
     {
-        return $this->queryExecutor->execute(['config', 'get', $parameter]);
+        return $this->queryExecutor->execute('config', 'get', $parameter);
     }
 
     /**
@@ -570,7 +569,7 @@ final class Redis
      */
     public function resetStatistics(): void
     {
-        $this->queryExecutor->execute(['config', 'resetstat']);
+        $this->queryExecutor->execute('config', 'resetstat');
     }
 
     /**
@@ -578,7 +577,7 @@ final class Redis
      */
     public function rewriteConfig(): void
     {
-        $this->queryExecutor->execute(['config', 'rewrite']);
+        $this->queryExecutor->execute('config', 'rewrite');
     }
 
     /**
@@ -586,7 +585,7 @@ final class Redis
      */
     public function setConfig(string $parameter, string $value): void
     {
-        $this->queryExecutor->execute(['config', 'set', $parameter, $value]);
+        $this->queryExecutor->execute('config', 'set', $parameter, $value);
     }
 
     /**
@@ -594,7 +593,7 @@ final class Redis
      */
     public function getDatabaseSize(): int
     {
-        return $this->queryExecutor->execute(['dbsize']);
+        return $this->queryExecutor->execute('dbsize');
     }
 
     /**
@@ -602,7 +601,7 @@ final class Redis
      */
     public function flushAll(): void
     {
-        $this->queryExecutor->execute(['flushall']);
+        $this->queryExecutor->execute('flushall');
     }
 
     /**
@@ -610,7 +609,7 @@ final class Redis
      */
     public function flushDatabase(): void
     {
-        $this->queryExecutor->execute(['flushdb']);
+        $this->queryExecutor->execute('flushdb');
     }
 
     /**
@@ -618,7 +617,7 @@ final class Redis
      */
     public function getLastSave(): int
     {
-        return $this->queryExecutor->execute(['lastsave']);
+        return $this->queryExecutor->execute('lastsave');
     }
 
     /**
@@ -626,7 +625,7 @@ final class Redis
      */
     public function getRole(): array
     {
-        return $this->queryExecutor->execute(['role']);
+        return $this->queryExecutor->execute('role');
     }
 
     /**
@@ -634,7 +633,7 @@ final class Redis
      */
     public function save(): void
     {
-        $this->queryExecutor->execute(['save']);
+        $this->queryExecutor->execute('save');
     }
 
     /**
@@ -642,7 +641,7 @@ final class Redis
      */
     public function shutdownWithSave(): string
     {
-        return $this->queryExecutor->execute(['shutdown', 'save']);
+        return $this->queryExecutor->execute('shutdown', 'save');
     }
 
     /**
@@ -650,7 +649,7 @@ final class Redis
      */
     public function shutdownWithoutSave(): string
     {
-        return $this->queryExecutor->execute(['shutdown', 'nosave']);
+        return $this->queryExecutor->execute('shutdown', 'nosave');
     }
 
     /**
@@ -658,7 +657,7 @@ final class Redis
      */
     public function shutdown(): string
     {
-        return $this->queryExecutor->execute(['shutdown']);
+        return $this->queryExecutor->execute('shutdown');
     }
 
     /**
@@ -666,7 +665,7 @@ final class Redis
      */
     public function enableReplication(string $host, int $port): void
     {
-        $this->queryExecutor->execute(['slaveof', $host, $port]);
+        $this->queryExecutor->execute('slaveof', $host, $port);
     }
 
     /**
@@ -674,7 +673,7 @@ final class Redis
      */
     public function disableReplication(): void
     {
-        $this->queryExecutor->execute(['slaveof', 'no', 'one']);
+        $this->queryExecutor->execute('slaveof', 'no', 'one');
     }
 
     /**
@@ -684,13 +683,13 @@ final class Redis
      */
     public function getSlowlog(?int $count = null): array
     {
-        $payload = ['slowlog', 'get'];
+        $payload = ['get'];
 
         if ($count !== null) {
             $payload[] = $count;
         }
 
-        return $this->queryExecutor->execute($payload);
+        return $this->queryExecutor->execute('slowlog', ...$payload);
     }
 
     /**
@@ -698,7 +697,7 @@ final class Redis
      */
     public function getSlowlogLength(): int
     {
-        return $this->queryExecutor->execute(['slowlog', 'len']);
+        return $this->queryExecutor->execute('slowlog', 'len');
     }
 
     /**
@@ -706,7 +705,7 @@ final class Redis
      */
     public function resetSlowlog(): void
     {
-        $this->queryExecutor->execute(['slowlog', 'reset']);
+        $this->queryExecutor->execute('slowlog', 'reset');
     }
 
     /**
@@ -714,7 +713,7 @@ final class Redis
      */
     public function getTime(): array
     {
-        return $this->queryExecutor->execute(['time']);
+        return $this->queryExecutor->execute('time');
     }
 
     /**
@@ -722,7 +721,7 @@ final class Redis
      */
     public function hasScript(string $sha1): bool
     {
-        $array = $this->queryExecutor->execute(['script', 'exists', $sha1]);
+        $array = $this->queryExecutor->execute('script', 'exists', $sha1);
         return (bool) ($array[0] ?? false);
     }
 
@@ -733,7 +732,7 @@ final class Redis
     {
         $this->evalCache = []; // same as internal redis behavior
 
-        $this->queryExecutor->execute(['script', 'flush']);
+        $this->queryExecutor->execute('script', 'flush');
     }
 
     /**
@@ -741,7 +740,7 @@ final class Redis
      */
     public function killScript(): void
     {
-        $this->queryExecutor->execute(['script', 'kill']);
+        $this->queryExecutor->execute('script', 'kill');
     }
 
     /**
@@ -749,7 +748,7 @@ final class Redis
      */
     public function loadScript(string $script): string
     {
-        return $this->queryExecutor->execute(['script', 'load', $script]);
+        return $this->queryExecutor->execute('script', 'load', $script);
     }
 
     /**
@@ -757,7 +756,7 @@ final class Redis
      */
     public function echo(string $text): string
     {
-        return $this->queryExecutor->execute(['echo', $text]);
+        return $this->queryExecutor->execute('echo', $text);
     }
 
     /**
@@ -770,13 +769,10 @@ final class Redis
     {
         try {
             $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
-            $query = ['evalsha', $sha1, \count($keys), ...\array_values($keys), ...\array_values($args)];
-
-            return $this->queryExecutor->execute($query);
+            return $this->queryExecutor->execute('evalsha', $sha1, \count($keys), ...$keys, ...$args);
         } catch (QueryException $e) {
             if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
-                $query = ['eval', $script, \count($keys), ...\array_values($keys), ...\array_values($args)];
-                return $this->queryExecutor->execute($query);
+                return $this->queryExecutor->execute('eval', $script, \count($keys), ...$keys, ...$args);
             }
 
             throw $e;
@@ -785,6 +781,6 @@ final class Redis
 
     public function select(int $database): void
     {
-        $this->queryExecutor->execute(['select', $database]);
+        $this->queryExecutor->execute('select', $database);
     }
 }

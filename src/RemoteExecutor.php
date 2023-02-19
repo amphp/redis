@@ -17,8 +17,8 @@ final class RemoteExecutor implements QueryExecutor
         $this->connection = new RedisSocketConnection($config, $connector);
     }
 
-    public function execute(array $query): mixed
+    public function execute(string $command, int|float|string ...$parameters): mixed
     {
-        return $this->connection->execute($query)->unwrap();
+        return $this->connection->execute($command, $parameters)->unwrap();
     }
 }

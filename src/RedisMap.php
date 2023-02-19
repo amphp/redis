@@ -16,7 +16,7 @@ final class RedisMap
      */
     public function remove(string $field, string ...$fields): int
     {
-        return $this->queryExecutor->execute(['hdel', $this->key, $field, ...\array_values($fields)]);
+        return $this->queryExecutor->execute('hdel', $this->key, $field, ...$fields);
     }
 
     /**
@@ -24,7 +24,7 @@ final class RedisMap
      */
     public function hasKey(string $field): bool
     {
-        return (bool) $this->queryExecutor->execute(['hexists', $this->key, $field]);
+        return (bool) $this->queryExecutor->execute('hexists', $this->key, $field);
     }
 
     /**
@@ -32,7 +32,7 @@ final class RedisMap
      */
     public function increment(string $field, int $increment = 1): int
     {
-        return $this->queryExecutor->execute(['hincrby', $this->key, $field, $increment]);
+        return $this->queryExecutor->execute('hincrby', $this->key, $field, $increment);
     }
 
     /**
@@ -40,7 +40,7 @@ final class RedisMap
      */
     public function incrementByFloat(string $field, float $increment): float
     {
-        return (float) $this->queryExecutor->execute(['hincrbyfloat', $this->key, $field, $increment]);
+        return (float) $this->queryExecutor->execute('hincrbyfloat', $this->key, $field, $increment);
     }
 
     /**
@@ -48,7 +48,7 @@ final class RedisMap
      */
     public function getKeys(): array
     {
-        return $this->queryExecutor->execute(['hkeys', $this->key]);
+        return $this->queryExecutor->execute('hkeys', $this->key);
     }
 
     /**
@@ -56,7 +56,7 @@ final class RedisMap
      */
     public function getSize(): int
     {
-        return $this->queryExecutor->execute(['hlen', $this->key]);
+        return $this->queryExecutor->execute('hlen', $this->key);
     }
 
     /**
@@ -65,7 +65,7 @@ final class RedisMap
      */
     public function getAll(): array
     {
-        return Internal\toMap($this->queryExecutor->execute(['hgetall', $this->key]));
+        return Internal\toMap($this->queryExecutor->execute('hgetall', $this->key));
     }
 
     /**
@@ -75,14 +75,14 @@ final class RedisMap
      */
     public function setValues(array $data): void
     {
-        $array = ['hmset', $this->key];
+        $array = [$this->key];
 
         foreach ($data as $dataKey => $value) {
             $array[] = $dataKey;
             $array[] = $value;
         }
 
-        $this->queryExecutor->execute($array);
+        $this->queryExecutor->execute('hmset', ...$array);
     }
 
     /**
@@ -90,7 +90,7 @@ final class RedisMap
      */
     public function getValue(string $field): string
     {
-        return $this->queryExecutor->execute(['hget', $this->key, $field]);
+        return $this->queryExecutor->execute('hget', $this->key, $field);
     }
 
     /**
@@ -98,7 +98,7 @@ final class RedisMap
      */
     public function getValues(string $field, string ...$fields): array
     {
-        return $this->queryExecutor->execute(['hmget', $this->key, $field, ...\array_values($fields)]);
+        return $this->queryExecutor->execute('hmget', $this->key, $field, ...$fields);
     }
 
     /**
@@ -106,7 +106,7 @@ final class RedisMap
      */
     public function setValue(string $field, string $value): bool
     {
-        return (bool) $this->queryExecutor->execute(['hset', $this->key, $field, $value]);
+        return (bool) $this->queryExecutor->execute('hset', $this->key, $field, $value);
     }
 
     /**
@@ -115,7 +115,7 @@ final class RedisMap
      */
     public function setValueWithoutOverwrite(string $field, string $value): bool
     {
-        return (bool) $this->queryExecutor->execute(['hsetnx', $this->key, $field, $value]);
+        return (bool) $this->queryExecutor->execute('hsetnx', $this->key, $field, $value);
     }
 
     /**
@@ -124,11 +124,11 @@ final class RedisMap
      */
     public function getLength(string $field): int
     {
-        return $this->queryExecutor->execute(['hstrlen', $this->key, $field]);
+        return $this->queryExecutor->execute('hstrlen', $this->key, $field);
     }
 
     /**
-     * @return \Traversable<array>
+     * @return \Traversable<array{string, string}>
      *
      * @link https://redis.io/commands/hscan
      */
@@ -137,7 +137,7 @@ final class RedisMap
         $cursor = 0;
 
         do {
-            $query = ['HSCAN', $this->key, $cursor];
+            $query = [$this->key, $cursor];
 
             if ($pattern !== null) {
                 $query[] = 'MATCH';
@@ -149,7 +149,8 @@ final class RedisMap
                 $query[] = $count;
             }
 
-            [$cursor, $keys] = $this->queryExecutor->execute($query);
+            /** @var list<string> $keys */
+            [$cursor, $keys] = $this->queryExecutor->execute('HSCAN', ...$query);
 
             $count = \count($keys);
             \assert($count % 2 === 0);

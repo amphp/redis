@@ -11,7 +11,7 @@ use Revolt\EventLoop;
 
 final class RedisSocketConnection implements RedisConnection
 {
-    /** @var \SplQueue<array{DeferredFuture, string[]}> */
+    /** @var \SplQueue<array{DeferredFuture, string, list<string>}> */
     private readonly \SplQueue $queue;
 
     private int $database;
@@ -34,41 +34,43 @@ final class RedisSocketConnection implements RedisConnection
         $this->socket?->close();
     }
 
-    public function execute(array $query): RespPayload
+    public function execute(string $command, array $parameters): RespPayload
     {
         if (!$this->running) {
             $this->run();
         }
 
-        /** @psalm-suppress RedundantFunctionCall */
-        $query = \array_map(\strval(...), \array_values($query));
-
-        $command = \strtolower($query[0] ?? '');
+        $parameters = \array_values(\array_map(\strval(...), $parameters));
 
         try {
-            $response = $this->enqueue(...$query)->await();
+            $response = $this->enqueue($command, $parameters)->await();
         } finally {
-            if ($command === 'quit') {
+            if (\strcasecmp($command, 'quit') === 0) {
                 $this->socket?->close();
             }
         }
 
-        if ($command === 'select') {
-            $this->database = (int) ($query[1] ?? 0);
+        if (\strcasecmp($command, 'select') === 0) {
+            $this->database = (int) ($parameters[0] ?? 0);
         }
 
         return $response;
     }
 
-    private function enqueue(string ...$args): Future
+    /**
+     * @param list<string> $parameters
+     *
+     * @return Future<RespPayload>
+     */
+    private function enqueue(string $command, array $parameters): Future
     {
         $deferred = new DeferredFuture();
-        $this->queue->push([$deferred, $args]);
+        $this->queue->push([$deferred, $command, $parameters]);
 
         $this->socket?->reference();
 
         try {
-            $this->socket?->write(...$args);
+            $this->socket?->write($command, ...$parameters);
         } catch (RedisException) {
             $this->socket = null;
         }
@@ -91,9 +93,9 @@ final class RedisSocketConnection implements RedisConnection
                     $socket->unreference();
 
                     try {
-                        foreach ($queue as [$deferred, $args]) {
+                        foreach ($queue as [$deferred, $command, $parameters]) {
                             $socket->reference();
-                            $socket->write(...$args);
+                            $socket->write($command, ...$parameters);
                         }
 
                         while ($response = $socket->read()) {

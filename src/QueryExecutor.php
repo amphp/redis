@@ -5,7 +5,7 @@ namespace Amp\Redis;
 interface QueryExecutor
 {
     /**
-     * @param non-empty-list<int|float|string> $query
+     * @throws QueryException
      */
-    public function execute(array $query): mixed;
+    public function execute(string $command, int|float|string ...$parameters): mixed;
 }

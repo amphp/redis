@@ -5,7 +5,7 @@ namespace Amp\Redis\Connection;
 interface RedisConnection
 {
     /**
-     * @param non-empty-list<int|float|string> $query
+     * @param array<int|float|string> $parameters
      */
-    public function execute(array $query): RespPayload;
+    public function execute(string $command, array $parameters): RespPayload;
 }
