@@ -17,10 +17,8 @@
         "void",
         "object",
         "never",
-        "toBool",
-        "toFloat",
         "toMap",
-        "toNull"
+        "redisConnector"
     ],
     "php-core-extensions": [
         "Core",
