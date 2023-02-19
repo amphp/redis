@@ -8,7 +8,7 @@ use Amp\Redis\RemoteExecutorFactory;
 $executorFactory = new RemoteExecutorFactory(RedisConfig::fromUri('redis://'));
 
 $redis = new Amp\Redis\Redis($executorFactory->createQueryExecutor());
-$mutex = new Amp\Redis\Mutex\RedisMutex($executorFactory);
+$mutex = new Amp\Redis\Sync\RedisMutex($executorFactory->createQueryExecutor());
 
 for ($i = 0; $i < 100; $i++) {
     $lock = $mutex->acquire('test' . random_int(0, 49));

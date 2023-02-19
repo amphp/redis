@@ -8,13 +8,13 @@ use Amp\Redis\RemoteExecutorFactory;
 $executorFactory = new RemoteExecutorFactory(RedisConfig::fromUri('redis://localhost'));
 
 $redis = new Amp\Redis\Redis($executorFactory->createQueryExecutor());
-$mutex = new Amp\Redis\Mutex\RedisMutex($executorFactory);
+$mutex = new Amp\Redis\Sync\RedisMutex($executorFactory->createQueryExecutor());
 
 for ($i = 0; $i < 100; $i++) {
     $lock = $mutex->acquire('test');
 
     $count = $redis->get('foo');
-    $redis->set('foo', ++$count);
+    $redis->set('foo', (string) ++$count);
 
     $lock->release();
 
