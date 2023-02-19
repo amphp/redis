@@ -3,7 +3,7 @@
 namespace Amp\Redis\Internal;
 
 /** @internal */
-function toMap(?array $values, ?\Closure $cast = null): array
+function toMap(?array $values): array
 {
     if ($values === null) {
         return [];
@@ -13,8 +13,7 @@ function toMap(?array $values, ?\Closure $cast = null): array
     $result = [];
 
     for ($i = 0; $i < $size; $i += 2) {
-        $value = $values[$i + 1];
-        $result[$values[$i]] = $cast ? $cast($value) : $value;
+        $result[$values[$i]] = $values[$i + 1];
     }
 
     return $result;

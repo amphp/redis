@@ -45,14 +45,14 @@ final class RedisSortedSet
     public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return Internal\toMap($this->queryExecutor->execute([
+        return \array_map(\floatval(...), Internal\toMap($this->queryExecutor->execute([
             'zrange',
             $this->key,
             $start,
             $end,
             'WITHSCORES',
             ...$options->toQuery(),
-        ]), \floatval(...));
+        ])));
     }
 
     /**
@@ -77,7 +77,7 @@ final class RedisSortedSet
     public function getRangeByScoreWithScores(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return Internal\toMap($this->queryExecutor->execute([
+        return \array_map(\floatval(...), Internal\toMap($this->queryExecutor->execute([
             'zrange',
             $this->key,
             $min->toQuery(),
@@ -85,7 +85,7 @@ final class RedisSortedSet
             'BYSCORE',
             'WITHSCORES',
             ...$options->toQuery(),
-        ]), \floatval(...));
+        ])));
     }
 
     public function getLexicographicRange(LexBoundary $start, LexBoundary $end, ?RangeOptions $options = null): array

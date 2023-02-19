@@ -490,16 +490,7 @@ final class Redis
     public function getNumberOfSubscriptions(string ...$channels): array
     {
         $query = ['pubsub', 'numsub', ...\array_values($channels)];
-
-        $response = $this->queryExecutor->execute($query);
-
-        $result = [];
-
-        for ($i = 0, $count = \count($response); $i < $count; $i += 2) {
-            $result[$response[$i]] = $response[$i + 1];
-        }
-
-        return $result;
+        return Internal\toMap($this->queryExecutor->execute($query));
     }
 
     /**
