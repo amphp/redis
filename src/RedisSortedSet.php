@@ -45,14 +45,14 @@ final class RedisSortedSet
     public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute([
+        return Internal\toMap($this->queryExecutor->execute([
             'zrange',
             $this->key,
             $start,
             $end,
             'WITHSCORES',
             ...$options->toQuery(),
-        ], static fn ($values) => Internal\toMap($values, Internal\toFloat(...)));
+        ]), \floatval(...));
     }
 
     /**
@@ -77,7 +77,7 @@ final class RedisSortedSet
     public function getRangeByScoreWithScores(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute([
+        return Internal\toMap($this->queryExecutor->execute([
             'zrange',
             $this->key,
             $min->toQuery(),
@@ -85,7 +85,7 @@ final class RedisSortedSet
             'BYSCORE',
             'WITHSCORES',
             ...$options->toQuery(),
-        ], static fn ($values) => Internal\toMap($values, Internal\toFloat(...)));
+        ]), \floatval(...));
     }
 
     public function getLexicographicRange(LexBoundary $start, LexBoundary $end, ?RangeOptions $options = null): array
@@ -113,7 +113,7 @@ final class RedisSortedSet
 
     public function increment(string $member, float $increment = 1): float
     {
-        return $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member], Internal\toFloat(...));
+        return (float) $this->queryExecutor->execute(['zincrby', $this->key, $increment, $member]);
     }
 
     /**
@@ -219,7 +219,7 @@ final class RedisSortedSet
 
     public function getScore(string $member): ?float
     {
-        return $this->queryExecutor->execute(['zscore', $this->key, $member], Internal\toFloat(...));
+        return (float) $this->queryExecutor->execute(['zscore', $this->key, $member]);
     }
 
     /**

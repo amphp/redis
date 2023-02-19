@@ -90,9 +90,8 @@ final class RedisList
      */
     public function popHeadBlocking(int $timeout = 0): ?string
     {
-        return $this->queryExecutor->execute(['blpop', $this->key, $timeout], static function ($response) {
-            return $response[1] ?? null;
-        });
+        $response = $this->queryExecutor->execute(['blpop', $this->key, $timeout]);
+        return $response[1] ?? null;
     }
 
     /**
@@ -108,9 +107,8 @@ final class RedisList
      */
     public function popTailBlocking(int $timeout = 0): ?string
     {
-        return $this->queryExecutor->execute(['brpop', $this->key, $timeout], static function ($response) {
-            return $response[1] ?? null;
-        });
+        $response = $this->queryExecutor->execute(['brpop', $this->key, $timeout]);
+        return $response[1] ?? null;
     }
 
     /**
@@ -150,7 +148,7 @@ final class RedisList
      */
     public function set(int $index, string $value): void
     {
-        $this->queryExecutor->execute(['lset', $this->key, $index, $value], Internal\toNull(...));
+        $this->queryExecutor->execute(['lset', $this->key, $index, $value]);
     }
 
     /**
@@ -159,7 +157,7 @@ final class RedisList
      */
     public function trim(int $start = 0, int $stop = -1): void
     {
-        $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop], Internal\toNull(...));
+        $this->queryExecutor->execute(['ltrim', $this->key, $start, $stop]);
     }
 
     /**

@@ -16,12 +16,12 @@ final class RedisHyperLogLog
      */
     public function add(string $element, string ...$elements): bool
     {
-        return $this->queryExecutor->execute([
+        return (bool) $this->queryExecutor->execute([
             'pfadd',
             $this->key,
             $element,
             ...\array_values($elements),
-        ], Internal\toBool(...));
+        ]);
     }
 
     /**
@@ -42,6 +42,6 @@ final class RedisHyperLogLog
             $this->key,
             $sourceKey,
             ...\array_values($sourceKeys),
-        ], Internal\toNull(...));
+        ]);
     }
 }

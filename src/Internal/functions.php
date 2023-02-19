@@ -3,30 +3,10 @@
 namespace Amp\Redis\Internal;
 
 /** @internal */
-function toFloat(mixed $response): ?float
-{
-    if ($response === null) {
-        return null;
-    }
-
-    return (float) $response;
-}
-
-/** @internal */
-function toBool(mixed $response): ?bool
-{
-    if ($response === null) {
-        return null;
-    }
-
-    return (bool) $response;
-}
-
-/** @internal */
-function toMap(?array $values, ?\Closure $cast = null): ?array
+function toMap(?array $values, ?\Closure $cast = null): array
 {
     if ($values === null) {
-        return null;
+        return [];
     }
 
     $size = \count($values);
@@ -38,10 +18,4 @@ function toMap(?array $values, ?\Closure $cast = null): ?array
     }
 
     return $result;
-}
-
-/** @internal */
-function toNull(mixed $response): void
-{
-    // nothing to do
 }

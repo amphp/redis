@@ -43,7 +43,7 @@ final class RedisSet
 
     public function contains(string $member): bool
     {
-        return $this->queryExecutor->execute(['sismember', $this->key, $member], Internal\toBool(...));
+        return (bool) $this->queryExecutor->execute(['sismember', $this->key, $member]);
     }
 
     public function getAll(): array
@@ -53,7 +53,7 @@ final class RedisSet
 
     public function move(string $member, string $destination): bool
     {
-        return $this->queryExecutor->execute(['smove', $this->key, $destination, $member], Internal\toBool(...));
+        return (bool) $this->queryExecutor->execute(['smove', $this->key, $destination, $member]);
     }
 
     public function popRandomMember(): string

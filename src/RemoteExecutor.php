@@ -33,7 +33,7 @@ final class RemoteExecutor implements QueryExecutor
         $this->socket?->close();
     }
 
-    public function execute(array $query, ?\Closure $responseTransform = null): mixed
+    public function execute(array $query): mixed
     {
         if (!$this->running) {
             $this->run();
@@ -56,7 +56,7 @@ final class RemoteExecutor implements QueryExecutor
             $this->database = (int) ($query[1] ?? 0);
         }
 
-        return $responseTransform ? $responseTransform($response) : $response;
+        return $response;
     }
 
     private function enqueue(string ...$args): Future
