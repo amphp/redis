@@ -4,9 +4,11 @@ namespace Amp\Redis\Connection;
 
 use Amp\Parser\Parser;
 use Amp\Redis\ParserException;
-use Amp\Redis\QueryException;
 
-final class RespParser extends Parser
+/**
+ * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RespPayload>
+ */
+final class RespParser
 {
     private const CRLF = "\r\n";
 
@@ -16,12 +18,24 @@ final class RespParser extends Parser
     private const TYPE_BULK_STRING = '$';
     private const TYPE_INTEGER = ':';
 
+    private readonly Parser $parser;
+
     /**
      * @param \Closure(RespPayload):void $push
      */
     public function __construct(\Closure $push)
     {
-        parent::__construct(self::parser($push));
+        $this->parser = new Parser(self::parser($push));
+    }
+
+    public function push(string $data): void
+    {
+        $this->parser->push($data);
+    }
+
+    public function cancel(): void
+    {
+        $this->parser->cancel();
     }
 
     /**
@@ -32,32 +46,27 @@ final class RespParser extends Parser
     private static function parser(\Closure $push): \Generator
     {
         while (true) {
-            try {
-                $value = self::parseValue(yield 1, yield self::CRLF);
-                $push(new RespValue($value instanceof \Generator ? yield from $value : $value));
-            } catch (QueryException $e) {
-                $push(new RespError($e));
-            }
+            $push(yield from self::parseValue(yield 1, yield self::CRLF));
         }
     }
 
     /**
-     * @return int|string|\Generator<int, int|string, string, string|null|list<mixed>>
+     * @return ParserGeneratorType
      */
-    private static function parseValue(string $type, string $payload): \Generator|int|string
+    private static function parseValue(string $type, string $payload): \Generator
     {
         return match ($type) {
-            self::TYPE_SIMPLE_STRING => $payload,
-            self::TYPE_INTEGER => (int) $payload,
-            self::TYPE_BULK_STRING => self::parseString((int) $payload),
-            self::TYPE_ARRAY => self::parseArray((int) $payload),
-            self::TYPE_ERROR => throw new QueryException($payload),
+            self::TYPE_SIMPLE_STRING => new RespValue($payload),
+            self::TYPE_INTEGER => new RespValue((int) $payload),
+            self::TYPE_BULK_STRING => yield from self::parseString((int) $payload),
+            self::TYPE_ARRAY => yield from self::parseArray((int) $payload),
+            self::TYPE_ERROR => new RespError($payload),
             default => throw new ParserException('Unknown resp data type: ' . $type),
         };
     }
 
     /**
-     * @return \Generator<int, int|string, string, string|null>
+     * @return ParserGeneratorType
      */
     private static function parseString(int $length): \Generator
     {
@@ -66,7 +75,7 @@ final class RespParser extends Parser
         }
 
         if ($length === -1) {
-            return null;
+            return new RespValue(null);
         }
 
         $payload = match ($length) {
@@ -76,11 +85,11 @@ final class RespParser extends Parser
 
         yield 2; // Remove trailing CRLF
 
-        return $payload;
+        return new RespValue($payload);
     }
 
     /**
-     * @return \Generator<int, int|string, string, list<mixed>|null>
+     * @return ParserGeneratorType
      */
     private static function parseArray(int $count): \Generator
     {
@@ -89,15 +98,14 @@ final class RespParser extends Parser
         }
 
         if ($count === -1) {
-            return null;
+            return new RespValue(null);
         }
 
         $payload = [];
         for ($i = 0; $i < $count; $i++) {
-            $value = self::parseValue(yield 1, yield self::CRLF);
-            $payload[] = $value instanceof \Generator ? yield from $value : $value;
+            $payload[] = (yield from self::parseValue(yield 1, yield self::CRLF))->unwrap();
         }
 
-        return $payload;
+        return new RespValue($payload);
     }
 }

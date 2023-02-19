@@ -2,20 +2,20 @@
 
 namespace Amp\Redis\Connection;
 
-use Amp\Redis\RedisException;
+use Amp\Redis\QueryException;
 
 final class RespError implements RespPayload
 {
     public function __construct(
-        public readonly RedisException $error,
+        public readonly string $message,
     ) {
     }
 
     /**
-     * @throws RedisException
+     * @throws QueryException
      */
     public function unwrap(): never
     {
-        throw $this->error;
+        throw new QueryException($this->message);
     }
 }
