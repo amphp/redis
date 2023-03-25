@@ -28,7 +28,7 @@ final class Cache implements CacheInterface
             try {
                 return yield $this->redis->get($key);
             } catch (RedisException $e) {
-                throw new CacheException("Fetching '${key}' from cache failed", 0, $e);
+                throw new CacheException("Fetching '{$key}' from cache failed", 0, $e);
             }
         });
     }
