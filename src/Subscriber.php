@@ -98,6 +98,14 @@ final class Subscriber
 
                 $this->connect = null;
 
+                if (!$connectException instanceof RedisException) {
+                    $connectException = new RedisException(
+                        'Connecting to redis server failed: ' . $connectException->getMessage(),
+                        0,
+                        $connectException
+                    );
+                }
+
                 throw $connectException;
             }
 
