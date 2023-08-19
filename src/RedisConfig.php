@@ -125,9 +125,14 @@ final class RedisConfig
             $this->database = (int) $path;
         }
 
+        $host = $uri->getHost();
+        if (\str_contains($host, ':')) {
+            $host = '[' . \trim($host, '[]') . ']';
+        }
+
         $this->uri = \sprintf(
             'tcp://%s:%d',
-            $uri->getHost() ?: self::DEFAULT_HOST,
+            $host ?: self::DEFAULT_HOST,
             $uri->getPort() ?: self::DEFAULT_PORT,
         );
     }
