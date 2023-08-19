@@ -535,7 +535,7 @@ final class Redis
     /**
      * @link https://redis.io/commands/client-getname
      */
-    public function getName(): string
+    public function getName(): ?string
     {
         return $this->queryExecutor->execute('client', 'getname');
     }
