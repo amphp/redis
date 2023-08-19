@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Connection;
 
-interface RedisConnection
+interface RedisLink
 {
     /**
      * @param array<int|float|string> $parameters

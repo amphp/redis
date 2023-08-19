@@ -11,7 +11,7 @@ use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;
 
-final class SocketRedisConnection implements RedisConnection
+final class SocketRedisLink implements RedisLink
 {
     use ForbidCloning;
     use ForbidSerialization;

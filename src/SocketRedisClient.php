@@ -4,16 +4,16 @@ namespace Amp\Redis;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
-use Amp\Redis\Connection\RedisConnection;
+use Amp\Redis\Connection\RedisLink;
 use Amp\Redis\Connection\RedisConnector;
-use Amp\Redis\Connection\SocketRedisConnection;
+use Amp\Redis\Connection\SocketRedisLink;
 
 final class SocketRedisClient implements RedisClient
 {
     use ForbidCloning;
     use ForbidSerialization;
 
-    private readonly RedisConnection $connection;
+    private readonly RedisLink $connection;
 
     public function __construct(
         RedisConfig|string $config,
@@ -23,7 +23,7 @@ final class SocketRedisClient implements RedisClient
             $config = RedisConfig::fromUri($config);
         }
 
-        $this->connection = new SocketRedisConnection($config, $connector);
+        $this->connection = new SocketRedisLink($config, $connector);
     }
 
     public function execute(string $command, int|float|string ...$parameters): mixed
