@@ -5,7 +5,7 @@ namespace Amp\Redis\Connection;
 /**
  * @psalm-type RedisValueType = int|string|list<mixed>|null
  */
-interface RedisPayload
+interface RedisResponse
 {
     /**
      * @return RedisValueType

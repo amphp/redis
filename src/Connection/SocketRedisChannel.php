@@ -48,7 +48,7 @@ final class SocketRedisChannel implements RedisChannel
         });
     }
 
-    public function read(): ?RedisPayload
+    public function read(): ?RedisResponse
     {
         if (!$this->iterator->continue()) {
             return null;

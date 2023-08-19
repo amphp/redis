@@ -4,7 +4,7 @@ namespace Amp\Redis\Connection;
 
 use Amp\Redis\QueryException;
 
-final class RedisError implements RedisPayload
+final class RedisError implements RedisResponse
 {
     public function __construct(
         public readonly string $message,

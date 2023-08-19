@@ -39,7 +39,7 @@ final class SocketRedisLink implements RedisLink
         $this->socket?->close();
     }
 
-    public function execute(string $command, array $parameters): RedisPayload
+    public function execute(string $command, array $parameters): RedisResponse
     {
         if (!$this->running) {
             $this->run();
@@ -65,7 +65,7 @@ final class SocketRedisLink implements RedisLink
     /**
      * @param list<string> $parameters
      *
-     * @return Future<RedisPayload>
+     * @return Future<RedisResponse>
      */
     private function enqueue(string $command, array $parameters): Future
     {

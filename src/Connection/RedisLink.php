@@ -7,5 +7,5 @@ interface RedisLink
     /**
      * @param array<int|float|string> $parameters
      */
-    public function execute(string $command, array $parameters): RedisPayload;
+    public function execute(string $command, array $parameters): RedisResponse;
 }

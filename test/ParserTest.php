@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
-use Amp\Redis\Connection\RedisPayload;
+use Amp\Redis\Connection\RedisResponse;
 use Amp\Redis\Connection\RespParser;
 use PHPUnit\Framework\TestCase;
 
@@ -38,7 +38,7 @@ class ParserTest extends TestCase
 
         $payload = $this->iterator->getValue();
 
-        self::assertInstanceOf(RedisPayload::class, $payload);
+        self::assertInstanceOf(RedisResponse::class, $payload);
 
         return $payload->unwrap();
     }

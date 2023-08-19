@@ -8,7 +8,7 @@ use Amp\Parser\Parser;
 use Amp\Redis\ParserException;
 
 /**
- * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RedisPayload>
+ * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RedisResponse>
  */
 final class RespParser
 {
@@ -26,7 +26,7 @@ final class RespParser
     private readonly Parser $parser;
 
     /**
-     * @param \Closure(RedisPayload):void $push
+     * @param \Closure(RedisResponse):void $push
      */
     public function __construct(\Closure $push)
     {
@@ -44,7 +44,7 @@ final class RespParser
     }
 
     /**
-     * @param \Closure(RedisPayload):void $push
+     * @param \Closure(RedisResponse):void $push
      *
      * @return \Generator<int, int|string, string, void>
      */

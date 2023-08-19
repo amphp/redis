@@ -9,7 +9,7 @@ interface RedisChannel
     /**
      * @throws RedisException If reading from the socket fails.
      */
-    public function read(): ?RedisPayload;
+    public function read(): ?RedisResponse;
 
     /**
      * @throws RedisException If writing to the socket fails.

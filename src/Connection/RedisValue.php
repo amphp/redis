@@ -3,9 +3,9 @@
 namespace Amp\Redis\Connection;
 
 /**
- * @psalm-import-type RedisValueType from RedisPayload
+ * @psalm-import-type RedisValueType from RedisResponse
  */
-final class RedisValue implements RedisPayload
+final class RedisValue implements RedisResponse
 {
     /**
      * @param RedisValueType $value
