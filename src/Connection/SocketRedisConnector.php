@@ -44,16 +44,16 @@ final class SocketRedisConnector implements RedisConnector
 
         if ($config->hasPassword()) {
             $readsNeeded++;
-            $respSocket->write('AUTH', $config->getPassword());
+            $respSocket->send('AUTH', $config->getPassword());
         }
 
         if ($config->getDatabase() !== 0) {
             $readsNeeded++;
-            $respSocket->write('SELECT', (string) $config->getDatabase());
+            $respSocket->send('SELECT', (string) $config->getDatabase());
         }
 
         for ($i = 0; $i < $readsNeeded; $i++) {
-            if (!($respSocket->read()?->unwrap())) {
+            if (!($respSocket->receive()?->unwrap())) {
                 throw new RedisException('Failed to connect to redis instance (' . $config->getConnectUri() . ')');
             }
         }

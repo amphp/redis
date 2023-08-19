@@ -9,12 +9,12 @@ interface RedisChannel
     /**
      * @throws RedisException If reading from the socket fails.
      */
-    public function read(): ?RedisResponse;
+    public function receive(): ?RedisResponse;
 
     /**
      * @throws RedisException If writing to the socket fails.
      */
-    public function write(string ...$args): void;
+    public function send(string ...$args): void;
 
     public function reference(): void;
 

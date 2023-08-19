@@ -24,16 +24,16 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
         $resp = $this->connector->connect($config);
 
-        $resp->write('PING');
+        $resp->send('PING');
 
-        $this->assertSame('PONG', $resp->read()->unwrap());
+        $this->assertSame('PONG', $resp->receive()->unwrap());
 
         $resp->close();
 
         $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        $resp->write('PING');
+        $resp->send('PING');
     }
 
     public function testRawCloseReadRemote(): void
@@ -43,11 +43,11 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
         $resp = $this->connector->connect($config);
 
-        $resp->write('QUIT');
+        $resp->send('QUIT');
 
-        $this->assertSame('OK', $resp->read()->unwrap());
+        $this->assertSame('OK', $resp->receive()->unwrap());
 
-        $this->assertNull($resp->read());
+        $this->assertNull($resp->receive());
     }
 
     public function testRawCloseReadLocal(): void
@@ -57,13 +57,13 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
         $resp = $this->connector->connect($config);
 
-        $resp->write('QUIT');
+        $resp->send('QUIT');
 
-        $this->assertSame('OK', $resp->read()->unwrap());
+        $this->assertSame('OK', $resp->receive()->unwrap());
 
         $resp->close();
 
-        $this->assertNull($resp->read());
+        $this->assertNull($resp->receive());
     }
 
     public function testRawCloseWriteRemote(): void
@@ -73,15 +73,15 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
         $resp = $this->connector->connect($config);
 
-        $resp->write('QUIT');
+        $resp->send('QUIT');
 
-        $this->assertSame('OK', $resp->read()->unwrap());
+        $this->assertSame('OK', $resp->receive()->unwrap());
 
         delay(0);
 
         $this->expectException(RedisException::class);
 
-        $resp->write('PING');
+        $resp->send('PING');
     }
 
     public function testRawCloseWriteLocal(): void
@@ -91,9 +91,9 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
         $resp = $this->connector->connect($config);
 
-        $resp->write('QUIT');
+        $resp->send('QUIT');
 
-        $this->assertSame('OK', $resp->read()->unwrap());
+        $this->assertSame('OK', $resp->receive()->unwrap());
 
         delay(0);
 
@@ -102,7 +102,7 @@ class BasicTest extends IntegrationTest
         $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        $resp->write('PING');
+        $resp->send('PING');
     }
 
     public function testConnect(): void

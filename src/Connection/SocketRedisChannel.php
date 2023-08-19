@@ -48,7 +48,7 @@ final class SocketRedisChannel implements RedisChannel
         });
     }
 
-    public function read(): ?RedisResponse
+    public function receive(): ?RedisResponse
     {
         if (!$this->iterator->continue()) {
             return null;
@@ -57,7 +57,7 @@ final class SocketRedisChannel implements RedisChannel
         return $this->iterator->getValue();
     }
 
-    public function write(string ...$args): void
+    public function send(string ...$args): void
     {
         if ($this->socket->isClosed()) {
             throw new RedisSocketException('Redis connection already closed');

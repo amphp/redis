@@ -75,7 +75,7 @@ final class SocketRedisLink implements RedisLink
         $this->socket?->reference();
 
         try {
-            $this->socket?->write($command, ...$parameters);
+            $this->socket?->send($command, ...$parameters);
         } catch (RedisException) {
             $this->socket = null;
         }
@@ -100,10 +100,10 @@ final class SocketRedisLink implements RedisLink
                     try {
                         foreach ($queue as [$deferred, $command, $parameters]) {
                             $socket->reference();
-                            $socket->write($command, ...$parameters);
+                            $socket->send($command, ...$parameters);
                         }
 
-                        while ($response = $socket->read()) {
+                        while ($response = $socket->receive()) {
                             /** @var DeferredFuture $deferred */
                             [$deferred] = $queue->shift();
                             if ($queue->isEmpty()) {

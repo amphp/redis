@@ -53,7 +53,7 @@ final class RedisSubscriber
             $this->socket?->reference();
 
             try {
-                $this->socket?->write('subscribe', $channel);
+                $this->socket?->send('subscribe', $channel);
             } catch (\Throwable $e) {
                 $this->unloadEmitter($queue, $channel);
 
@@ -79,7 +79,7 @@ final class RedisSubscriber
             $this->socket?->reference();
 
             try {
-                $this->socket?->write('psubscribe', $pattern);
+                $this->socket?->send('psubscribe', $pattern);
             } catch (\Throwable $e) {
                 $this->unloadPatternEmitter($queue, $pattern);
 
@@ -115,15 +115,15 @@ final class RedisSubscriber
                     try {
                         foreach (\array_keys($queues) as $channel) {
                             $socket->reference();
-                            $socket->write('subscribe', $channel);
+                            $socket->send('subscribe', $channel);
                         }
 
                         foreach (\array_keys($patternQueues) as $pattern) {
                             $socket->reference();
-                            $socket->write('psubscribe', $pattern);
+                            $socket->send('psubscribe', $pattern);
                         }
 
-                        while ($response = $socket->read()?->unwrap()) {
+                        while ($response = $socket->receive()?->unwrap()) {
                             /** @psalm-suppress RedundantCondition */
                             \assert(
                                 \is_array($response) && \array_is_list($response),
@@ -188,7 +188,7 @@ final class RedisSubscriber
                     try {
                         if (empty($this->queues[$channel])) {
                             $this->socket?->reference();
-                            $this->socket?->write('unsubscribe', $channel);
+                            $this->socket?->send('unsubscribe', $channel);
                         }
 
                         if ($this->isIdle()) {
@@ -218,7 +218,7 @@ final class RedisSubscriber
                     try {
                         if (empty($this->patternQueues[$pattern])) {
                             $this->socket?->reference();
-                            $this->socket?->write('punsubscribe', $pattern);
+                            $this->socket?->send('punsubscribe', $pattern);
                         }
 
                         if ($this->isIdle()) {
