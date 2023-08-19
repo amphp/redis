@@ -4,12 +4,12 @@ namespace Amp\Redis\Connection;
 
 use Amp\Redis\RedisException;
 
-interface RespChannel
+interface RedisChannel
 {
     /**
      * @throws RedisException If reading from the socket fails.
      */
-    public function read(): ?RespPayload;
+    public function read(): ?RedisPayload;
 
     /**
      * @throws RedisException If writing to the socket fails.

@@ -6,7 +6,7 @@ use Amp\Parser\Parser;
 use Amp\Redis\ParserException;
 
 /**
- * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RespPayload>
+ * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RedisPayload>
  */
 final class RespParser
 {
@@ -21,7 +21,7 @@ final class RespParser
     private readonly Parser $parser;
 
     /**
-     * @param \Closure(RespPayload):void $push
+     * @param \Closure(RedisPayload):void $push
      */
     public function __construct(\Closure $push)
     {
@@ -39,7 +39,7 @@ final class RespParser
     }
 
     /**
-     * @param \Closure(RespPayload):void $push
+     * @param \Closure(RedisPayload):void $push
      *
      * @return \Generator<int, int|string, string, void>
      */
@@ -56,11 +56,11 @@ final class RespParser
     private static function parseValue(string $type, string $payload): \Generator
     {
         return match ($type) {
-            self::TYPE_SIMPLE_STRING => new RespValue($payload),
-            self::TYPE_INTEGER => new RespValue((int) $payload),
+            self::TYPE_SIMPLE_STRING => new RedisValue($payload),
+            self::TYPE_INTEGER => new RedisValue((int) $payload),
             self::TYPE_BULK_STRING => yield from self::parseString((int) $payload),
             self::TYPE_ARRAY => yield from self::parseArray((int) $payload),
-            self::TYPE_ERROR => new RespError($payload),
+            self::TYPE_ERROR => new RedisError($payload),
             default => throw new ParserException('Unknown resp data type: ' . $type),
         };
     }
@@ -75,7 +75,7 @@ final class RespParser
         }
 
         if ($length === -1) {
-            return new RespValue(null);
+            return new RedisValue(null);
         }
 
         $payload = match ($length) {
@@ -85,7 +85,7 @@ final class RespParser
 
         yield 2; // Remove trailing CRLF
 
-        return new RespValue($payload);
+        return new RedisValue($payload);
     }
 
     /**
@@ -98,7 +98,7 @@ final class RespParser
         }
 
         if ($count === -1) {
-            return new RespValue(null);
+            return new RedisValue(null);
         }
 
         $payload = [];
@@ -106,6 +106,6 @@ final class RespParser
             $payload[] = (yield from self::parseValue(yield 1, yield self::CRLF))->unwrap();
         }
 
-        return new RespValue($payload);
+        return new RedisValue($payload);
     }
 }

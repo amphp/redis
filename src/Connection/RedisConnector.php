@@ -16,5 +16,5 @@ interface RedisConnector
         RedisConfig $config,
         ?ConnectContext $context = null,
         ?Cancellation $cancellation = null,
-    ): RespChannel;
+    ): RedisChannel;
 }

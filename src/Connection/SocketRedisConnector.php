@@ -21,10 +21,10 @@ final class SocketRedisConnector implements RedisConnector
         RedisConfig $config,
         ?ConnectContext $context = null,
         ?Cancellation $cancellation = null,
-    ): RespChannel {
+    ): RedisChannel {
         try {
             $context = ($context ?? new ConnectContext)->withConnectTimeout($config->getTimeout());
-            $respSocket = new SocketRespChannel(
+            $respSocket = new SocketRedisChannel(
                 ($this->connector ?? Socket\socketConnector())->connect($config->getConnectUri(), $context)
             );
         } catch (Socket\SocketException $e) {

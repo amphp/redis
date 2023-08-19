@@ -11,7 +11,7 @@ use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
-final class SocketRespChannel implements RespChannel
+final class SocketRedisChannel implements RedisChannel
 {
     private readonly Socket $socket;
 
@@ -43,7 +43,7 @@ final class SocketRespChannel implements RespChannel
         });
     }
 
-    public function read(): ?RespPayload
+    public function read(): ?RedisPayload
     {
         if (!$this->iterator->continue()) {
             return null;

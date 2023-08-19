@@ -4,14 +4,14 @@ namespace Amp\Redis;
 
 use Amp\Future;
 use Amp\Pipeline\Queue;
+use Amp\Redis\Connection\RedisChannel;
 use Amp\Redis\Connection\RedisConnector;
-use Amp\Redis\Connection\RespChannel;
 use Revolt\EventLoop;
 use function Amp\async;
 
 final class RedisSubscriber
 {
-    private ?RespChannel $socket = null;
+    private ?RedisChannel $socket = null;
 
     private bool $running = false;
 

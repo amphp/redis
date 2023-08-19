@@ -3,12 +3,12 @@
 namespace Amp\Redis\Connection;
 
 /**
- * @psalm-import-type RespType from RespPayload
+ * @psalm-import-type RedisValueType from RedisPayload
  */
-final class RespValue implements RespPayload
+final class RedisValue implements RedisPayload
 {
     /**
-     * @param RespType $value
+     * @param RedisValueType $value
      */
     public function __construct(
         private readonly int|string|array|null $value,

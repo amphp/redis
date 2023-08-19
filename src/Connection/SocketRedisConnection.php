@@ -18,7 +18,7 @@ final class SocketRedisConnection implements RedisConnection
 
     private bool $running = false;
 
-    private ?RespChannel $socket = null;
+    private ?RedisChannel $socket = null;
 
     public function __construct(
         private readonly RedisConfig $config,
@@ -34,7 +34,7 @@ final class SocketRedisConnection implements RedisConnection
         $this->socket?->close();
     }
 
-    public function execute(string $command, array $parameters): RespPayload
+    public function execute(string $command, array $parameters): RedisPayload
     {
         if (!$this->running) {
             $this->run();
@@ -60,7 +60,7 @@ final class SocketRedisConnection implements RedisConnection
     /**
      * @param list<string> $parameters
      *
-     * @return Future<RespPayload>
+     * @return Future<RedisPayload>
      */
     private function enqueue(string $command, array $parameters): Future
     {

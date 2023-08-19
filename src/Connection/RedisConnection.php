@@ -7,5 +7,5 @@ interface RedisConnection
     /**
      * @param array<int|float|string> $parameters
      */
-    public function execute(string $command, array $parameters): RespPayload;
+    public function execute(string $command, array $parameters): RedisPayload;
 }
