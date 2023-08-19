@@ -18,7 +18,8 @@
         "object",
         "never",
         "toMap",
-        "redisConnector"
+        "redisConnector",
+        "random_bytes"
     ],
     "php-core-extensions": [
         "Core",
