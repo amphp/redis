@@ -26,7 +26,7 @@ final class RangeOptions
     }
 
     /**
-     * @return list<string>
+     * @return list<string|int>
      */
     public function toQuery(): array
     {
@@ -37,6 +37,8 @@ final class RangeOptions
         }
 
         if ($this->offset !== null) {
+            \assert($this->count !== null);
+
             $query[] = "LIMIT";
             $query[] = $this->offset;
             $query[] = $this->count;

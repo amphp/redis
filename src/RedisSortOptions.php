@@ -123,15 +123,22 @@ final class RedisSortOptions
     {
         $payload = [];
 
-        if ($this->hasPattern()) {
+        $pattern = $this->getPattern();
+        if ($pattern !== null) {
             $payload[] = 'BY';
-            $payload[] = $this->getPattern();
+            $payload[] = $pattern;
         }
 
         if ($this->hasLimit()) {
+            $offset = $this->getOffset();
+            $count = $this->getCount();
+
+            \assert($offset !== null);
+            \assert($count !== null);
+
             $payload[] = 'LIMIT';
-            $payload[] = $this->getOffset();
-            $payload[] = $this->getCount();
+            $payload[] = $offset;
+            $payload[] = $count;
         }
 
         if ($this->isDescending()) {
