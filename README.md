@@ -38,7 +38,7 @@ Amp\Loop::run(static function () {
 
 ## Security
 
-If you discover any security related issues, please email [`me@kelunik.com`](mailto:me@kelunik.com) instead of using the issue tracker.
+If you discover any security related issues, please use the private security issue reporter instead of using the public issue tracker.
 
 ## License
 
