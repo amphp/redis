@@ -6,7 +6,7 @@ use Amp\Redis\Redis;
 use Amp\Redis\RedisConfig;
 use Amp\Redis\SocketRedisClient;
 
-$redis = new Redis(new SocketRedisClient(RedisConfig::fromUri('redis://')));
+$redis = new Redis(new SocketRedisClient('redis://'));
 
 $redis->set('foo', '21');
 $result = $redis->increment('foo', 21);

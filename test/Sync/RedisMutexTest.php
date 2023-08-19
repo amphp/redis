@@ -18,7 +18,7 @@ class RedisMutexTest extends IntegrationTest
     {
         parent::setUp();
         $this->options = (new RedisMutexOptions())->withLockTimeout(1);
-        $clientFactory = new SocketRedisClientFactory(RedisConfig::fromUri($this->getUri()));
+        $clientFactory = new SocketRedisClientFactory($this->getUri());
 
         $this->mutex = new RedisMutex($clientFactory->createRedisClient(), $this->options);
     }

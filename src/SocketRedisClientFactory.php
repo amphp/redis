@@ -7,7 +7,7 @@ use Amp\Redis\Connection\RedisConnector;
 final class SocketRedisClientFactory implements RedisClientFactory
 {
     public function __construct(
-        private readonly RedisConfig $config,
+        private readonly RedisConfig|string $config,
         private readonly ?RedisConnector $connector = null,
     ) {
     }

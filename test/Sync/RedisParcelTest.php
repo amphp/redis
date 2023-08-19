@@ -45,8 +45,7 @@ class RedisParcelTest extends IntegrationTest
 
     protected function createParcel(mixed $value): RedisParcel
     {
-        $config = RedisConfig::fromUri($this->getUri());
-        $clientFactory = new SocketRedisClientFactory($config);
+        $clientFactory = new SocketRedisClientFactory($this->getUri());
         $mutex = new RedisMutex($clientFactory->createRedisClient());
 
         return RedisParcel::create($mutex, \bin2hex(\random_bytes(8)), $value);

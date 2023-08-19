@@ -2,10 +2,9 @@
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
-use Amp\Redis\RedisConfig;
 use Amp\Redis\SocketRedisClientFactory;
 
-$clientFactory = new SocketRedisClientFactory(RedisConfig::fromUri('redis://'));
+$clientFactory = new SocketRedisClientFactory('redis://');
 
 $redis = new Amp\Redis\Redis($clientFactory->createRedisClient());
 $mutex = new Amp\Redis\Sync\RedisMutex($clientFactory->createRedisClient());

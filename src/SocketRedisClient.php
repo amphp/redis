@@ -11,9 +11,13 @@ final class SocketRedisClient implements RedisClient
     private readonly RedisConnection $connection;
 
     public function __construct(
-        RedisConfig $config,
+        RedisConfig|string $config,
         ?RedisConnector $connector = null,
     ) {
+        if (\is_string($config)) {
+            $config = RedisConfig::fromUri($config);
+        }
+
         $this->connection = new SocketRedisConnection($config, $connector);
     }
 
