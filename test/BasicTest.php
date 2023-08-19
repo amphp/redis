@@ -3,7 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Redis\Connection\RedisConnector;
-use Amp\Redis\Connection\RedisSocketConnector;
+use Amp\Redis\Connection\SocketRedisConnector;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest
@@ -14,7 +14,7 @@ class BasicTest extends IntegrationTest
     {
         parent::setUp();
 
-        $this->connector = new RedisSocketConnector();
+        $this->connector = new SocketRedisConnector();
     }
 
     public function testRaw(): void

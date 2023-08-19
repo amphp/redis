@@ -9,7 +9,7 @@ use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;
 
-final class RedisSocketConnection implements RedisConnection
+final class SocketRedisConnection implements RedisConnection
 {
     /** @var \SplQueue<array{DeferredFuture, string, list<string>}> */
     private readonly \SplQueue $queue;

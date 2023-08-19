@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Redis\Connection\RedisConnection;
 use Amp\Redis\Connection\RedisConnector;
-use Amp\Redis\Connection\RedisSocketConnection;
+use Amp\Redis\Connection\SocketRedisConnection;
 
 final class RemoteExecutor implements QueryExecutor
 {
@@ -14,7 +14,7 @@ final class RemoteExecutor implements QueryExecutor
         RedisConfig $config,
         ?RedisConnector $connector = null,
     ) {
-        $this->connection = new RedisSocketConnection($config, $connector);
+        $this->connection = new SocketRedisConnection($config, $connector);
     }
 
     public function execute(string $command, int|float|string ...$parameters): mixed

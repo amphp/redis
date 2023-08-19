@@ -17,5 +17,5 @@ function redisConnector(?RedisConnector $connector = null): RedisConnector
         return $map[$driver] = $connector;
     }
 
-    return $map[$driver] ??= new RedisSocketConnector();
+    return $map[$driver] ??= new SocketRedisConnector();
 }
