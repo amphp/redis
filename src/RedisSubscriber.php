@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RedisChannel;
@@ -11,6 +13,9 @@ use function Amp\async;
 
 final class RedisSubscriber
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private ?RedisChannel $socket = null;
 
     private bool $running = false;

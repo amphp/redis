@@ -2,8 +2,14 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class RedisSortedSet
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly RedisClient $client;
     private readonly string $key;
 

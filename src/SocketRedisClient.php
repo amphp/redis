@@ -2,12 +2,17 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Redis\Connection\RedisConnection;
 use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\SocketRedisConnection;
 
 final class SocketRedisClient implements RedisClient
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly RedisConnection $connection;
 
     public function __construct(

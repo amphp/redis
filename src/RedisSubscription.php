@@ -2,6 +2,8 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
 use Revolt\EventLoop;
 
@@ -10,6 +12,9 @@ use Revolt\EventLoop;
  */
 final class RedisSubscription implements \IteratorAggregate
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var null|\Closure():void */
     private ?\Closure $unsubscribe;
 

@@ -3,6 +3,8 @@
 namespace Amp\Redis\Connection;
 
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Redis\RedisConfig;
 use Amp\Redis\RedisException;
@@ -11,6 +13,9 @@ use Revolt\EventLoop;
 
 final class SocketRedisConnection implements RedisConnection
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var \SplQueue<array{DeferredFuture, string, list<string>}> */
     private readonly \SplQueue $queue;
 

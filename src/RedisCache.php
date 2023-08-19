@@ -4,6 +4,8 @@ namespace Amp\Redis;
 
 use Amp\Cache\Cache;
 use Amp\Cache\CacheException;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 
@@ -13,6 +15,9 @@ use Amp\Serialization\Serializer;
  */
 final class RedisCache implements Cache
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     public function __construct(
         private readonly Redis $redis,
         private readonly Serializer $serializer = new NativeSerializer(),

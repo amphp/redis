@@ -4,6 +4,8 @@ namespace Amp\Redis\Connection;
 
 use Amp\ByteStream\ResourceStream;
 use Amp\ByteStream\StreamException;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 use Amp\Redis\RedisException;
@@ -13,6 +15,9 @@ use Revolt\EventLoop;
 
 final class SocketRedisChannel implements RedisChannel
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly Socket $socket;
 
     private readonly ConcurrentIterator $iterator;

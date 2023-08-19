@@ -3,8 +3,14 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class Redis
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var string[] */
     private array $evalCache = [];
 

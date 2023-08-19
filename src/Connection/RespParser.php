@@ -2,6 +2,8 @@
 
 namespace Amp\Redis\Connection;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Parser\Parser;
 use Amp\Redis\ParserException;
 
@@ -10,6 +12,9 @@ use Amp\Redis\ParserException;
  */
 final class RespParser
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private const CRLF = "\r\n";
 
     private const TYPE_SIMPLE_STRING = '+';

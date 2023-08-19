@@ -3,8 +3,14 @@
 
 namespace Amp\Redis;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class RedisList
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     public function __construct(
         private readonly RedisClient $client,
         private readonly string $key,

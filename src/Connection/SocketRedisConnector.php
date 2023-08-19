@@ -3,6 +3,8 @@
 namespace Amp\Redis\Connection;
 
 use Amp\Cancellation;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Redis\RedisConfig;
 use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
@@ -12,6 +14,9 @@ use Amp\Socket\SocketConnector;
 
 final class SocketRedisConnector implements RedisConnector
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     public function __construct(
         private readonly ?SocketConnector $connector = null,
     ) {
