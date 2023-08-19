@@ -11,7 +11,7 @@ use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
-final class DefaultRespSocket implements RespSocket
+final class SocketRespChannel implements RespChannel
 {
     private readonly Socket $socket;
 

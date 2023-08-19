@@ -4,7 +4,7 @@ namespace Amp\Redis\Connection;
 
 use Amp\Redis\RedisException;
 
-interface RespSocket
+interface RespChannel
 {
     /**
      * @throws RedisException If reading from the socket fails.

@@ -18,7 +18,7 @@ final class SocketRedisConnection implements RedisConnection
 
     private bool $running = false;
 
-    private ?RespSocket $socket = null;
+    private ?RespChannel $socket = null;
 
     public function __construct(
         private readonly RedisConfig $config,
