@@ -4,7 +4,7 @@ namespace Amp\Redis\Sync;
 
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RedisConfig;
-use Amp\Redis\RemoteExecutorFactory;
+use Amp\Redis\SocketRedisClientFactory;
 use Revolt\EventLoop;
 use function Amp\delay;
 
@@ -18,9 +18,9 @@ class RedisMutexTest extends IntegrationTest
     {
         parent::setUp();
         $this->options = (new RedisMutexOptions())->withLockTimeout(1);
-        $executorFactory = new RemoteExecutorFactory(RedisConfig::fromUri($this->getUri()));
+        $clientFactory = new SocketRedisClientFactory(RedisConfig::fromUri($this->getUri()));
 
-        $this->mutex = new RedisMutex($executorFactory->createQueryExecutor(), $this->options);
+        $this->mutex = new RedisMutex($clientFactory->createRedisClient(), $this->options);
     }
 
     public function testTimeout(): void

@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\QueryExecutor;
+use Amp\Redis\RedisClient;
 use Amp\Redis\Redis;
 use Amp\Redis\RedisException;
 use Amp\Sync\KeyedMutex;
@@ -119,12 +119,12 @@ RENEW;
      * Constructs a new Mutex instance. A single instance can be used to create as many locks as you need.
      */
     public function __construct(
-        private readonly QueryExecutor $queryExecutor,
+        private readonly RedisClient $client,
         ?RedisMutexOptions $options = null,
         ?PsrLogger $logger = null,
     ) {
         $this->options = $options ?? new RedisMutexOptions;
-        $this->redis = new Redis($queryExecutor);
+        $this->redis = new Redis($client);
         $this->logger = $logger ?? new NullLogger;
     }
 
@@ -135,9 +135,9 @@ RENEW;
         }
     }
 
-    public function getQueryExecutor(): QueryExecutor
+    public function getClient(): RedisClient
     {
-        return $this->queryExecutor;
+        return $this->client;
     }
 
     /**

@@ -5,7 +5,7 @@ use Revolt\EventLoop;
 require __DIR__ . '/../vendor/autoload.php';
 
 $config = Amp\Redis\RedisConfig::fromUri('redis://');
-$client = new Amp\Redis\Redis(new Amp\Redis\RemoteExecutor($config));
+$client = new Amp\Redis\Redis(new Amp\Redis\SocketRedisClient($config));
 
 $client->delete('foobar-list');
 

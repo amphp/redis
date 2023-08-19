@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Redis\Connection\RedisConnector;
 
-final class RemoteExecutorFactory implements QueryExecutorFactory
+final class SocketRedisClientFactory implements RedisClientFactory
 {
     public function __construct(
         private readonly RedisConfig $config,
@@ -12,8 +12,8 @@ final class RemoteExecutorFactory implements QueryExecutorFactory
     ) {
     }
 
-    public function createQueryExecutor(): QueryExecutor
+    public function createRedisClient(): RedisClient
     {
-        return new RemoteExecutor($this->config, $this->connector);
+        return new SocketRedisClient($this->config, $this->connector);
     }
 }

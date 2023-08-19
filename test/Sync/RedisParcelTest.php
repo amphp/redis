@@ -4,7 +4,7 @@ namespace Amp\Redis\Sync;
 
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RedisConfig;
-use Amp\Redis\RemoteExecutorFactory;
+use Amp\Redis\SocketRedisClientFactory;
 use function Amp\async;
 use function Amp\delay;
 
@@ -46,8 +46,8 @@ class RedisParcelTest extends IntegrationTest
     protected function createParcel(mixed $value): RedisParcel
     {
         $config = RedisConfig::fromUri($this->getUri());
-        $executorFactory = new RemoteExecutorFactory($config);
-        $mutex = new RedisMutex($executorFactory->createQueryExecutor());
+        $clientFactory = new SocketRedisClientFactory($config);
+        $mutex = new RedisMutex($clientFactory->createRedisClient());
 
         return RedisParcel::create($mutex, \bin2hex(\random_bytes(8)), $value);
     }

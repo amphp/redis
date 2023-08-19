@@ -4,12 +4,12 @@ namespace Amp\Redis;
 
 final class RedisSortedSet
 {
-    private readonly QueryExecutor $queryExecutor;
+    private readonly RedisClient $client;
     private readonly string $key;
 
-    public function __construct(QueryExecutor $queryExecutor, string $key)
+    public function __construct(RedisClient $client, string $key)
     {
-        $this->queryExecutor = $queryExecutor;
+        $this->client = $client;
         $this->key = $key;
     }
 
@@ -27,7 +27,7 @@ final class RedisSortedSet
             $payload[] = $member;
         }
 
-        return $this->queryExecutor->execute('zadd', ...$payload);
+        return $this->client->execute('zadd', ...$payload);
     }
 
     /**
@@ -36,7 +36,7 @@ final class RedisSortedSet
     public function getRange(int $start, int $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute('zrange', $this->key, $start, $end, ...$options->toQuery());
+        return $this->client->execute('zrange', $this->key, $start, $end, ...$options->toQuery());
     }
 
     /**
@@ -45,7 +45,7 @@ final class RedisSortedSet
     public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return \array_map(\floatval(...), Internal\toMap($this->queryExecutor->execute(
+        return \array_map(\floatval(...), Internal\toMap($this->client->execute(
             'zrange',
             $this->key,
             $start,
@@ -61,7 +61,7 @@ final class RedisSortedSet
     public function getRangeByScore(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute(
+        return $this->client->execute(
             'zrange',
             $this->key,
             $min->toQuery(),
@@ -77,7 +77,7 @@ final class RedisSortedSet
     public function getRangeByScoreWithScores(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return \array_map(\floatval(...), Internal\toMap($this->queryExecutor->execute(
+        return \array_map(\floatval(...), Internal\toMap($this->client->execute(
             'zrange',
             $this->key,
             $min->toQuery(),
@@ -91,7 +91,7 @@ final class RedisSortedSet
     public function getLexicographicRange(LexBoundary $start, LexBoundary $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return $this->queryExecutor->execute(
+        return $this->client->execute(
             'zrange',
             $this->key,
             $start->toQuery(),
@@ -103,17 +103,17 @@ final class RedisSortedSet
 
     public function getSize(): int
     {
-        return $this->queryExecutor->execute('zcard', $this->key);
+        return $this->client->execute('zcard', $this->key);
     }
 
     public function count(int $min, int $max): int
     {
-        return $this->queryExecutor->execute('zcount', $this->key, $min, $max);
+        return $this->client->execute('zcount', $this->key, $min, $max);
     }
 
     public function increment(string $member, float $increment = 1): float
     {
-        return (float) $this->queryExecutor->execute('zincrby', $this->key, $increment, $member);
+        return (float) $this->client->execute('zincrby', $this->key, $increment, $member);
     }
 
     /**
@@ -148,42 +148,42 @@ final class RedisSortedSet
             $payload[] = $aggregate;
         }
 
-        return $this->queryExecutor->execute('zinterstore', ...$payload);
+        return $this->client->execute('zinterstore', ...$payload);
     }
 
     public function countLexicographicRange(LexBoundary $min, LexBoundary $max): int
     {
-        return $this->queryExecutor->execute('zlexcount', $this->key, $min->toQuery(), $max->toQuery());
+        return $this->client->execute('zlexcount', $this->key, $min->toQuery(), $max->toQuery());
     }
 
     public function getRank(string $member): ?int
     {
-        return $this->queryExecutor->execute('zrank', $this->key, $member);
+        return $this->client->execute('zrank', $this->key, $member);
     }
 
     public function remove(string $member, string ...$members): int
     {
-        return $this->queryExecutor->execute('zrem', $this->key, $member, ...$members);
+        return $this->client->execute('zrem', $this->key, $member, ...$members);
     }
 
     public function removeLexicographicRange(LexBoundary $min, LexBoundary $max): int
     {
-        return $this->queryExecutor->execute('zremrangebylex', $this->key, $min->toQuery(), $max->toQuery());
+        return $this->client->execute('zremrangebylex', $this->key, $min->toQuery(), $max->toQuery());
     }
 
     public function removeRankRange(int $start, int $stop): int
     {
-        return $this->queryExecutor->execute('zremrangebyrank', $this->key, $start, $stop);
+        return $this->client->execute('zremrangebyrank', $this->key, $start, $stop);
     }
 
     public function removeRangeByScore(ScoreBoundary $min, ScoreBoundary $max): int
     {
-        return $this->queryExecutor->execute('zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery());
+        return $this->client->execute('zremrangebyscore', $this->key, $min->toQuery(), $max->toQuery());
     }
 
     public function getReversedRank(string $member): ?int
     {
-        return $this->queryExecutor->execute('zrevrank', $this->key, $member);
+        return $this->client->execute('zrevrank', $this->key, $member);
     }
 
     /**
@@ -207,7 +207,7 @@ final class RedisSortedSet
             }
 
             /** @var list<string> $keys */
-            [$cursor, $keys] = $this->queryExecutor->execute('ZSCAN', ...$query);
+            [$cursor, $keys] = $this->client->execute('ZSCAN', ...$query);
 
             $count = \count($keys);
             \assert($count % 2 === 0);
@@ -220,7 +220,7 @@ final class RedisSortedSet
 
     public function getScore(string $member): ?float
     {
-        return (float) $this->queryExecutor->execute('zscore', $this->key, $member);
+        return (float) $this->client->execute('zscore', $this->key, $member);
     }
 
     /**
@@ -255,7 +255,7 @@ final class RedisSortedSet
             $payload[] = $aggregate;
         }
 
-        return $this->queryExecutor->execute('zunionstore', ...$payload);
+        return $this->client->execute('zunionstore', ...$payload);
     }
 
     /**
@@ -263,6 +263,6 @@ final class RedisSortedSet
      */
     public function sort(?RedisSortOptions $options = null): array
     {
-        return $this->queryExecutor->execute('SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery());
+        return $this->client->execute('SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery());
     }
 }

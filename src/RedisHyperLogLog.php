@@ -6,7 +6,7 @@ namespace Amp\Redis;
 final class RedisHyperLogLog
 {
     public function __construct(
-        private readonly QueryExecutor $queryExecutor,
+        private readonly RedisClient $client,
         private readonly string $key,
     ) {
     }
@@ -16,7 +16,7 @@ final class RedisHyperLogLog
      */
     public function add(string $element, string ...$elements): bool
     {
-        return (bool) $this->queryExecutor->execute(
+        return (bool) $this->client->execute(
             'pfadd',
             $this->key,
             $element,
@@ -29,7 +29,7 @@ final class RedisHyperLogLog
      */
     public function count(): int
     {
-        return $this->queryExecutor->execute('pfcount', $this->key);
+        return $this->client->execute('pfcount', $this->key);
     }
 
     /**
@@ -37,7 +37,7 @@ final class RedisHyperLogLog
      */
     public function storeUnion(string $sourceKey, string ...$sourceKeys): void
     {
-        $this->queryExecutor->execute(
+        $this->client->execute(
             'pfmerge',
             $this->key,
             $sourceKey,

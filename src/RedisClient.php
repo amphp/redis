@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-interface QueryExecutor
+interface RedisClient
 {
     /**
      * @throws QueryException

@@ -37,7 +37,7 @@ class AuthTest extends AsyncTestCase
 
     public function testSuccess(): void
     {
-        $redis = new Redis(new RemoteExecutor(
+        $redis = new Redis(new SocketRedisClient(
             RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD))
         ));
         $this->assertSame('PONG', $redis->echo('PONG'));
@@ -46,7 +46,7 @@ class AuthTest extends AsyncTestCase
 
     public function testFailure(): void
     {
-        $redis = new Redis(new RemoteExecutor(
+        $redis = new Redis(new SocketRedisClient(
             RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, 'wrong'))
         ));
         $this->expectException(RedisSocketException::class);
@@ -60,7 +60,7 @@ class AuthTest extends AsyncTestCase
     {
         // This will hit stream select limits if garbage isn't collected as it should (e.g. due to circular references)
         for ($i = 0; $i < 10000; $i++) {
-            $redis = new Redis(new RemoteExecutor(
+            $redis = new Redis(new SocketRedisClient(
                 RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD))
             ));
             $this->assertSame('PONG', $redis->echo('PONG'));

@@ -6,7 +6,7 @@ use Amp\Redis\Connection\RedisConnection;
 use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\SocketRedisConnection;
 
-final class RemoteExecutor implements QueryExecutor
+final class SocketRedisClient implements RedisClient
 {
     private readonly RedisConnection $connection;
 

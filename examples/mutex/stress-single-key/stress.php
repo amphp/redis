@@ -3,12 +3,12 @@
 require __DIR__ . '/../../../vendor/autoload.php';
 
 use Amp\Redis\RedisConfig;
-use Amp\Redis\RemoteExecutorFactory;
+use Amp\Redis\SocketRedisClientFactory;
 
-$executorFactory = new RemoteExecutorFactory(RedisConfig::fromUri('redis://localhost'));
+$clientFactory = new SocketRedisClientFactory(RedisConfig::fromUri('redis://localhost'));
 
-$redis = new Amp\Redis\Redis($executorFactory->createQueryExecutor());
-$mutex = new Amp\Redis\Sync\RedisMutex($executorFactory->createQueryExecutor());
+$redis = new Amp\Redis\Redis($clientFactory->createRedisClient());
+$mutex = new Amp\Redis\Sync\RedisMutex($clientFactory->createRedisClient());
 
 for ($i = 0; $i < 100; $i++) {
     $lock = $mutex->acquire('test');
