@@ -426,6 +426,9 @@ final class Redis
         return (bool) $this->queryExecutor->execute('setnx', $key, $value);
     }
 
+    /**
+     * @link https://redis.io/commands/set/
+     */
     public function set(string $key, string $value, ?RedisSetOptions $options = null): bool
     {
         $options ??= new RedisSetOptions();
