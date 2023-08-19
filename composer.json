@@ -36,7 +36,7 @@
         "amphp/sync": "^2",
         "revolt/event-loop": "^1",
         "psr/log": "^1|^2|^3",
-        "league/uri": "^6.5"
+        "league/uri": "^6.5|^7"
     },
     "require-dev": {
         "amphp/phpunit-util": "^3",
