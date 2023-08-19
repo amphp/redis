@@ -2,9 +2,10 @@
 
 namespace Amp\Redis\Connection;
 
+use Amp\Closable;
 use Amp\Redis\RedisException;
 
-interface RedisChannel
+interface RedisChannel extends Closable
 {
     /**
      * @throws RedisException If reading from the socket fails.
@@ -19,8 +20,4 @@ interface RedisChannel
     public function reference(): void;
 
     public function unreference(): void;
-
-    public function close(): void;
-
-    public function isClosed(): bool;
 }

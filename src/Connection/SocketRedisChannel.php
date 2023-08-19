@@ -97,6 +97,11 @@ final class SocketRedisChannel implements RedisChannel
         return $this->socket->isClosed();
     }
 
+    public function onClose(\Closure $onClose): void
+    {
+        $this->socket->onClose($onClose);
+    }
+
     public function __destruct()
     {
         $this->close();
