@@ -10,7 +10,7 @@ use Amp\Socket;
 use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;
 
-class SocketRedisConnector implements RedisConnector
+final class SocketRedisConnector implements RedisConnector
 {
     public function __construct(
         private readonly ?SocketConnector $connector = null,
