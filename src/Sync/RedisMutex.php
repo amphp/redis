@@ -2,8 +2,8 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\RedisClient;
 use Amp\Redis\Redis;
+use Amp\Redis\RedisClient;
 use Amp\Redis\RedisException;
 use Amp\Sync\KeyedMutex;
 use Amp\Sync\Lock;

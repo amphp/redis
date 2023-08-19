@@ -2,7 +2,6 @@
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
-use Amp\Redis\RedisConfig;
 use Amp\Redis\SocketRedisClientFactory;
 
 $clientFactory = new SocketRedisClientFactory('redis://localhost');

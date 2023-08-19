@@ -2,8 +2,8 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\RedisClient;
 use Amp\Redis\Redis;
+use Amp\Redis\RedisClient;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 use Amp\Sync\Parcel;

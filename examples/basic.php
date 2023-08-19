@@ -3,7 +3,6 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Amp\Redis\Redis;
-use Amp\Redis\RedisConfig;
 use Amp\Redis\SocketRedisClient;
 
 $redis = new Redis(new SocketRedisClient('redis://'));

@@ -3,7 +3,6 @@
 namespace Amp\Redis\Sync;
 
 use Amp\Redis\IntegrationTest;
-use Amp\Redis\RedisConfig;
 use Amp\Redis\SocketRedisClientFactory;
 use function Amp\async;
 use function Amp\delay;
