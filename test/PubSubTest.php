@@ -10,14 +10,14 @@ use function Amp\delay;
 
 class PubSubTest extends IntegrationTest
 {
-    private Subscriber $subscriber;
+    private RedisSubscriber $subscriber;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->setTimeout(1);
 
-        $this->subscriber = new Subscriber(RedisConfig::fromUri($this->getUri()));
+        $this->subscriber = new RedisSubscriber(RedisConfig::fromUri($this->getUri()));
     }
 
     private function getNextValue(ConcurrentIterator $concurrentIterator): string

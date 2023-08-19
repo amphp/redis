@@ -8,7 +8,7 @@ use Revolt\EventLoop;
 /**
  * @implements \IteratorAggregate<int, string>
  */
-final class Subscription implements \IteratorAggregate
+final class RedisSubscription implements \IteratorAggregate
 {
     /** @var null|\Closure():void */
     private ?\Closure $unsubscribe;

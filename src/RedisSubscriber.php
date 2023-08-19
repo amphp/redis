@@ -9,7 +9,7 @@ use Amp\Redis\Connection\RespChannel;
 use Revolt\EventLoop;
 use function Amp\async;
 
-final class Subscriber
+final class RedisSubscriber
 {
     private ?RespChannel $socket = null;
 
@@ -33,7 +33,7 @@ final class Subscriber
         $this->socket?->close();
     }
 
-    public function subscribe(string $channel): Subscription
+    public function subscribe(string $channel): RedisSubscription
     {
         if (!$this->running) {
             $this->run();
@@ -56,10 +56,10 @@ final class Subscriber
             }
         }
 
-        return new Subscription($queue->iterate(), fn () => $this->unloadEmitter($queue, $channel));
+        return new RedisSubscription($queue->iterate(), fn () => $this->unloadEmitter($queue, $channel));
     }
 
-    public function subscribeToPattern(string $pattern): Subscription
+    public function subscribeToPattern(string $pattern): RedisSubscription
     {
         if (!$this->running) {
             $this->run();
@@ -82,7 +82,7 @@ final class Subscriber
             }
         }
 
-        return new Subscription($queue->iterate(), fn () => $this->unloadPatternEmitter($queue, $pattern));
+        return new RedisSubscription($queue->iterate(), fn () => $this->unloadPatternEmitter($queue, $pattern));
     }
 
     private function run(): void
