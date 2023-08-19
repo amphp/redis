@@ -1,15 +1,16 @@
 {
     "name": "amphp/redis",
-    "description": "A non-blocking Redis client for Amp.",
+    "description": "Efficient asynchronous communication with Redis servers, enabling scalable and responsive data storage and retrieval.",
     "keywords": [
         "amp",
         "amphp",
         "async",
         "client",
-        "redis"
+        "redis",
+        "revolt"
     ],
     "license": "MIT",
-    "homepage": "https://github.com/amphp/redis",
+    "homepage": "https://amphp.org/redis",
     "authors": [
         {
             "name": "Niklas Keller",
