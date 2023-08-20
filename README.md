@@ -19,11 +19,7 @@ composer require amphp/redis
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Amp\Redis\RedisConfig;
 use Amp\Redis\Redis;
-use Amp\Redis\SocketRedisClient;
-use Amp\Redis\Connection\ReconnectingRedisLink;
-use Amp\Redis\Connection\SocketRedisConnector;
 use function Amp\Redis\createRedisClient;
 
 $redis = new Redis(createRedisClient('redis://'));
