@@ -23,7 +23,7 @@ final class SocketRedisLink implements RedisLink
 
     private bool $running = false;
 
-    private ?RedisChannel $socket = null;
+    private ?RedisChannel $channel = null;
 
     public function __construct(
         private readonly RedisConfig $config,
@@ -36,7 +36,7 @@ final class SocketRedisLink implements RedisLink
     public function __destruct()
     {
         $this->running = false;
-        $this->socket?->close();
+        $this->channel?->close();
     }
 
     public function execute(string $command, array $parameters): RedisResponse
@@ -51,7 +51,7 @@ final class SocketRedisLink implements RedisLink
             $response = $this->enqueue($command, $parameters)->await();
         } finally {
             if (\strcasecmp($command, 'quit') === 0) {
-                $this->socket?->close();
+                $this->channel?->close();
             }
         }
 
@@ -72,12 +72,12 @@ final class SocketRedisLink implements RedisLink
         $deferred = new DeferredFuture();
         $this->queue->push([$deferred, $command, $parameters]);
 
-        $this->socket?->reference();
+        $this->channel?->reference();
 
         try {
-            $this->socket?->send($command, ...$parameters);
+            $this->channel?->send($command, ...$parameters);
         } catch (RedisException) {
-            $this->socket = null;
+            $this->channel = null;
         }
 
         return $deferred->getFuture();
@@ -89,7 +89,7 @@ final class SocketRedisLink implements RedisLink
         $connector = $this->connector ?? redisConnector();
         $queue = $this->queue;
         $running = &$this->running;
-        $socket = &$this->socket;
+        $socket = &$this->channel;
         $database = &$this->database;
         EventLoop::queue(static function () use (&$socket, &$running, &$database, $queue, $config, $connector): void {
             try {

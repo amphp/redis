@@ -16,7 +16,7 @@ final class RedisSubscriber
     use ForbidCloning;
     use ForbidSerialization;
 
-    private ?RedisChannel $socket = null;
+    private ?RedisChannel $channel = null;
 
     private bool $running = false;
 
@@ -35,7 +35,7 @@ final class RedisSubscriber
     public function __destruct()
     {
         $this->running = false;
-        $this->socket?->close();
+        $this->channel?->close();
     }
 
     public function subscribe(string $channel): RedisSubscription
@@ -50,10 +50,10 @@ final class RedisSubscriber
         $this->queues[$channel][\spl_object_id($queue)] = $queue;
 
         if ($subscribe) {
-            $this->socket?->reference();
+            $this->channel?->reference();
 
             try {
-                $this->socket?->send('subscribe', $channel);
+                $this->channel?->send('subscribe', $channel);
             } catch (\Throwable $e) {
                 $this->unloadEmitter($queue, $channel);
 
@@ -76,10 +76,10 @@ final class RedisSubscriber
         $this->patternQueues[$pattern][\spl_object_id($queue)] = $queue;
 
         if ($subscribe) {
-            $this->socket?->reference();
+            $this->channel?->reference();
 
             try {
-                $this->socket?->send('psubscribe', $pattern);
+                $this->channel?->send('psubscribe', $pattern);
             } catch (\Throwable $e) {
                 $this->unloadPatternEmitter($queue, $pattern);
 
@@ -95,7 +95,7 @@ final class RedisSubscriber
         $config = $this->config;
         $connector = $this->connector ?? Connection\redisConnector();
         $running = &$this->running;
-        $socket = &$this->socket;
+        $socket = &$this->channel;
         $queues = &$this->queues;
         $patternQueues = &$this->patternQueues;
 
@@ -187,12 +187,12 @@ final class RedisSubscriber
                 async(function () use ($channel): void {
                     try {
                         if (empty($this->queues[$channel])) {
-                            $this->socket?->reference();
-                            $this->socket?->send('unsubscribe', $channel);
+                            $this->channel?->reference();
+                            $this->channel?->send('unsubscribe', $channel);
                         }
 
                         if ($this->isIdle()) {
-                            $this->socket?->unreference();
+                            $this->channel?->unreference();
                         }
                     } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
@@ -217,12 +217,12 @@ final class RedisSubscriber
                 async(function () use ($pattern): void {
                     try {
                         if (empty($this->patternQueues[$pattern])) {
-                            $this->socket?->reference();
-                            $this->socket?->send('punsubscribe', $pattern);
+                            $this->channel?->reference();
+                            $this->channel?->send('punsubscribe', $pattern);
                         }
 
                         if ($this->isIdle()) {
-                            $this->socket?->unreference();
+                            $this->channel?->unreference();
                         }
                     } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
