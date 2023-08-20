@@ -399,7 +399,9 @@ final class RedisClient
      */
     public function getMultiple(string $key, string ...$keys): array
     {
-        return \array_combine($keys, $this->execute('mget', $key, ...$keys));
+        \array_unshift($keys, $key);
+
+        return \array_combine($keys, $this->execute('mget', ...$keys));
     }
 
     /**

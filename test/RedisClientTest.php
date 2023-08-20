@@ -56,5 +56,15 @@ class RedisClientTest extends IntegrationTest
         $this->assertSame(4, $this->redis->increment('number'));
         $this->assertSame(6, $this->redis->increment('number', 2));
         $this->assertSame(1, $this->redis->getLength('number'));
+
+        $this->redis->set('multi.1', '1');
+        $this->redis->set('multi.2', '2');
+        $this->redis->set('multi.3', '3');
+
+        $this->assertSame([
+            'multi.1' => '1',
+            'multi.2' => '2',
+            'multi.3' => '3',
+        ], $this->redis->getMultiple('multi.1', 'multi.2', 'multi.3'));
     }
 }
