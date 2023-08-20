@@ -160,7 +160,6 @@ final class RedisList
     }
 
     /**
-     *
      * @link https://redis.io/commands/ltrim
      */
     public function trim(int $start = 0, int $stop = -1): void
