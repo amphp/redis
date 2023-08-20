@@ -17,6 +17,18 @@ final class RedisError implements RedisResponse
         throw new QueryException($this->message);
     }
 
+    public function getKind(): ?string
+    {
+        $prefix = \strtok($this->message, ' ');
+
+        // This is just a convention of Redis server, not part of the protocol
+        if ($prefix === \strtoupper($prefix)) {
+            return $prefix;
+        }
+
+        return null;
+    }
+
     public function getMessage(): string
     {
         return $this->message;

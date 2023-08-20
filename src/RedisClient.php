@@ -794,7 +794,7 @@ final class RedisClient
 
         $response = $this->link->execute('evalsha', [$sha1, \count($keys), ...$keys, ...$args]);
 
-        if ($response instanceof RedisError && \strtok($response->getMessage(), ' ') === 'NOSCRIPT') {
+        if ($response instanceof RedisError && $response->getKind() === 'NOSCRIPT') {
             return $this->execute('eval', $script, \count($keys), ...$keys, ...$args);
         }
 
