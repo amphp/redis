@@ -3,7 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\Redis\Connection\Authenticator;
-use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\ReconnectingRedisLink;
 use Amp\Redis\Connection\DatabaseSelector;
 use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\SocketRedisConnector;
@@ -33,5 +33,5 @@ function createRedisConnector(RedisConfig|string $config, ?RedisConnector $conne
 
 function createRedisClient(RedisConfig|string $config, ?RedisConnector $connector = null): RedisClient
 {
-    return new RedisClient(new ChannelLink(createRedisConnector($config, $connector)));
+    return new RedisClient(new ReconnectingRedisLink(createRedisConnector($config, $connector)));
 }

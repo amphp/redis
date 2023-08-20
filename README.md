@@ -25,12 +25,12 @@ require __DIR__ . '/vendor/autoload.php';
 use Amp\Redis\RedisConfig;
 use Amp\Redis\Redis;
 use Amp\Redis\SocketRedisClient;
-use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\ReconnectingRedisLink;
 use Amp\Redis\Connection\SocketRedisConnector;
 
 Amp\Loop::run(static function () {
     $config = RedisConfig::fromUri('redis://');
-    $redis = new Redis(new ChannelLink($config, new SocketRedisConnector($config)));
+    $redis = new Redis(new ReconnectingRedisLink($config, new SocketRedisConnector($config)));
 
     yield $redis->set('foo', '21');
     $result = yield $redis->increment('foo', 21);
