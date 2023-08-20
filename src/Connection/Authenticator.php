@@ -14,13 +14,13 @@ final class Authenticator implements RedisConnector
 
     public function __construct(
         #[\SensitiveParameter] private readonly string $password,
-        private readonly RedisConnector $channelFactory
+        private readonly RedisConnector $connector
     ) {
     }
 
     public function connect(?Cancellation $cancellation = null): RedisChannel
     {
-        $channel = $this->channelFactory->connect($cancellation);
+        $channel = $this->connector->connect($cancellation);
 
         $channel->send('AUTH', $this->password);
 

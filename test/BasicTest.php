@@ -7,7 +7,7 @@ use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
-    private RedisConnector $channelFactory;
+    private RedisConnector $connector;
 
     public function setUp(): void
     {
@@ -18,8 +18,8 @@ class BasicTest extends IntegrationTest
     {
         $this->setTimeout(5);
 
-        $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->connect();
+        $this->connector = createRedisConnector($this->getUri());
+        $channel = $this->connector->connect();
 
         $channel->send('PING');
 
@@ -39,8 +39,8 @@ class BasicTest extends IntegrationTest
 
         $config = RedisConfig::fromUri($this->getUri());
 
-        $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->connect();
+        $this->connector = createRedisConnector($this->getUri());
+        $channel = $this->connector->connect();
 
         $channel->send('QUIT');
 
@@ -55,8 +55,8 @@ class BasicTest extends IntegrationTest
 
         $config = RedisConfig::fromUri($this->getUri());
 
-        $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->connect();
+        $this->connector = createRedisConnector($this->getUri());
+        $channel = $this->connector->connect();
 
         $channel->send('QUIT');
 
@@ -73,8 +73,8 @@ class BasicTest extends IntegrationTest
 
         $config = RedisConfig::fromUri($this->getUri());
 
-        $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->connect();
+        $this->connector = createRedisConnector($this->getUri());
+        $channel = $this->connector->connect();
 
         $channel->send('QUIT');
 
@@ -93,8 +93,8 @@ class BasicTest extends IntegrationTest
 
         $config = RedisConfig::fromUri($this->getUri());
 
-        $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->connect();
+        $this->connector = createRedisConnector($this->getUri());
+        $channel = $this->connector->connect();
 
         $channel->send('QUIT');
 

@@ -17,7 +17,7 @@ class PubSubTest extends IntegrationTest
         parent::setUp();
         $this->setTimeout(1);
 
-        $this->subscriber = new RedisSubscriber(createRedisChannelFactory($this->getUri()));
+        $this->subscriber = new RedisSubscriber(createRedisConnector($this->getUri()));
     }
 
     private function getNextValue(ConcurrentIterator $concurrentIterator): string

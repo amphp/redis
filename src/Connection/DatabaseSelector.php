@@ -14,13 +14,13 @@ final class DatabaseSelector implements RedisConnector
 
     public function __construct(
         private readonly int $database,
-        private readonly RedisConnector $channelFactory
+        private readonly RedisConnector $connector
     ) {
     }
 
     public function connect(?Cancellation $cancellation = null): RedisChannel
     {
-        $channel = $this->channelFactory->connect($cancellation);
+        $channel = $this->connector->connect($cancellation);
 
         $channel->send('SELECT', (string) $this->database);
 

@@ -27,7 +27,7 @@ final class RedisSubscriber
     private array $patternQueues = [];
 
     public function __construct(
-        private readonly RedisConnector $channelFactory,
+        private readonly RedisConnector $connector,
     ) {
     }
 
@@ -91,7 +91,7 @@ final class RedisSubscriber
 
     private function run(): void
     {
-        $channelFactory = $this->channelFactory;
+        $connector = $this->connector;
         $running = &$this->running;
         $channel = &$this->channel;
         $queues = &$this->queues;
@@ -102,11 +102,11 @@ final class RedisSubscriber
             &$channel,
             &$queues,
             &$patternQueues,
-            $channelFactory
+            $connector
         ): void {
             try {
                 while ($running) {
-                    $channel = $channelFactory->connect();
+                    $channel = $connector->connect();
                     $channel->unreference();
 
                     try {
