@@ -21,6 +21,11 @@ interface RedisChannel extends Closable
      */
     public function send(string ...$args): void;
 
+    /**
+     * @return string A name for debugging purposes, e.g. the connect URI.
+     */
+    public function getName(): string;
+
     public function reference(): void;
 
     public function unreference(): void;

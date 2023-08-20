@@ -6,7 +6,6 @@ use Amp\DeferredFuture;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Future;
-use Amp\Redis\RedisConfig;
 use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;
@@ -19,17 +18,14 @@ final class ChannelLink implements RedisLink
     /** @var \SplQueue<array{DeferredFuture, string, list<string>}> */
     private readonly \SplQueue $queue;
 
-    private int $database;
+    private ?int $database = null;
 
     private bool $running = false;
 
     private ?RedisChannel $channel = null;
 
-    public function __construct(
-        private readonly RedisConfig $config,
-        private readonly RedisChannelFactory $channelFactory,
-    ) {
-        $this->database = $config->getDatabase();
+    public function __construct(private readonly RedisChannelFactory $channelFactory)
+    {
         $this->queue = new \SplQueue();
     }
 
@@ -56,7 +52,7 @@ final class ChannelLink implements RedisLink
         }
 
         if (\strcasecmp($command, 'select') === 0) {
-            $this->database = (int)($parameters[0] ?? 0);
+            $this->database = (int) ($parameters[0] ?? 0);
         }
 
         return $response;
@@ -95,8 +91,12 @@ final class ChannelLink implements RedisLink
             try {
                 while ($running) {
                     $channel = $channelFactory->createChannel();
-                    $channel->send('SELECT', (string)$database);
-                    $channel->receive()->unwrap();
+
+                    if ($database !== null) {
+                        $channel->send('SELECT', (string) $database);
+                        $channel->receive()->unwrap();
+                    }
+
                     $channel->unreference();
 
                     try {

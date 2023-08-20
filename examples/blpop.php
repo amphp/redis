@@ -2,16 +2,12 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Amp\Redis\Connection\ChannelLink;
-use Amp\Redis\Connection\SocketChannelFactory;
 use Amp\Redis\Redis;
-use Amp\Redis\RedisClient;
-use Amp\Redis\RedisConfig;
 use function Amp\async;
+use function Amp\Redis\createRedisClient;
 
 $future = async(function (): void {
-    $config = RedisConfig::fromUri('redis://');
-    $popClient = new Redis(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
+    $popClient = new Redis(createRedisClient('redis://'));
 
     try {
         $value = $popClient->getList('foobar-list')->popHeadBlocking();
@@ -21,8 +17,7 @@ $future = async(function (): void {
     }
 });
 
-$config = RedisConfig::fromUri('redis://');
-$pushClient = new Redis(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
+$pushClient = new Redis(createRedisClient('redis://'));
 
 print 'Pushing value…' . PHP_EOL;
 $pushClient->getList('foobar-list')->pushHead('42');

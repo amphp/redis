@@ -20,11 +20,14 @@ final class SocketChannel implements RedisChannel
 
     private readonly Socket $socket;
 
+    private readonly string $name;
+
     private readonly ConcurrentIterator $iterator;
 
     public function __construct(Socket $socket)
     {
         $this->socket = $socket;
+        $this->name = $socket->getRemoteAddress()->toString();
 
         $queue = new Queue();
         $this->iterator = $queue->iterate();
@@ -71,6 +74,11 @@ final class SocketChannel implements RedisChannel
         } catch (StreamException $e) {
             throw new RedisSocketException($e->getMessage(), 0, $e);
         }
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 
     public function reference(): void

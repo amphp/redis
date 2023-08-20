@@ -2,21 +2,16 @@
 
 require __DIR__ . '/../../../vendor/autoload.php';
 
-use Amp\Redis\Connection\ChannelLink;
-use Amp\Redis\Connection\SocketChannelFactory;
-use Amp\Redis\RedisClient;
-use Amp\Redis\RedisConfig;
+use function Amp\Redis\createRedisClient;
 
-$config = RedisConfig::fromUri('redis://');
-
-$redis = new Amp\Redis\Redis(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
-$mutex = new Amp\Redis\Sync\RedisMutex(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
+$redis = new Amp\Redis\Redis(createRedisClient('redis://'));
+$mutex = new Amp\Redis\Sync\RedisMutex(createRedisClient('redis://'));
 
 for ($i = 0; $i < 100; $i++) {
     $lock = $mutex->acquire('test');
 
     $count = $redis->get('foo');
-    $redis->set('foo', (string)++$count);
+    $redis->set('foo', (string) ++$count);
 
     $lock->release();
 

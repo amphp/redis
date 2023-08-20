@@ -2,13 +2,10 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\Connection\ChannelLink;
-use Amp\Redis\Connection\SocketChannelFactory;
 use Amp\Redis\IntegrationTest;
-use Amp\Redis\RedisClient;
-use Amp\Redis\RedisConfig;
 use Revolt\EventLoop;
 use function Amp\delay;
+use function Amp\Redis\createRedisClient;
 
 class RedisMutexTest extends IntegrationTest
 {
@@ -21,9 +18,7 @@ class RedisMutexTest extends IntegrationTest
         parent::setUp();
         $this->options = (new RedisMutexOptions())->withLockTimeout(1);
 
-        $config = RedisConfig::fromUri($this->getUri());
-
-        $this->mutex = new RedisMutex(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))), $this->options);
+        $this->mutex = new RedisMutex(createRedisClient($this->getUri()), $this->options);
     }
 
     public function testTimeout(): void

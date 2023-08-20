@@ -50,6 +50,7 @@
             "Amp\\Redis\\": "src"
         },
         "files": [
+            "src/functions.php",
             "src/Internal/functions.php"
         ]
     },

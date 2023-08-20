@@ -4,7 +4,6 @@ namespace Amp\Redis;
 
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
-use Amp\Redis\Connection\SocketChannelFactory;
 use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\delay;
@@ -18,7 +17,7 @@ class PubSubTest extends IntegrationTest
         parent::setUp();
         $this->setTimeout(1);
 
-        $this->subscriber = new RedisSubscriber(new SocketChannelFactory(RedisConfig::fromUri($this->getUri())));
+        $this->subscriber = new RedisSubscriber(createRedisChannelFactory($this->getUri()));
     }
 
     private function getNextValue(ConcurrentIterator $concurrentIterator): string

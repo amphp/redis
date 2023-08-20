@@ -6,7 +6,6 @@ use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
-use Amp\Redis\RedisConfig;
 use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Amp\Socket;
@@ -21,11 +20,11 @@ final class SocketChannelFactory implements RedisChannelFactory
     private readonly ConnectContext $connectContext;
 
     public function __construct(
-        private readonly RedisConfig $config,
-        ?ConnectContext $connectContext = null,
+        private readonly string $uri,
+        ConnectContext $connectContext,
         private readonly ?SocketConnector $socketConnector = null,
     ) {
-        $this->connectContext = ($connectContext ?? new ConnectContext)->withConnectTimeout($config->getTimeout());
+        $this->connectContext = $connectContext;
     }
 
     /**
@@ -37,36 +36,15 @@ final class SocketChannelFactory implements RedisChannelFactory
     {
         try {
             $socketConnector = $this->socketConnector ?? Socket\socketConnector();
-            $socket = $socketConnector->connect($this->config->getConnectUri(), $this->connectContext, $cancellation);
-
+            $socket = $socketConnector->connect($this->uri, $this->connectContext, $cancellation);
         } catch (Socket\SocketException $e) {
             throw new RedisSocketException(
-                'Failed to connect to redis instance (' . $this->config->getConnectUri() . ')',
+                'Failed to connect to redis instance (' . $this->uri . ')',
                 0,
                 $e
             );
         }
 
-        $channel = new SocketChannel($socket);
-
-        $readsNeeded = 0;
-
-        if ($this->config->hasPassword()) {
-            $readsNeeded++;
-            $channel->send('AUTH', $this->config->getPassword());
-        }
-
-        if ($this->config->getDatabase() !== 0) {
-            $readsNeeded++;
-            $channel->send('SELECT', (string)$this->config->getDatabase());
-        }
-
-        for ($i = 0; $i < $readsNeeded; $i++) {
-            if (!($channel->receive()?->unwrap())) {
-                throw new RedisException('Failed to connect to redis instance (' . $this->config->getConnectUri() . ')');
-            }
-        }
-
-        return $channel;
+        return new SocketChannel($socket);
     }
 }
