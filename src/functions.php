@@ -5,17 +5,17 @@ namespace Amp\Redis;
 use Amp\Redis\Connection\Authenticator;
 use Amp\Redis\Connection\ChannelLink;
 use Amp\Redis\Connection\DatabaseSelector;
-use Amp\Redis\Connection\RedisChannelFactory;
-use Amp\Redis\Connection\SocketChannelFactory;
+use Amp\Redis\Connection\RedisConnector;
+use Amp\Redis\Connection\SocketRedisConnector;
 use Amp\Socket\ConnectContext;
 
-function createRedisChannelFactory(RedisConfig|string $config, ?RedisChannelFactory $channelFactory = null): RedisChannelFactory
+function createRedisChannelFactory(RedisConfig|string $config, ?RedisConnector $channelFactory = null): RedisConnector
 {
     if (\is_string($config)) {
         $config = RedisConfig::fromUri($config);
     }
 
-    $channelFactory ??= new SocketChannelFactory(
+    $channelFactory ??= new SocketRedisConnector(
         $config->getConnectUri(),
         (new ConnectContext())->withConnectTimeout($config->getTimeout())
     );
@@ -31,7 +31,7 @@ function createRedisChannelFactory(RedisConfig|string $config, ?RedisChannelFact
     return $channelFactory;
 }
 
-function createRedisClient(RedisConfig|string $config, ?RedisChannelFactory $channelFactory = null): RedisClient
+function createRedisClient(RedisConfig|string $config, ?RedisConnector $channelFactory = null): RedisClient
 {
     return new RedisClient(new ChannelLink(createRedisChannelFactory($config, $channelFactory)));
 }

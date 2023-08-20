@@ -5,10 +5,10 @@ namespace Amp\Redis\Connection;
 use Amp\Cancellation;
 use Amp\Redis\RedisException;
 
-interface RedisChannelFactory
+interface RedisConnector
 {
     /**
      * @throws RedisException
      */
-    public function createChannel(?Cancellation $cancellation = null): RedisChannel;
+    public function connect(?Cancellation $cancellation = null): RedisChannel;
 }

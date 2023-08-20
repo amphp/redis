@@ -7,7 +7,7 @@ use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RedisChannel;
-use Amp\Redis\Connection\RedisChannelFactory;
+use Amp\Redis\Connection\RedisConnector;
 use Revolt\EventLoop;
 use function Amp\async;
 
@@ -27,7 +27,7 @@ final class RedisSubscriber
     private array $patternQueues = [];
 
     public function __construct(
-        private readonly RedisChannelFactory $channelFactory,
+        private readonly RedisConnector $channelFactory,
     ) {
     }
 
@@ -106,7 +106,7 @@ final class RedisSubscriber
         ): void {
             try {
                 while ($running) {
-                    $channel = $channelFactory->createChannel();
+                    $channel = $channelFactory->connect();
                     $channel->unreference();
 
                     try {

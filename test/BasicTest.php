@@ -2,12 +2,12 @@
 
 namespace Amp\Redis;
 
-use Amp\Redis\Connection\RedisChannelFactory;
+use Amp\Redis\Connection\RedisConnector;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
-    private RedisChannelFactory $channelFactory;
+    private RedisConnector $channelFactory;
 
     public function setUp(): void
     {
@@ -19,7 +19,7 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->createChannel();
+        $channel = $this->channelFactory->connect();
 
         $channel->send('PING');
 
@@ -40,7 +40,7 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
 
         $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->createChannel();
+        $channel = $this->channelFactory->connect();
 
         $channel->send('QUIT');
 
@@ -56,7 +56,7 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
 
         $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->createChannel();
+        $channel = $this->channelFactory->connect();
 
         $channel->send('QUIT');
 
@@ -74,7 +74,7 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
 
         $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->createChannel();
+        $channel = $this->channelFactory->connect();
 
         $channel->send('QUIT');
 
@@ -94,7 +94,7 @@ class BasicTest extends IntegrationTest
         $config = RedisConfig::fromUri($this->getUri());
 
         $this->channelFactory = createRedisChannelFactory($this->getUri());
-        $channel = $this->channelFactory->createChannel();
+        $channel = $this->channelFactory->connect();
 
         $channel->send('QUIT');
 

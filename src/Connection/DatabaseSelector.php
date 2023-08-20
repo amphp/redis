@@ -7,20 +7,20 @@ use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\RedisException;
 
-final class DatabaseSelector implements RedisChannelFactory
+final class DatabaseSelector implements RedisConnector
 {
     use ForbidCloning;
     use ForbidSerialization;
 
     public function __construct(
         private readonly int $database,
-        private readonly RedisChannelFactory $channelFactory
+        private readonly RedisConnector $channelFactory
     ) {
     }
 
-    public function createChannel(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisChannel
     {
-        $channel = $this->channelFactory->createChannel($cancellation);
+        $channel = $this->channelFactory->connect($cancellation);
 
         $channel->send('SELECT', (string) $this->database);
 

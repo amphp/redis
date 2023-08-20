@@ -12,7 +12,7 @@ use Amp\Socket;
 use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;
 
-final class SocketChannelFactory implements RedisChannelFactory
+final class SocketRedisConnector implements RedisConnector
 {
     use ForbidCloning;
     use ForbidSerialization;
@@ -32,7 +32,7 @@ final class SocketChannelFactory implements RedisChannelFactory
      * @throws RedisException
      * @throws RedisSocketException
      */
-    public function createChannel(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisChannel
     {
         try {
             $socketConnector = $this->socketConnector ?? Socket\socketConnector();
@@ -45,6 +45,6 @@ final class SocketChannelFactory implements RedisChannelFactory
             );
         }
 
-        return new SocketChannel($socket);
+        return new SocketRedisChannel($socket);
     }
 }

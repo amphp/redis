@@ -7,20 +7,20 @@ use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\RedisException;
 
-final class Authenticator implements RedisChannelFactory
+final class Authenticator implements RedisConnector
 {
     use ForbidCloning;
     use ForbidSerialization;
 
     public function __construct(
         #[\SensitiveParameter] private readonly string $password,
-        private readonly RedisChannelFactory $channelFactory
+        private readonly RedisConnector $channelFactory
     ) {
     }
 
-    public function createChannel(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisChannel
     {
-        $channel = $this->channelFactory->createChannel($cancellation);
+        $channel = $this->channelFactory->connect($cancellation);
 
         $channel->send('AUTH', $this->password);
 

@@ -26,11 +26,11 @@ use Amp\Redis\RedisConfig;
 use Amp\Redis\Redis;
 use Amp\Redis\SocketRedisClient;
 use Amp\Redis\Connection\ChannelLink;
-use Amp\Redis\Connection\SocketChannelFactory;
+use Amp\Redis\Connection\SocketRedisConnector;
 
 Amp\Loop::run(static function () {
     $config = RedisConfig::fromUri('redis://');
-    $redis = new Redis(new ChannelLink($config, new SocketChannelFactory($config)));
+    $redis = new Redis(new ChannelLink($config, new SocketRedisConnector($config)));
 
     yield $redis->set('foo', '21');
     $result = yield $redis->increment('foo', 21);

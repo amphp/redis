@@ -24,7 +24,7 @@ final class ChannelLink implements RedisLink
 
     private ?RedisChannel $channel = null;
 
-    public function __construct(private readonly RedisChannelFactory $channelFactory)
+    public function __construct(private readonly RedisConnector $channelFactory)
     {
         $this->queue = new \SplQueue();
     }
@@ -90,7 +90,7 @@ final class ChannelLink implements RedisLink
         EventLoop::queue(static function () use (&$channel, &$running, &$database, $queue, $channelFactory): void {
             try {
                 while ($running) {
-                    $channel = $channelFactory->createChannel();
+                    $channel = $channelFactory->connect();
 
                     if ($database !== null) {
                         $channel->send('SELECT', (string) $database);
