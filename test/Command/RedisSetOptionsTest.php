@@ -2,14 +2,14 @@
 
 namespace Amp\Redis\Command;
 
-use Amp\Redis\Command\Option\RedisSetOptions;
+use Amp\Redis\Command\Option\SetOptions;
 use PHPUnit\Framework\TestCase;
 
 class RedisSetOptionsTest extends TestCase
 {
     public function test(): void
     {
-        $options = new RedisSetOptions;
+        $options = new SetOptions;
 
         $this->assertSame([], $options->toQuery());
         $this->assertSame(['EX', 3], $options->withTtl(3)->toQuery());

@@ -2,14 +2,14 @@
 
 namespace Amp\Redis\Command;
 
-use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\Command\Option\SortOptions;
 use PHPUnit\Framework\TestCase;
 
 class RedisSortOptionsTest extends TestCase
 {
     public function test(): void
     {
-        $options = new RedisSortOptions;
+        $options = new SortOptions;
 
         $this->assertFalse($options->hasLimit());
         $this->assertTrue($options->withLimit(0, 100)->hasLimit());

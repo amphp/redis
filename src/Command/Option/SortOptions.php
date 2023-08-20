@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Command\Option;
 
-final class RedisSortOptions
+final class SortOptions
 {
     private ?string $pattern = null;
     private ?int $offset = null;

@@ -7,7 +7,7 @@ use Amp\Cache\AtomicCache;
 use Amp\Cache\LocalCache;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
-use Amp\Redis\Command\Option\RedisSetOptions;
+use Amp\Redis\Command\Option\SetOptions;
 use Amp\Redis\Command\RedisHyperLogLog;
 use Amp\Redis\Command\RedisList;
 use Amp\Redis\Command\RedisMap;
@@ -447,9 +447,9 @@ final class RedisClient
     /**
      * @link https://redis.io/commands/set/
      */
-    public function set(string $key, string $value, ?RedisSetOptions $options = null): bool
+    public function set(string $key, string $value, ?SetOptions $options = null): bool
     {
-        $options ??= new RedisSetOptions();
+        $options ??= new SetOptions();
         return (bool) $this->execute('set', $key, $value, ...$options->toQuery());
     }
 

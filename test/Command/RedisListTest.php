@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Command;
 
-use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\Command\Option\SortOptions;
 use Amp\Redis\IntegrationTest;
 
 class RedisListTest extends IntegrationTest
@@ -46,7 +46,7 @@ class RedisListTest extends IntegrationTest
         $this->assertSame(1, $list->remove('a'));
         $this->assertSame(['y', 'x', 'b'], $list->getRange());
 
-        $this->assertSame(['b', 'x', 'y'], $list->sort((new RedisSortOptions)->withLexicographicSorting()));
+        $this->assertSame(['b', 'x', 'y'], $list->sort((new SortOptions)->withLexicographicSorting()));
 
         $this->assertSame('y', $list->popHeadBlocking());
         $this->assertSame('b', $list->popTailBlocking());

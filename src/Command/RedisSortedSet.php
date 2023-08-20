@@ -7,7 +7,7 @@ use Amp\ForbidSerialization;
 use Amp\Redis\Command\Boundary\LexBoundary;
 use Amp\Redis\Command\Boundary\ScoreBoundary;
 use Amp\Redis\Command\Option\RangeOptions;
-use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\Command\Option\SortOptions;
 use Amp\Redis\RedisClient;
 use function Amp\Redis\Internal\toMap;
 
@@ -273,8 +273,8 @@ final class RedisSortedSet
     /**
      * @link https://redis.io/commands/sort
      */
-    public function sort(?RedisSortOptions $options = null): array
+    public function sort(?SortOptions $options = null): array
     {
-        return $this->client->execute('SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery());
+        return $this->client->execute('SORT', $this->key, ...($options ?? new SortOptions)->toQuery());
     }
 }

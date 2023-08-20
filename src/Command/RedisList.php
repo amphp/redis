@@ -5,7 +5,7 @@ namespace Amp\Redis\Command;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
-use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\Command\Option\SortOptions;
 use Amp\Redis\RedisClient;
 
 final class RedisList
@@ -171,8 +171,8 @@ final class RedisList
     /**
      * @link https://redis.io/commands/sort
      */
-    public function sort(?RedisSortOptions $options = null): array
+    public function sort(?SortOptions $options = null): array
     {
-        return $this->client->execute('SORT', $this->key, ...($options ?? new RedisSortOptions)->toQuery());
+        return $this->client->execute('SORT', $this->key, ...($options ?? new SortOptions)->toQuery());
     }
 }
