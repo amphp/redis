@@ -3,6 +3,8 @@
 
 namespace Amp\Redis;
 
+use Amp\Cache\AtomicCache;
+use Amp\Cache\LocalCache;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\Command\Option\RedisSetOptions;
@@ -13,6 +15,9 @@ use Amp\Redis\Command\RedisSet;
 use Amp\Redis\Command\RedisSortedSet;
 use Amp\Redis\Connection\RedisLink;
 use Amp\Redis\Protocol\QueryException;
+use Amp\Redis\Protocol\RedisError;
+use Amp\Sync\LocalKeyedMutex;
+use Amp\Sync\LocalMutex;
 use function Amp\Redis\Internal\toMap;
 
 final class RedisClient
@@ -20,12 +25,12 @@ final class RedisClient
     use ForbidCloning;
     use ForbidSerialization;
 
-    /** @var string[] */
-    private array $evalCache = [];
+    private AtomicCache $evalCache;
 
     public function __construct(
         private readonly RedisLink $link
     ) {
+        $this->evalCache = $this->createCache();
     }
 
     public function getHyperLogLog(string $key): RedisHyperLogLog
@@ -748,7 +753,7 @@ final class RedisClient
      */
     public function flushScripts(): void
     {
-        $this->evalCache = []; // same as internal redis behavior
+        $this->evalCache = $this->createCache(); // same as internal redis behavior
 
         $this->execute('script', 'flush');
     }
@@ -785,20 +790,24 @@ final class RedisClient
      */
     public function eval(string $script, array $keys = [], array $args = []): mixed
     {
-        try {
-            $sha1 = $this->evalCache[$script] ?? ($this->evalCache[$script] = \sha1($script));
-            return $this->execute('evalsha', $sha1, \count($keys), ...$keys, ...$args);
-        } catch (QueryException $e) {
-            if (\strtok($e->getMessage(), ' ') === 'NOSCRIPT') {
-                return $this->execute('eval', $script, \count($keys), ...$keys, ...$args);
-            }
+        $sha1 = $this->evalCache->computeIfAbsent($script, fn (string $value) => \sha1($value));
 
-            throw $e;
+        $response = $this->link->execute('evalsha', [$sha1, \count($keys), ...$keys, ...$args]);
+
+        if ($response instanceof RedisError && \strtok($response->getMessage(), ' ') === 'NOSCRIPT') {
+            return $this->execute('eval', $script, \count($keys), ...$keys, ...$args);
         }
+
+        $response->unwrap();
     }
 
     public function select(int $database): void
     {
         $this->execute('select', $database);
+    }
+
+    private function createCache(): AtomicCache
+    {
+        return new AtomicCache(new LocalCache(1000, 60), new LocalKeyedMutex());
     }
 }
