@@ -2,8 +2,6 @@
 
 namespace Amp\Redis\Protocol;
 
-use Amp\Redis\QueryException;
-
 final class RedisError implements RedisResponse
 {
     public function __construct(

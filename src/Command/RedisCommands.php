@@ -5,7 +5,7 @@ namespace Amp\Redis\Command;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
-use Amp\Redis\QueryException;
+use Amp\Redis\Protocol\QueryException;
 use Amp\Redis\RedisClient;
 use function Amp\Redis\Internal;
 

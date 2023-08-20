@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Protocol\ProtocolException;
+use Amp\Redis\Protocol\QueryException;
 use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\Protocol\RespParser;
 use PHPUnit\Framework\TestCase;
