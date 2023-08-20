@@ -38,7 +38,7 @@ class FailingCacheTest extends AsyncTestCase
 
     private function createFailingCache(): CacheInterface
     {
-        return new RedisCache(new Redis(new RedisClient(new class implements RedisLink {
+        return new RedisCache(new RedisCommands(new RedisClient(new class implements RedisLink {
             public function execute(string $command, array $parameters): never
             {
                 throw new RedisException('Failed, because dummy implementation');

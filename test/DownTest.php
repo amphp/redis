@@ -10,7 +10,7 @@ class DownTest extends AsyncTestCase
     {
         $this->expectException(RedisSocketException::class);
 
-        $redis = new Redis(createRedisClient('tcp://127.0.0.1:25325'));
+        $redis = new RedisCommands(createRedisClient('tcp://127.0.0.1:25325'));
         $redis->ping();
     }
 }

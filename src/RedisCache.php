@@ -19,7 +19,7 @@ final class RedisCache implements Cache
     use ForbidSerialization;
 
     public function __construct(
-        private readonly Redis $redis,
+        private readonly RedisCommands $redis,
         private readonly Serializer $serializer = new NativeSerializer(),
     ) {
     }

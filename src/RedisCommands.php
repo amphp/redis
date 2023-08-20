@@ -6,7 +6,7 @@ namespace Amp\Redis;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
-final class Redis
+final class RedisCommands
 {
     use ForbidCloning;
     use ForbidSerialization;
@@ -108,7 +108,7 @@ final class Redis
     /**
      * @link https://redis.io/commands/keys
      *
-     * @see Redis::scan()
+     * @see RedisCommands::scan()
      */
     public function getKeys(string $pattern = '*'): array
     {

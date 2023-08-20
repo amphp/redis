@@ -6,7 +6,7 @@ use Amp\PHPUnit\AsyncTestCase;
 
 abstract class IntegrationTest extends AsyncTestCase
 {
-    protected Redis $redis;
+    protected RedisCommands $redis;
 
     protected function setUp(): void
     {
@@ -21,9 +21,9 @@ abstract class IntegrationTest extends AsyncTestCase
         $this->redis->flushAll();
     }
 
-    final protected function createInstance(): Redis
+    final protected function createInstance(): RedisCommands
     {
-        return new Redis(createRedisClient($this->getUri()));
+        return new RedisCommands(createRedisClient($this->getUri()));
     }
 
     final protected function getUri(): ?string

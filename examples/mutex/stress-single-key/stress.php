@@ -4,7 +4,7 @@ require __DIR__ . '/../../../vendor/autoload.php';
 
 use function Amp\Redis\createRedisClient;
 
-$redis = new Amp\Redis\Redis(createRedisClient('redis://'));
+$redis = new Amp\Redis\RedisCommands(createRedisClient('redis://'));
 $mutex = new Amp\Redis\Sync\RedisMutex(createRedisClient('redis://'));
 
 for ($i = 0; $i < 100; $i++) {
