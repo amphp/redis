@@ -5,6 +5,7 @@ namespace Amp\Redis\Command;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\RedisClient;
+use function Amp\Redis\Internal\toMap;
 
 final class RedisSortedSet
 {
@@ -52,7 +53,7 @@ final class RedisSortedSet
     public function getRangeWithScores(int $start, int $end, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return \array_map(\floatval(...), Internal\toMap($this->client->execute(
+        return \array_map(\floatval(...), toMap($this->client->execute(
             'zrange',
             $this->key,
             $start,
@@ -84,7 +85,7 @@ final class RedisSortedSet
     public function getRangeByScoreWithScores(ScoreBoundary $min, ScoreBoundary $max, ?RangeOptions $options = null): array
     {
         $options ??= new RangeOptions();
-        return \array_map(\floatval(...), Internal\toMap($this->client->execute(
+        return \array_map(\floatval(...), toMap($this->client->execute(
             'zrange',
             $this->key,
             $min->toQuery(),

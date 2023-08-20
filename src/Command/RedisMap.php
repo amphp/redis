@@ -6,6 +6,7 @@ namespace Amp\Redis\Command;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\RedisClient;
+use function Amp\Redis\Internal\toMap;
 
 final class RedisMap
 {
@@ -72,7 +73,7 @@ final class RedisMap
      */
     public function getAll(): array
     {
-        return Internal\toMap($this->client->execute('hgetall', $this->key));
+        return toMap($this->client->execute('hgetall', $this->key));
     }
 
     /**

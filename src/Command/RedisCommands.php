@@ -8,6 +8,7 @@ use Amp\ForbidSerialization;
 use Amp\Redis\Protocol\QueryException;
 use Amp\Redis\RedisClient;
 use function Amp\Redis\Internal;
+use function Amp\Redis\Internal\toMap;
 
 final class RedisCommands
 {
@@ -501,7 +502,7 @@ final class RedisCommands
      */
     public function getNumberOfSubscriptions(string ...$channels): array
     {
-        return Internal\toMap($this->client->execute('pubsub', 'numsub', ...$channels));
+        return toMap($this->client->execute('pubsub', 'numsub', ...$channels));
     }
 
     /**
