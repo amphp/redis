@@ -8,7 +8,6 @@ use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\RedisException;
-use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;
 
 final class ReconnectingRedisLink implements RedisLink
@@ -121,7 +120,7 @@ final class ReconnectingRedisLink implements RedisLink
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new RedisSocketException($exception->getMessage(), 0, $exception);
+                $exception = new RedisChannelException($exception->getMessage(), 0, $exception);
 
                 while (!$queue->isEmpty()) {
                     /** @var DeferredFuture $deferred */

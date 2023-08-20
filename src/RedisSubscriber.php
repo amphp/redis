@@ -7,6 +7,7 @@ use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RedisChannel;
+use Amp\Redis\Connection\RedisChannelException;
 use Amp\Redis\Connection\RedisConnector;
 use Revolt\EventLoop;
 use function Amp\async;
@@ -144,7 +145,7 @@ final class RedisSubscriber
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new RedisSocketException($exception->getMessage(), 0, $exception);
+                $exception = new RedisChannelException($exception->getMessage(), 0, $exception);
 
                 $queueGroups = \array_merge($queues, $patternQueues);
 

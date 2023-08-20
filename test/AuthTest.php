@@ -5,6 +5,7 @@ namespace Amp\Redis;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Process\Process;
 use Amp\Redis\Command\RedisCommands;
+use Amp\Redis\Connection\RedisChannelException;
 use function Amp\delay;
 
 class AuthTest extends AsyncTestCase
@@ -47,7 +48,7 @@ class AuthTest extends AsyncTestCase
     {
         $redis = new RedisCommands(createRedisClient(\sprintf(self::URI_FORMAT, self::PORT, 'wrong')));
 
-        $this->expectException(RedisSocketException::class);
+        $this->expectException(RedisChannelException::class);
 
         $this->expectExceptionMessage('invalid');
 
