@@ -2,8 +2,8 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\Connection\ChannelRedisLink;
-use Amp\Redis\Connection\SocketRedisChannelFactory;
+use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\SocketChannelFactory;
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RedisClient;
 use Amp\Redis\RedisConfig;
@@ -49,7 +49,7 @@ class RedisParcelTest extends IntegrationTest
     {
         $config = RedisConfig::fromUri($this->getUri());
 
-        $mutex = new RedisMutex(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
+        $mutex = new RedisMutex(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
 
         return RedisParcel::create($mutex, \bin2hex(\random_bytes(8)), $value);
     }

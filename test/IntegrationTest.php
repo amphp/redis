@@ -3,8 +3,8 @@
 namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Redis\Connection\ChannelRedisLink;
-use Amp\Redis\Connection\SocketRedisChannelFactory;
+use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\SocketChannelFactory;
 
 abstract class IntegrationTest extends AsyncTestCase
 {
@@ -26,7 +26,7 @@ abstract class IntegrationTest extends AsyncTestCase
     final protected function createInstance(): Redis
     {
         $config = RedisConfig::fromUri($this->getUri());
-        return new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
+        return new Redis(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
     }
 
     final protected function getUri(): ?string

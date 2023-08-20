@@ -2,8 +2,8 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\Connection\ChannelRedisLink;
-use Amp\Redis\Connection\SocketRedisChannelFactory;
+use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\SocketChannelFactory;
 use Amp\Redis\IntegrationTest;
 use Amp\Redis\RedisClient;
 use Amp\Redis\RedisConfig;
@@ -23,7 +23,7 @@ class RedisMutexTest extends IntegrationTest
 
         $config = RedisConfig::fromUri($this->getUri());
 
-        $this->mutex = new RedisMutex(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))), $this->options);
+        $this->mutex = new RedisMutex(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))), $this->options);
     }
 
     public function testTimeout(): void

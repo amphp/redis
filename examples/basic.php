@@ -2,14 +2,14 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Amp\Redis\Connection\ChannelRedisLink;
-use Amp\Redis\Connection\SocketRedisChannelFactory;
+use Amp\Redis\Connection\ChannelLink;
+use Amp\Redis\Connection\SocketChannelFactory;
 use Amp\Redis\Redis;
 use Amp\Redis\RedisClient;
 use Amp\Redis\RedisConfig;
 
 $config = RedisConfig::fromUri('redis://');
-$redis = new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
+$redis = new Redis(new RedisClient(new ChannelLink($config, new SocketChannelFactory($config))));
 
 $redis->set('foo', '21');
 $result = $redis->increment('foo', 21);

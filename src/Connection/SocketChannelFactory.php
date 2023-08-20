@@ -13,7 +13,7 @@ use Amp\Socket;
 use Amp\Socket\ConnectContext;
 use Amp\Socket\SocketConnector;
 
-final class SocketRedisChannelFactory implements RedisChannelFactory
+final class SocketChannelFactory implements RedisChannelFactory
 {
     use ForbidCloning;
     use ForbidSerialization;
@@ -47,7 +47,7 @@ final class SocketRedisChannelFactory implements RedisChannelFactory
             );
         }
 
-        $channel = new SocketRedisChannel($socket);
+        $channel = new SocketChannel($socket);
 
         $readsNeeded = 0;
 

@@ -13,7 +13,7 @@ use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
-final class SocketRedisChannel implements RedisChannel
+final class SocketChannel implements RedisChannel
 {
     use ForbidCloning;
     use ForbidSerialization;
