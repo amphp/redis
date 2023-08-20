@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Redis\Command\RedisSortOptions;
+use Amp\Redis\Command\Option\RedisSortOptions;
 
 class RedisListTest extends IntegrationTest
 {

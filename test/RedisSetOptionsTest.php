@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-use Amp\Redis\Command\RedisSetOptions;
+use Amp\Redis\Command\Option\RedisSetOptions;
 use PHPUnit\Framework\TestCase;
 
 class RedisSetOptionsTest extends TestCase

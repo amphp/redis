@@ -4,6 +4,10 @@ namespace Amp\Redis\Command;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
+use Amp\Redis\Command\Option\LexBoundary;
+use Amp\Redis\Command\Option\RangeOptions;
+use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\Command\Option\ScoreBoundary;
 use Amp\Redis\RedisClient;
 use function Amp\Redis\Internal\toMap;
 
