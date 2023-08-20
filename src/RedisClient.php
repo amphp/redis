@@ -798,7 +798,7 @@ final class RedisClient
             return $this->execute('eval', $script, \count($keys), ...$keys, ...$args);
         }
 
-        $response->unwrap();
+        return $response->unwrap();
     }
 
     public function select(int $database): void
