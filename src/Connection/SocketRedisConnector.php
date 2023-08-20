@@ -29,21 +29,21 @@ final class SocketRedisConnector implements RedisConnector
     /**
      * @throws CancelledException
      * @throws RedisException
-     * @throws RedisChannelException
+     * @throws RedisConnectionException
      */
-    public function connect(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisConnection
     {
         try {
             $socketConnector = $this->socketConnector ?? Socket\socketConnector();
             $socket = $socketConnector->connect($this->uri, $this->connectContext, $cancellation);
         } catch (Socket\SocketException $e) {
-            throw new RedisChannelException(
+            throw new RedisConnectionException(
                 'Failed to connect to redis instance (' . $this->uri . ')',
                 0,
                 $e
             );
         }
 
-        return new SocketRedisChannel($socket);
+        return new SocketRedisConnection($socket);
     }
 }

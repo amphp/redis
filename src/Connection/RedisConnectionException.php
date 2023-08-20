@@ -4,6 +4,6 @@ namespace Amp\Redis\Connection;
 
 use Amp\Redis\RedisException;
 
-final class RedisChannelException extends RedisException
+final class RedisConnectionException extends RedisException
 {
 }

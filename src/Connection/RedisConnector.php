@@ -10,5 +10,5 @@ interface RedisConnector
     /**
      * @throws RedisException
      */
-    public function connect(?Cancellation $cancellation = null): RedisChannel;
+    public function connect(?Cancellation $cancellation = null): RedisConnection;
 }

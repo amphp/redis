@@ -18,16 +18,16 @@ final class DatabaseSelector implements RedisConnector
     ) {
     }
 
-    public function connect(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisConnection
     {
-        $channel = $this->connector->connect($cancellation);
+        $connection = $this->connector->connect($cancellation);
 
-        $channel->send('SELECT', (string) $this->database);
+        $connection->send('SELECT', (string) $this->database);
 
-        if (!($channel->receive()?->unwrap())) {
-            throw new RedisException('Failed to select database: ' . $channel->getName());
+        if (!($connection->receive()?->unwrap())) {
+            throw new RedisException('Failed to select database: ' . $connection->getName());
         }
 
-        return $channel;
+        return $connection;
     }
 }

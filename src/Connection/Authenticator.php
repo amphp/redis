@@ -18,16 +18,16 @@ final class Authenticator implements RedisConnector
     ) {
     }
 
-    public function connect(?Cancellation $cancellation = null): RedisChannel
+    public function connect(?Cancellation $cancellation = null): RedisConnection
     {
-        $channel = $this->connector->connect($cancellation);
+        $connection = $this->connector->connect($cancellation);
 
-        $channel->send('AUTH', $this->password);
+        $connection->send('AUTH', $this->password);
 
-        if (!($channel->receive()?->unwrap())) {
-            throw new RedisException('Failed to authenticate to redis instance: ' . $channel->getName());
+        if (!($connection->receive()?->unwrap())) {
+            throw new RedisException('Failed to authenticate to redis instance: ' . $connection->getName());
         }
 
-        return $channel;
+        return $connection;
     }
 }

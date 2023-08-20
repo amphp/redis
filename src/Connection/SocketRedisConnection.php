@@ -14,7 +14,7 @@ use Amp\Redis\RedisException;
 use Amp\Socket\Socket;
 use Revolt\EventLoop;
 
-final class SocketRedisChannel implements RedisChannel
+final class SocketRedisConnection implements RedisConnection
 {
     use ForbidCloning;
     use ForbidSerialization;
@@ -64,7 +64,7 @@ final class SocketRedisChannel implements RedisChannel
     public function send(string ...$args): void
     {
         if ($this->socket->isClosed()) {
-            throw new RedisChannelException('Redis connection already closed');
+            throw new RedisConnectionException('Redis connection already closed');
         }
 
         $payload = \implode("\r\n", \array_map(fn (string $arg) => '$' . \strlen($arg) . "\r\n" . $arg, $args));
@@ -73,7 +73,7 @@ final class SocketRedisChannel implements RedisChannel
         try {
             $this->socket->write($payload);
         } catch (StreamException $e) {
-            throw new RedisChannelException($e->getMessage(), 0, $e);
+            throw new RedisConnectionException($e->getMessage(), 0, $e);
         }
     }
 

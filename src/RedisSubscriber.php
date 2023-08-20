@@ -6,8 +6,8 @@ use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Pipeline\Queue;
-use Amp\Redis\Connection\RedisChannel;
-use Amp\Redis\Connection\RedisChannelException;
+use Amp\Redis\Connection\RedisConnection;
+use Amp\Redis\Connection\RedisConnectionException;
 use Amp\Redis\Connection\RedisConnector;
 use Revolt\EventLoop;
 use function Amp\async;
@@ -17,7 +17,7 @@ final class RedisSubscriber
     use ForbidCloning;
     use ForbidSerialization;
 
-    private ?RedisChannel $channel = null;
+    private ?RedisConnection $connection = null;
 
     private bool $running = false;
 
@@ -35,7 +35,7 @@ final class RedisSubscriber
     public function __destruct()
     {
         $this->running = false;
-        $this->channel?->close();
+        $this->connection?->close();
     }
 
     public function subscribe(string $channel): RedisSubscription
@@ -51,7 +51,7 @@ final class RedisSubscriber
 
         if ($subscribe) {
             try {
-                $this->channel?->send('subscribe', $channel);
+                $this->connection?->send('subscribe', $channel);
             } catch (\Throwable $e) {
                 $this->unloadEmitter($queue, $channel);
 
@@ -75,7 +75,7 @@ final class RedisSubscriber
 
         if ($subscribe) {
             try {
-                $this->channel?->send('psubscribe', $pattern);
+                $this->connection?->send('psubscribe', $pattern);
             } catch (\Throwable $e) {
                 $this->unloadPatternEmitter($queue, $pattern);
 
@@ -90,31 +90,31 @@ final class RedisSubscriber
     {
         $connector = $this->connector;
         $running = &$this->running;
-        $channel = &$this->channel;
+        $connection = &$this->connection;
         $queues = &$this->queues;
         $patternQueues = &$this->patternQueues;
 
         EventLoop::queue(static function () use (
             &$running,
-            &$channel,
+            &$connection,
             &$queues,
             &$patternQueues,
             $connector
         ): void {
             try {
                 while ($running) {
-                    $channel = $connector->connect();
+                    $connection = $connector->connect();
 
                     try {
                         foreach (\array_keys($queues) as $queue) {
-                            $channel->send('subscribe', $queue);
+                            $connection->send('subscribe', $queue);
                         }
 
                         foreach (\array_keys($patternQueues) as $pattern) {
-                            $channel->send('psubscribe', $pattern);
+                            $connection->send('psubscribe', $pattern);
                         }
 
-                        while ($response = $channel->receive()?->unwrap()) {
+                        while ($response = $connection->receive()?->unwrap()) {
                             /** @psalm-suppress RedundantCondition */
                             \assert(
                                 \is_array($response) && \array_is_list($response),
@@ -134,11 +134,11 @@ final class RedisSubscriber
                     } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
-                        $channel = null;
+                        $connection = null;
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new RedisChannelException($exception->getMessage(), 0, $exception);
+                $exception = new RedisConnectionException($exception->getMessage(), 0, $exception);
 
                 $queueGroups = \array_merge($queues, $patternQueues);
 
@@ -178,11 +178,11 @@ final class RedisSubscriber
                 async(function () use ($channel): void {
                     try {
                         if (empty($this->queues[$channel])) {
-                            $this->channel?->send('unsubscribe', $channel);
+                            $this->connection?->send('unsubscribe', $channel);
                         }
 
                         if ($this->isIdle()) {
-                            $this->channel?->close();
+                            $this->connection?->close();
                         }
                     } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke
@@ -207,11 +207,11 @@ final class RedisSubscriber
                 async(function () use ($pattern): void {
                     try {
                         if (empty($this->patternQueues[$pattern])) {
-                            $this->channel?->send('punsubscribe', $pattern);
+                            $this->connection?->send('punsubscribe', $pattern);
                         }
 
                         if ($this->isIdle()) {
-                            $this->channel?->close();
+                            $this->connection?->close();
                         }
                     } catch (RedisException) {
                         // if there's an exception, the unsubscribe is implicitly successful, because the connection broke

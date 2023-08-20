@@ -22,7 +22,7 @@ final class ReconnectingRedisLink implements RedisLink
 
     private bool $running = false;
 
-    private ?RedisChannel $channel = null;
+    private ?RedisConnection $connection = null;
 
     public function __construct(private readonly RedisConnector $connector)
     {
@@ -32,7 +32,7 @@ final class ReconnectingRedisLink implements RedisLink
     public function __destruct()
     {
         $this->running = false;
-        $this->channel?->close();
+        $this->connection?->close();
     }
 
     public function execute(string $command, array $parameters): RedisResponse
@@ -47,7 +47,7 @@ final class ReconnectingRedisLink implements RedisLink
             $response = $this->enqueue($command, $parameters)->await();
         } finally {
             if (\strcasecmp($command, 'quit') === 0) {
-                $this->channel?->close();
+                $this->connection?->close();
             }
         }
 
@@ -68,12 +68,12 @@ final class ReconnectingRedisLink implements RedisLink
         $deferred = new DeferredFuture();
         $this->queue->push([$deferred, $command, $parameters]);
 
-        $this->channel?->reference();
+        $this->connection?->reference();
 
         try {
-            $this->channel?->send($command, ...$parameters);
+            $this->connection?->send($command, ...$parameters);
         } catch (RedisException) {
-            $this->channel = null;
+            $this->connection = null;
         }
 
         return $deferred->getFuture();
@@ -84,31 +84,31 @@ final class ReconnectingRedisLink implements RedisLink
         $connector = $this->connector;
         $queue = $this->queue;
         $running = &$this->running;
-        $channel = &$this->channel;
+        $connection = &$this->connection;
         $database = &$this->database;
 
-        EventLoop::queue(static function () use (&$channel, &$running, &$database, $queue, $connector): void {
+        EventLoop::queue(static function () use (&$connection, &$running, &$database, $queue, $connector): void {
             try {
                 while ($running) {
                     if ($database !== null) {
-                        $channel = (new DatabaseSelector($database, $connector))->connect();
+                        $connection = (new DatabaseSelector($database, $connector))->connect();
                     } else {
-                        $channel = $connector->connect();
+                        $connection = $connector->connect();
                     }
 
-                    $channel->unreference();
+                    $connection->unreference();
 
                     try {
                         foreach ($queue as [$deferred, $command, $parameters]) {
-                            $channel->reference();
-                            $channel->send($command, ...$parameters);
+                            $connection->reference();
+                            $connection->send($command, ...$parameters);
                         }
 
-                        while ($response = $channel->receive()) {
+                        while ($response = $connection->receive()) {
                             /** @var DeferredFuture $deferred */
                             [$deferred] = $queue->shift();
                             if ($queue->isEmpty()) {
-                                $channel->unreference();
+                                $connection->unreference();
                             }
 
                             $deferred->complete($response);
@@ -116,11 +116,11 @@ final class ReconnectingRedisLink implements RedisLink
                     } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
-                        $channel = null;
+                        $connection = null;
                     }
                 }
             } catch (\Throwable $exception) {
-                $exception = new RedisChannelException($exception->getMessage(), 0, $exception);
+                $exception = new RedisConnectionException($exception->getMessage(), 0, $exception);
 
                 while (!$queue->isEmpty()) {
                     /** @var DeferredFuture $deferred */
