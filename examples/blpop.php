@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Amp\Redis\RedisCommands;
+use Amp\Redis\Command\RedisCommands;
 use function Amp\async;
 use function Amp\Redis\createRedisClient;
 

@@ -1,9 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis;
+namespace Amp\Redis\Command;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
+use Amp\Redis\RedisClient;
 
 final class RedisSortedSet
 {

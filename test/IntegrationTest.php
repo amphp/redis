@@ -3,6 +3,7 @@
 namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Redis\Command\RedisCommands;
 
 abstract class IntegrationTest extends AsyncTestCase
 {

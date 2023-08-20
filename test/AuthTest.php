@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Process\Process;
+use Amp\Redis\Command\RedisCommands;
 use function Amp\delay;
 
 class AuthTest extends AsyncTestCase

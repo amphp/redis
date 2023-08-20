@@ -1,10 +1,13 @@
 <?php declare(strict_types=1);
 /** @noinspection DuplicatedCode */
 
-namespace Amp\Redis;
+namespace Amp\Redis\Command;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
+use Amp\Redis\QueryException;
+use Amp\Redis\RedisClient;
+use function Amp\Redis\Internal;
 
 final class RedisCommands
 {

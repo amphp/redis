@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-use Amp\Redis\RedisCommands;
+use Amp\Redis\Command\RedisCommands;
 use Revolt\EventLoop;
 use function Amp\Redis\createRedisClient;
 

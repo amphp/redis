@@ -6,6 +6,8 @@ use Amp\Cache\Cache;
 use Amp\Cache\CacheException;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
+use Amp\Redis\Command\RedisCommands;
+use Amp\Redis\Command\RedisSetOptions;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 

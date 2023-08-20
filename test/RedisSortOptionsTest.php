@@ -2,6 +2,7 @@
 
 namespace Amp\Redis;
 
+use Amp\Redis\Command\RedisSortOptions;
 use PHPUnit\Framework\TestCase;
 
 class RedisSortOptionsTest extends TestCase

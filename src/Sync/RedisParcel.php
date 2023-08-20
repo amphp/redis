@@ -2,7 +2,7 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\RedisCommands;
+use Amp\Redis\Command\RedisCommands;
 use Amp\Redis\RedisClient;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
