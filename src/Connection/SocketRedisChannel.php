@@ -8,6 +8,8 @@ use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
+use Amp\Redis\Protocol\RedisResponse;
+use Amp\Redis\Protocol\RespParser;
 use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Amp\Socket\Socket;

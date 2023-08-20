@@ -2,6 +2,8 @@
 
 namespace Amp\Redis\Connection;
 
+use Amp\Redis\Protocol\RedisResponse;
+
 interface RedisLink
 {
     /**

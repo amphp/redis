@@ -6,6 +6,7 @@ use Amp\DeferredFuture;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Future;
+use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;

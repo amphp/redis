@@ -3,8 +3,8 @@
 namespace Amp\Redis;
 
 use Amp\Redis\Connection\Authenticator;
-use Amp\Redis\Connection\ReconnectingRedisLink;
 use Amp\Redis\Connection\DatabaseSelector;
+use Amp\Redis\Connection\ReconnectingRedisLink;
 use Amp\Redis\Connection\RedisConnector;
 use Amp\Redis\Connection\SocketRedisConnector;
 use Amp\Socket\ConnectContext;

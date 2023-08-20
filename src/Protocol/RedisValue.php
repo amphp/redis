@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis\Connection;
+namespace Amp\Redis\Protocol;
 
 /**
  * @psalm-import-type RedisValueType from RedisResponse

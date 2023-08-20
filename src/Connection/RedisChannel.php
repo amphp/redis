@@ -3,6 +3,7 @@
 namespace Amp\Redis\Connection;
 
 use Amp\Closable;
+use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\RedisException;
 
 /**

@@ -1,11 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis\Connection;
+namespace Amp\Redis\Protocol;
 
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Parser\Parser;
 use Amp\Redis\ParserException;
+use Generator as ParserGeneratorType;
 
 /**
  * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RedisResponse>

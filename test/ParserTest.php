@@ -4,8 +4,8 @@ namespace Amp\Redis;
 
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
-use Amp\Redis\Connection\RedisResponse;
-use Amp\Redis\Connection\RespParser;
+use Amp\Redis\Protocol\RedisResponse;
+use Amp\Redis\Protocol\RespParser;
 use PHPUnit\Framework\TestCase;
 
 class ParserTest extends TestCase
