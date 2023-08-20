@@ -3,7 +3,6 @@
 namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Redis\Command\RedisCommands;
 use Amp\Redis\Connection\RedisChannelException;
 
 class DownTest extends AsyncTestCase
@@ -12,7 +11,7 @@ class DownTest extends AsyncTestCase
     {
         $this->expectException(RedisChannelException::class);
 
-        $redis = new RedisCommands(createRedisClient('tcp://127.0.0.1:25325'));
+        $redis = new RedisClient(createRedisClient('tcp://127.0.0.1:25325'));
         $redis->ping();
     }
 }

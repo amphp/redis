@@ -7,7 +7,6 @@ use Amp\Cache\CacheException;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Redis\Command\Option\RedisSetOptions;
-use Amp\Redis\Command\RedisCommands;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
 
@@ -21,7 +20,7 @@ final class RedisCache implements Cache
     use ForbidSerialization;
 
     public function __construct(
-        private readonly RedisCommands $redis,
+        private readonly RedisClient $redis,
         private readonly Serializer $serializer = new NativeSerializer(),
     ) {
     }

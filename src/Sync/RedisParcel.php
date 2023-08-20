@@ -2,7 +2,6 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\Command\RedisCommands;
 use Amp\Redis\RedisClient;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\Serializer;
@@ -32,7 +31,7 @@ final class RedisParcel implements Parcel
         return (new self($mutex, $key, $serializer))->open();
     }
 
-    private readonly RedisCommands $redis;
+    private readonly RedisClient $redis;
 
     private readonly Serializer $serializer;
 
@@ -41,7 +40,7 @@ final class RedisParcel implements Parcel
         private readonly string $key,
         ?Serializer $serializer = null,
     ) {
-        $this->redis = new RedisCommands($mutex->getClient());
+        $this->redis = new RedisClient($mutex->getClient());
         $this->serializer = $serializer ?? new NativeSerializer();
     }
 

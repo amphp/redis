@@ -2,7 +2,6 @@
 
 namespace Amp\Redis\Sync;
 
-use Amp\Redis\Command\RedisCommands;
 use Amp\Redis\RedisClient;
 use Amp\Redis\RedisException;
 use Amp\Sync\KeyedMutex;
@@ -102,7 +101,7 @@ RENEW;
 
     private readonly RedisMutexOptions $options;
 
-    private readonly RedisCommands $redis;
+    private readonly RedisClient $redis;
 
     /** @var array<string, array{string, string}> */
     private array $locks = [];
@@ -124,7 +123,7 @@ RENEW;
         ?PsrLogger $logger = null,
     ) {
         $this->options = $options ?? new RedisMutexOptions;
-        $this->redis = new RedisCommands($client);
+        $this->redis = new RedisClient($client);
         $this->logger = $logger ?? new NullLogger;
     }
 

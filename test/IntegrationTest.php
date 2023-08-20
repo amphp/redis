@@ -3,11 +3,10 @@
 namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Redis\Command\RedisCommands;
 
 abstract class IntegrationTest extends AsyncTestCase
 {
-    protected RedisCommands $redis;
+    protected RedisClient $redis;
 
     protected function setUp(): void
     {
@@ -22,9 +21,9 @@ abstract class IntegrationTest extends AsyncTestCase
         $this->redis->flushAll();
     }
 
-    final protected function createInstance(): RedisCommands
+    final protected function createInstance(): RedisClient
     {
-        return new RedisCommands(createRedisClient($this->getUri()));
+        return new RedisClient(createRedisClient($this->getUri()));
     }
 
     final protected function getUri(): ?string

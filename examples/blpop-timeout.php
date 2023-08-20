@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-use Amp\Redis\Command\RedisCommands;
+use Amp\Redis\RedisClient;
 use Revolt\EventLoop;
 use function Amp\Redis\createRedisClient;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$client = new RedisCommands(createRedisClient('redis://'));
+$client = new RedisClient(createRedisClient('redis://'));
 
 $client->delete('foobar-list');
 
