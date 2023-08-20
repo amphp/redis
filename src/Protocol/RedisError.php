@@ -7,7 +7,7 @@ use Amp\Redis\QueryException;
 final class RedisError implements RedisResponse
 {
     public function __construct(
-        public readonly string $message,
+        private readonly string $message,
     ) {
     }
 
@@ -17,5 +17,10 @@ final class RedisError implements RedisResponse
     public function unwrap(): never
     {
         throw new QueryException($this->message);
+    }
+
+    public function getMessage(): string
+    {
+        return $this->message;
     }
 }
