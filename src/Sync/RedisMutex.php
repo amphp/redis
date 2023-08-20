@@ -123,7 +123,7 @@ RENEW;
         ?PsrLogger $logger = null,
     ) {
         $this->options = $options ?? new RedisMutexOptions;
-        $this->redis = new RedisClient($client);
+        $this->redis = $client;
         $this->logger = $logger ?? new NullLogger;
     }
 

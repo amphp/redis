@@ -23,7 +23,7 @@ abstract class IntegrationTest extends AsyncTestCase
 
     final protected function createInstance(): RedisClient
     {
-        return new RedisClient(createRedisClient($this->getUri()));
+        return createRedisClient($this->getUri());
     }
 
     final protected function getUri(): ?string

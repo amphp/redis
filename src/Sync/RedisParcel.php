@@ -40,7 +40,7 @@ final class RedisParcel implements Parcel
         private readonly string $key,
         ?Serializer $serializer = null,
     ) {
-        $this->redis = new RedisClient($mutex->getClient());
+        $this->redis = $mutex->getClient();
         $this->serializer = $serializer ?? new NativeSerializer();
     }
 

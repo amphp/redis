@@ -12,7 +12,7 @@ class RedisTest extends IntegrationTest
 
         $this->assertTrue($this->redis->set('foo', 'bar'));
         $this->assertSame('bar', $this->redis->get('foo'));
-        $this->assertSame('bar', $this->redis->query('get', 'foo'));
+        $this->assertSame('bar', $this->redis->execute('get', 'foo'));
         $this->assertSame('foo', $this->redis->getRandomKey());
         $this->assertTrue($this->redis->expireIn('foo', 2));
         $this->assertGreaterThan(1000, $this->redis->getTtlInMillis('foo'));

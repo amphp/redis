@@ -6,7 +6,7 @@ use function Amp\Redis\createRedisClient;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$client = new RedisClient(createRedisClient('redis://'));
+$client = createRedisClient('redis://');
 
 $client->delete('foobar-list');
 

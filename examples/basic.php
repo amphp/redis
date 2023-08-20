@@ -5,7 +5,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use Amp\Redis\RedisClient;
 use function Amp\Redis\createRedisClient;
 
-$redis = new RedisClient(createRedisClient('redis://'));
+$redis = createRedisClient('redis://');
 
 $redis->set('foo', '21');
 $result = $redis->increment('foo', 21);
