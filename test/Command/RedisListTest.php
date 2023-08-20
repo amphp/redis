@@ -1,8 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis;
+namespace Amp\Redis\Command;
 
 use Amp\Redis\Command\Option\RedisSortOptions;
+use Amp\Redis\IntegrationTest;
 
 class RedisListTest extends IntegrationTest
 {

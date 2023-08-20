@@ -1,10 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis;
+namespace Amp\Redis\Command;
 
 use Amp\Redis\Command\Option\LexBoundary;
 use Amp\Redis\Command\Option\RangeOptions;
 use Amp\Redis\Command\Option\ScoreBoundary;
+use Amp\Redis\IntegrationTest;
 
 class RedisSortedSetTest extends IntegrationTest
 {

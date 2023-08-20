@@ -4,7 +4,7 @@ namespace Amp\Redis\Sync;
 
 use PHPUnit\Framework\TestCase;
 
-class MutexOptionsTest extends TestCase
+class RedisMutexOptionsTest extends TestCase
 {
     public function testWithKeyPrefix(): void
     {

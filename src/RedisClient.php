@@ -14,10 +14,8 @@ use Amp\Redis\Command\RedisMap;
 use Amp\Redis\Command\RedisSet;
 use Amp\Redis\Command\RedisSortedSet;
 use Amp\Redis\Connection\RedisLink;
-use Amp\Redis\Protocol\QueryException;
 use Amp\Redis\Protocol\RedisError;
 use Amp\Sync\LocalKeyedMutex;
-use Amp\Sync\LocalMutex;
 use function Amp\Redis\Internal\toMap;
 
 final class RedisClient

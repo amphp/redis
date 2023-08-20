@@ -2,7 +2,6 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Amp\Redis\RedisClient;
 use function Amp\Redis\createRedisClient;
 
 $redis = createRedisClient('redis://');

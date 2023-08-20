@@ -7,7 +7,7 @@ use Amp\Process\Process;
 use Amp\Redis\Connection\RedisChannelException;
 use function Amp\delay;
 
-class AuthTest extends AsyncTestCase
+class AuthenticatorTest extends AsyncTestCase
 {
     private const PORT = 25325;
     private const TIMEOUT = 3;

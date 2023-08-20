@@ -1,16 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis;
+namespace Amp\Redis\Protocol;
 
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
-use Amp\Redis\Protocol\ProtocolException;
-use Amp\Redis\Protocol\QueryException;
-use Amp\Redis\Protocol\RedisResponse;
-use Amp\Redis\Protocol\RespParser;
 use PHPUnit\Framework\TestCase;
 
-class ParserTest extends TestCase
+class RespParserTest extends TestCase
 {
     private Queue $queue;
     private RespParser $parser;

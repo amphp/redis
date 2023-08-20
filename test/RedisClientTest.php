@@ -4,7 +4,7 @@ namespace Amp\Redis;
 
 use function Amp\delay;
 
-class RedisTest extends IntegrationTest
+class RedisClientTest extends IntegrationTest
 {
     public function test(): void
     {

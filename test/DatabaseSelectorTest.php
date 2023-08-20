@@ -2,7 +2,7 @@
 
 namespace Amp\Redis;
 
-class SelectTest extends IntegrationTest
+class DatabaseSelectorTest extends IntegrationTest
 {
     public function testConnect(): void
     {
