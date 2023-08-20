@@ -1,27 +1,33 @@
 <?php declare(strict_types=1);
 
-namespace Amp\Redis\Command\Option;
+namespace Amp\Redis\Command\Boundary;
 
-final class ScoreBoundary
+final class LexBoundary
 {
-    public static function exclusive(float $value): self
+    /**
+     * @param non-empty-string $value
+     */
+    public static function exclusive(string $value): self
     {
         return new self('(' . $value);
     }
 
-    public static function inclusive(float $value): self
+    /**
+     * @param non-empty-string $value
+     */
+    public static function inclusive(string $value): self
     {
-        return new self((string) $value);
+        return new self('[' . $value);
     }
 
     public static function negativeInfinity(): self
     {
-        return new self('-inf');
+        return new self('-');
     }
 
     public static function positiveInfinity(): self
     {
-        return new self('+inf');
+        return new self('+');
     }
 
     private function __construct(private readonly string $value)

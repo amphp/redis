@@ -2,9 +2,9 @@
 
 namespace Amp\Redis\Command;
 
-use Amp\Redis\Command\Option\LexBoundary;
+use Amp\Redis\Command\Boundary\LexBoundary;
+use Amp\Redis\Command\Boundary\ScoreBoundary;
 use Amp\Redis\Command\Option\RangeOptions;
-use Amp\Redis\Command\Option\ScoreBoundary;
 use Amp\Redis\IntegrationTest;
 
 class RedisSortedSetTest extends IntegrationTest
