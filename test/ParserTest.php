@@ -4,6 +4,7 @@ namespace Amp\Redis;
 
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
+use Amp\Redis\Protocol\ProtocolException;
 use Amp\Redis\Protocol\RedisResponse;
 use Amp\Redis\Protocol\RespParser;
 use PHPUnit\Framework\TestCase;
@@ -166,7 +167,7 @@ class ParserTest extends TestCase
 
     public function testUnknownType(): void
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(ProtocolException::class);
 
         $this->parser->push("3$\r\nfoo\r\n");
     }

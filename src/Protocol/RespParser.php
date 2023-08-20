@@ -5,7 +5,6 @@ namespace Amp\Redis\Protocol;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Parser\Parser;
-use Amp\Redis\ParserException;
 use Generator as ParserGeneratorType;
 
 /**
@@ -67,7 +66,7 @@ final class RespParser
             self::TYPE_BULK_STRING => yield from self::parseString((int) $payload),
             self::TYPE_ARRAY => yield from self::parseArray((int) $payload),
             self::TYPE_ERROR => new RedisError($payload),
-            default => throw new ParserException('Unknown resp data type: ' . $type),
+            default => throw new ProtocolException('Unknown resp data type: ' . $type),
         };
     }
 
@@ -77,7 +76,7 @@ final class RespParser
     private static function parseString(int $length): \Generator
     {
         if ($length < -1) {
-            throw new ParserException('Invalid string length: ' . $length);
+            throw new ProtocolException('Invalid string length: ' . $length);
         }
 
         if ($length === -1) {
@@ -100,7 +99,7 @@ final class RespParser
     private static function parseArray(int $count): \Generator
     {
         if ($count < -1) {
-            throw new ParserException('Invalid array length: ' . $count);
+            throw new ProtocolException('Invalid array length: ' . $count);
         }
 
         if ($count === -1) {
