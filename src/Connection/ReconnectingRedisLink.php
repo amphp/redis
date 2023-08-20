@@ -91,11 +91,10 @@ final class ReconnectingRedisLink implements RedisLink
         EventLoop::queue(static function () use (&$channel, &$running, &$database, $queue, $connector): void {
             try {
                 while ($running) {
-                    $channel = $connector->connect();
-
                     if ($database !== null) {
-                        $channel->send('SELECT', (string) $database);
-                        $channel->receive()->unwrap();
+                        $channel = (new DatabaseSelector($database, $connector))->connect();
+                    } else {
+                        $channel = $connector->connect();
                     }
 
                     $channel->unreference();
