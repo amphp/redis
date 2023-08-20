@@ -27,7 +27,7 @@ final class RespParser
     private readonly Parser $parser;
 
     /**
-     * @param \Closure(RedisResponse):void $push
+     * @psalm-param \Closure(RedisResponse):void $push
      */
     public function __construct(\Closure $push)
     {
@@ -57,7 +57,7 @@ final class RespParser
     }
 
     /**
-     * @return ParserGeneratorType
+     * @psalm-return ParserGeneratorType
      */
     private static function parseValue(string $type, string $payload): \Generator
     {
@@ -72,7 +72,7 @@ final class RespParser
     }
 
     /**
-     * @return ParserGeneratorType
+     * @psalm-return ParserGeneratorType
      */
     private static function parseString(int $length): \Generator
     {
@@ -95,7 +95,7 @@ final class RespParser
     }
 
     /**
-     * @return ParserGeneratorType
+     * @psalm-return ParserGeneratorType
      */
     private static function parseArray(int $count): \Generator
     {
