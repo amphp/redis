@@ -7,7 +7,7 @@ use Amp\ForbidSerialization;
 use Amp\Future;
 use Amp\Pipeline\Queue;
 use Amp\Redis\Connection\RedisChannel;
-use Amp\Redis\Connection\RedisConnector;
+use Amp\Redis\Connection\RedisChannelFactory;
 use Revolt\EventLoop;
 use function Amp\async;
 
@@ -27,8 +27,7 @@ final class RedisSubscriber
     private array $patternQueues = [];
 
     public function __construct(
-        private readonly RedisConfig $config,
-        private readonly ?RedisConnector $connector = null,
+        private readonly RedisChannelFactory $channelFactory,
     ) {
     }
 
@@ -92,38 +91,36 @@ final class RedisSubscriber
 
     private function run(): void
     {
-        $config = $this->config;
-        $connector = $this->connector ?? Connection\redisConnector();
+        $channelFactory = $this->channelFactory;
         $running = &$this->running;
-        $socket = &$this->channel;
+        $channel = &$this->channel;
         $queues = &$this->queues;
         $patternQueues = &$this->patternQueues;
 
         EventLoop::queue(static function () use (
             &$running,
-            &$socket,
+            &$channel,
             &$queues,
             &$patternQueues,
-            $config,
-            $connector
+            $channelFactory
         ): void {
             try {
                 while ($running) {
-                    $socket = $connector->connect($config);
-                    $socket->unreference();
+                    $channel = $channelFactory->createChannel();
+                    $channel->unreference();
 
                     try {
-                        foreach (\array_keys($queues) as $channel) {
-                            $socket->reference();
-                            $socket->send('subscribe', $channel);
+                        foreach (\array_keys($queues) as $queue) {
+                            $channel->reference();
+                            $channel->send('subscribe', $queue);
                         }
 
                         foreach (\array_keys($patternQueues) as $pattern) {
-                            $socket->reference();
-                            $socket->send('psubscribe', $pattern);
+                            $channel->reference();
+                            $channel->send('psubscribe', $pattern);
                         }
 
-                        while ($response = $socket->receive()?->unwrap()) {
+                        while ($response = $channel->receive()?->unwrap()) {
                             /** @psalm-suppress RedundantCondition */
                             \assert(
                                 \is_array($response) && \array_is_list($response),
@@ -143,7 +140,7 @@ final class RedisSubscriber
                     } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
-                        $socket = null;
+                        $channel = null;
                     }
                 }
             } catch (\Throwable $exception) {

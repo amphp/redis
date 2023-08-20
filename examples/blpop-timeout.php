@@ -1,10 +1,16 @@
 <?php declare(strict_types=1);
 
+use Amp\Redis\Connection\ChannelRedisLink;
+use Amp\Redis\Connection\SocketRedisChannelFactory;
+use Amp\Redis\Redis;
+use Amp\Redis\RedisClient;
+use Amp\Redis\RedisConfig;
 use Revolt\EventLoop;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$client = new Amp\Redis\Redis(new Amp\Redis\SocketRedisClient('redis://'));
+$config = RedisConfig::fromUri('redis://');
+$client = new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
 
 $client->delete('foobar-list');
 

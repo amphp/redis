@@ -2,10 +2,24 @@
 
 namespace Amp\Redis;
 
-interface RedisClient
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+use Amp\Redis\Connection\RedisLink;
+
+final class RedisClient
 {
-    /**
-     * @throws QueryException
-     */
-    public function execute(string $command, int|float|string ...$parameters): mixed;
+    use ForbidCloning;
+    use ForbidSerialization;
+
+    private readonly RedisLink $redisLink;
+
+    public function __construct(RedisLink $redisLink)
+    {
+        $this->redisLink = $redisLink;
+    }
+
+    public function execute(string $command, int|float|string ...$parameters): mixed
+    {
+        return $this->redisLink->execute($command, $parameters)->unwrap();
+    }
 }

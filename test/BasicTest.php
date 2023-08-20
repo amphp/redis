@@ -2,19 +2,17 @@
 
 namespace Amp\Redis;
 
-use Amp\Redis\Connection\RedisConnector;
-use Amp\Redis\Connection\SocketRedisConnector;
+use Amp\Redis\Connection\RedisChannelFactory;
+use Amp\Redis\Connection\SocketRedisChannelFactory;
 use function Amp\delay;
 
 class BasicTest extends IntegrationTest
 {
-    private RedisConnector $connector;
+    private RedisChannelFactory $channelFactory;
 
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->connector = new SocketRedisConnector();
     }
 
     public function testRaw(): void
@@ -22,18 +20,20 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = $this->connector->connect($config);
 
-        $resp->send('PING');
+        $this->channelFactory = new SocketRedisChannelFactory($config);
+        $channel = $this->channelFactory->createChannel();
 
-        $this->assertSame('PONG', $resp->receive()->unwrap());
+        $channel->send('PING');
 
-        $resp->close();
+        $this->assertSame('PONG', $channel->receive()->unwrap());
+
+        $channel->close();
 
         $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        $resp->send('PING');
+        $channel->send('PING');
     }
 
     public function testRawCloseReadRemote(): void
@@ -41,13 +41,15 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = $this->connector->connect($config);
 
-        $resp->send('QUIT');
+        $this->channelFactory = new SocketRedisChannelFactory($config);
+        $channel = $this->channelFactory->createChannel();
 
-        $this->assertSame('OK', $resp->receive()->unwrap());
+        $channel->send('QUIT');
 
-        $this->assertNull($resp->receive());
+        $this->assertSame('OK', $channel->receive()->unwrap());
+
+        $this->assertNull($channel->receive());
     }
 
     public function testRawCloseReadLocal(): void
@@ -55,15 +57,17 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = $this->connector->connect($config);
 
-        $resp->send('QUIT');
+        $this->channelFactory = new SocketRedisChannelFactory($config);
+        $channel = $this->channelFactory->createChannel();
 
-        $this->assertSame('OK', $resp->receive()->unwrap());
+        $channel->send('QUIT');
 
-        $resp->close();
+        $this->assertSame('OK', $channel->receive()->unwrap());
 
-        $this->assertNull($resp->receive());
+        $channel->close();
+
+        $this->assertNull($channel->receive());
     }
 
     public function testRawCloseWriteRemote(): void
@@ -71,17 +75,19 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = $this->connector->connect($config);
 
-        $resp->send('QUIT');
+        $this->channelFactory = new SocketRedisChannelFactory($config);
+        $channel = $this->channelFactory->createChannel();
 
-        $this->assertSame('OK', $resp->receive()->unwrap());
+        $channel->send('QUIT');
+
+        $this->assertSame('OK', $channel->receive()->unwrap());
 
         delay(0);
 
         $this->expectException(RedisException::class);
 
-        $resp->send('PING');
+        $channel->send('PING');
     }
 
     public function testRawCloseWriteLocal(): void
@@ -89,20 +95,22 @@ class BasicTest extends IntegrationTest
         $this->setTimeout(5);
 
         $config = RedisConfig::fromUri($this->getUri());
-        $resp = $this->connector->connect($config);
 
-        $resp->send('QUIT');
+        $this->channelFactory = new SocketRedisChannelFactory($config);
+        $channel = $this->channelFactory->createChannel();
 
-        $this->assertSame('OK', $resp->receive()->unwrap());
+        $channel->send('QUIT');
+
+        $this->assertSame('OK', $channel->receive()->unwrap());
 
         delay(0);
 
-        $resp->close();
+        $channel->close();
 
         $this->expectException(RedisException::class);
         $this->expectExceptionMessage('Redis connection already closed');
 
-        $resp->send('PING');
+        $channel->send('PING');
     }
 
     public function testConnect(): void

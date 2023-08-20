@@ -11,7 +11,7 @@ use Amp\Redis\RedisException;
 use Amp\Redis\RedisSocketException;
 use Revolt\EventLoop;
 
-final class SocketRedisLink implements RedisLink
+final class ChannelRedisLink implements RedisLink
 {
     use ForbidCloning;
     use ForbidSerialization;
@@ -27,7 +27,7 @@ final class SocketRedisLink implements RedisLink
 
     public function __construct(
         private readonly RedisConfig $config,
-        private readonly ?RedisConnector $connector = null,
+        private readonly RedisChannelFactory $channelFactory,
     ) {
         $this->database = $config->getDatabase();
         $this->queue = new \SplQueue();
@@ -56,7 +56,7 @@ final class SocketRedisLink implements RedisLink
         }
 
         if (\strcasecmp($command, 'select') === 0) {
-            $this->database = (int) ($parameters[0] ?? 0);
+            $this->database = (int)($parameters[0] ?? 0);
         }
 
         return $response;
@@ -85,29 +85,31 @@ final class SocketRedisLink implements RedisLink
 
     private function run(): void
     {
-        $config = $this->config;
-        $connector = $this->connector ?? redisConnector();
+        $channelFactory = $this->channelFactory;
         $queue = $this->queue;
         $running = &$this->running;
-        $socket = &$this->channel;
+        $channel = &$this->channel;
         $database = &$this->database;
-        EventLoop::queue(static function () use (&$socket, &$running, &$database, $queue, $config, $connector): void {
+
+        EventLoop::queue(static function () use (&$channel, &$running, &$database, $queue, $channelFactory): void {
             try {
                 while ($running) {
-                    $socket = $connector->connect($config->withDatabase($database));
-                    $socket->unreference();
+                    $channel = $channelFactory->createChannel();
+                    $channel->send('SELECT', (string)$database);
+                    $channel->receive()->unwrap();
+                    $channel->unreference();
 
                     try {
                         foreach ($queue as [$deferred, $command, $parameters]) {
-                            $socket->reference();
-                            $socket->send($command, ...$parameters);
+                            $channel->reference();
+                            $channel->send($command, ...$parameters);
                         }
 
-                        while ($response = $socket->receive()) {
+                        while ($response = $channel->receive()) {
                             /** @var DeferredFuture $deferred */
                             [$deferred] = $queue->shift();
                             if ($queue->isEmpty()) {
-                                $socket->unreference();
+                                $channel->unreference();
                             }
 
                             $deferred->complete($response);
@@ -115,7 +117,7 @@ final class SocketRedisLink implements RedisLink
                     } catch (RedisException) {
                         // Attempt to reconnect after failure.
                     } finally {
-                        $socket = null;
+                        $channel = null;
                     }
                 }
             } catch (\Throwable $exception) {

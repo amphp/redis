@@ -4,6 +4,8 @@ namespace Amp\Redis;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Process\Process;
+use Amp\Redis\Connection\ChannelRedisLink;
+use Amp\Redis\Connection\SocketRedisChannelFactory;
 use function Amp\delay;
 
 class AuthTest extends AsyncTestCase
@@ -37,16 +39,17 @@ class AuthTest extends AsyncTestCase
 
     public function testSuccess(): void
     {
-        $redis = new Redis(new SocketRedisClient(
-            \sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD)
-        ));
+        $config = RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD));
+        $redis = new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
         $this->assertSame('PONG', $redis->echo('PONG'));
         $redis->quit();
     }
 
     public function testFailure(): void
     {
-        $redis = new Redis(new SocketRedisClient(\sprintf(self::URI_FORMAT, self::PORT, 'wrong')));
+        $config = RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, 'wrong'));
+        $redis = new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
+
         $this->expectException(RedisSocketException::class);
 
         $this->expectExceptionMessage('invalid');
@@ -58,9 +61,9 @@ class AuthTest extends AsyncTestCase
     {
         // This will hit stream select limits if garbage isn't collected as it should (e.g. due to circular references)
         for ($i = 0; $i < 10000; $i++) {
-            $redis = new Redis(new SocketRedisClient(
-                \sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD)
-            ));
+            $config = RedisConfig::fromUri(\sprintf(self::URI_FORMAT, self::PORT, self::PASSWORD));
+            $redis = new Redis(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
+
             $this->assertSame('PONG', $redis->echo('PONG'));
         }
 

@@ -2,8 +2,11 @@
 
 namespace Amp\Redis\Sync;
 
+use Amp\Redis\Connection\ChannelRedisLink;
+use Amp\Redis\Connection\SocketRedisChannelFactory;
 use Amp\Redis\IntegrationTest;
-use Amp\Redis\SocketRedisClientFactory;
+use Amp\Redis\RedisClient;
+use Amp\Redis\RedisConfig;
 use function Amp\async;
 use function Amp\delay;
 
@@ -44,8 +47,9 @@ class RedisParcelTest extends IntegrationTest
 
     protected function createParcel(mixed $value): RedisParcel
     {
-        $clientFactory = new SocketRedisClientFactory($this->getUri());
-        $mutex = new RedisMutex($clientFactory->createRedisClient());
+        $config = RedisConfig::fromUri($this->getUri());
+
+        $mutex = new RedisMutex(new RedisClient(new ChannelRedisLink($config, new SocketRedisChannelFactory($config))));
 
         return RedisParcel::create($mutex, \bin2hex(\random_bytes(8)), $value);
     }
