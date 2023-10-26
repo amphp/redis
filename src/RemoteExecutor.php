@@ -139,7 +139,7 @@ final class RemoteExecutor implements QueryExecutor
                     $socket->close();
 
                     while ($temp) {
-                        $deferred = \array_shift($queue);
+                        $deferred = \array_shift($temp);
                         $deferred->fail($error);
                     }
                 }
