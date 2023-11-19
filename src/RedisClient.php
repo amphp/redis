@@ -490,8 +490,6 @@ final class RedisClient
     }
 
     /**
-     * @param string $pattern
-     *
      * @link https://redis.io/commands/pubsub
      */
     public function getActiveChannels(?string $pattern = null): array
@@ -700,8 +698,6 @@ final class RedisClient
     }
 
     /**
-     * @param int $count
-     *
      * @link https://redis.io/commands/slowlog
      */
     public function getSlowlog(?int $count = null): array

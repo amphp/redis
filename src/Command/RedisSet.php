@@ -127,8 +127,6 @@ final class RedisSet
     }
 
     /**
-     * @param SortOptions $options
-     *
      * @link https://redis.io/commands/sort
      */
     public function sort(?SortOptions $options = null): array
