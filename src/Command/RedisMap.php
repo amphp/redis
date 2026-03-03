@@ -96,7 +96,7 @@ final class RedisMap
     /**
      * @link https://redis.io/commands/hget
      */
-    public function getValue(string $field): string
+    public function getValue(string $field): ?string
     {
         return $this->client->execute('hget', $this->key, $field);
     }
