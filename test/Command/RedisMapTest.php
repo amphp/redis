@@ -15,6 +15,8 @@ class RedisMapTest extends IntegrationTest
         $this->assertSame([], $map->getKeys());
         $this->assertSame([], $map->getAll());
 
+        $this->assertNull($map->getValue('foo'));
+
         $map->setValues([
             'foo' => 'bar',
             'rofl' => 'lol',
