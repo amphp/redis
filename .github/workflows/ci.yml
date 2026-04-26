@@ -69,6 +69,10 @@ jobs:
             composer-${{ runner.os }}-
             composer-
 
+      - name: Remove psalm/phar
+        run: composer remove --no-update --dev psalm/phar
+        if: matrix.psalm == 'skip'
+
       - name: Install dependencies
         uses: nick-invision/retry@v2
         with:
@@ -84,6 +88,7 @@ jobs:
 
       - name: Run static analysis
         run: vendor/bin/psalm.phar
+        if: matrix.psalm != 'skip'
 
       - name: Run style fixer
         env:
