@@ -148,6 +148,7 @@ RENEW;
      *
      * @param string $key Lock key.
      */
+    #[\Override]
     public function acquire(string $key): Lock
     {
         $this->numberOfLocks++;

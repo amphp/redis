@@ -35,6 +35,7 @@ final class ReconnectingRedisLink implements RedisLink
         $this->connection?->close();
     }
 
+    #[\Override]
     public function execute(string $command, array $parameters): RedisResponse
     {
         if (!$this->running) {

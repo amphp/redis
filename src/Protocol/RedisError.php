@@ -12,6 +12,7 @@ final class RedisError implements RedisResponse
     /**
      * @throws QueryException
      */
+    #[\Override]
     public function unwrap(): never
     {
         throw new QueryException($this->message);

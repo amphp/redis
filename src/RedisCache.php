@@ -25,6 +25,7 @@ final class RedisCache implements Cache
     ) {
     }
 
+    #[\Override]
     public function get(string $key): mixed
     {
         try {
@@ -39,6 +40,7 @@ final class RedisCache implements Cache
         }
     }
 
+    #[\Override]
     public function set(string $key, mixed $value, ?int $ttl = null): void
     {
         if ($ttl !== null && $ttl < 0) {
@@ -62,6 +64,7 @@ final class RedisCache implements Cache
         }
     }
 
+    #[\Override]
     public function delete(string $key): bool
     {
         try {

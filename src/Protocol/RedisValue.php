@@ -15,6 +15,7 @@ final class RedisValue implements RedisResponse
     ) {
     }
 
+    #[\Override]
     public function unwrap(): int|string|array|null
     {
         return $this->value;

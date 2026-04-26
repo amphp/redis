@@ -36,6 +36,7 @@ final class RedisSubscription implements \IteratorAggregate
     /**
      * Using a Generator to maintain a reference to $this.
      */
+    #[\Override]
     public function getIterator(): \Traversable
     {
         yield from $this->iterator;
