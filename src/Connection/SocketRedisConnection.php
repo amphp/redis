@@ -52,6 +52,7 @@ final class SocketRedisConnection implements RedisConnection
         });
     }
 
+    #[\Override]
     public function receive(): ?RedisResponse
     {
         if (!$this->iterator->continue()) {
@@ -61,6 +62,7 @@ final class SocketRedisConnection implements RedisConnection
         return $this->iterator->getValue();
     }
 
+    #[\Override]
     public function send(string ...$args): void
     {
         if ($this->socket->isClosed()) {
@@ -77,11 +79,13 @@ final class SocketRedisConnection implements RedisConnection
         }
     }
 
+    #[\Override]
     public function getName(): string
     {
         return $this->name;
     }
 
+    #[\Override]
     public function reference(): void
     {
         if ($this->socket instanceof ResourceStream) {
@@ -89,6 +93,7 @@ final class SocketRedisConnection implements RedisConnection
         }
     }
 
+    #[\Override]
     public function unreference(): void
     {
         if ($this->socket instanceof ResourceStream) {
@@ -96,16 +101,19 @@ final class SocketRedisConnection implements RedisConnection
         }
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->socket->close();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->socket->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->socket->onClose($onClose);

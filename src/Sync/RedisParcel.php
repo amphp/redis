@@ -73,6 +73,7 @@ final class RedisParcel implements Parcel
         return $this->mutex->getClient();
     }
 
+    #[\Override]
     public function unwrap(): mixed
     {
         $value = $this->redis->get($this->key)
@@ -81,6 +82,7 @@ final class RedisParcel implements Parcel
         return $this->serializer->unserialize($value);
     }
 
+    #[\Override]
     public function synchronized(\Closure $closure): mixed
     {
         $lock = $this->mutex->acquire($this->key);

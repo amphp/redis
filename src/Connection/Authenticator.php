@@ -18,6 +18,7 @@ final class Authenticator implements RedisConnector
     ) {
     }
 
+    #[\Override]
     public function connect(?Cancellation $cancellation = null): RedisConnection
     {
         $connection = $this->connector->connect($cancellation);

@@ -4,6 +4,9 @@ namespace Amp\Redis\Sync;
 
 use Amp\Redis\RedisException;
 
+/**
+ * @psalm-suppress ClassMustBeFinal
+ */
 class RedisMutexException extends RedisException
 {
 }

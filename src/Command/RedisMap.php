@@ -157,7 +157,6 @@ final class RedisMap
                 $query[] = $count;
             }
 
-            /** @var list<string> $keys */
             [$cursor, $keys] = $this->client->execute('HSCAN', ...$query);
 
             $count = \count($keys);

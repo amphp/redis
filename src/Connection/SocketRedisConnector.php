@@ -31,6 +31,7 @@ final class SocketRedisConnector implements RedisConnector
      * @throws RedisException
      * @throws RedisConnectionException
      */
+    #[\Override]
     public function connect(?Cancellation $cancellation = null): RedisConnection
     {
         try {

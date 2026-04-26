@@ -12,6 +12,7 @@ final class RedisError implements RedisResponse
     /**
      * @throws QueryException
      */
+    #[\Override]
     public function unwrap(): never
     {
         throw new QueryException($this->message);
@@ -20,6 +21,7 @@ final class RedisError implements RedisResponse
     public function getKind(): ?string
     {
         $prefix = \strtok($this->message, ' ');
+        \assert(\is_string($prefix)); // For Psalm.
 
         // This is just a convention of Redis server, not part of the protocol
         if ($prefix === \strtoupper($prefix)) {

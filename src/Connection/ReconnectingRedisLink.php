@@ -35,6 +35,7 @@ final class ReconnectingRedisLink implements RedisLink
         $this->connection?->close();
     }
 
+    #[\Override]
     public function execute(string $command, array $parameters): RedisResponse
     {
         if (!$this->running) {
@@ -99,13 +100,12 @@ final class ReconnectingRedisLink implements RedisLink
                     $connection->unreference();
 
                     try {
-                        foreach ($queue as [$deferred, $command, $parameters]) {
+                        foreach ($queue as [, $command, $parameters]) {
                             $connection->reference();
                             $connection->send($command, ...$parameters);
                         }
 
                         while ($response = $connection->receive()) {
-                            /** @var DeferredFuture $deferred */
                             [$deferred] = $queue->shift();
                             if ($queue->isEmpty()) {
                                 $connection->unreference();
@@ -123,7 +123,6 @@ final class ReconnectingRedisLink implements RedisLink
                 $exception = new RedisConnectionException($exception->getMessage(), 0, $exception);
 
                 while (!$queue->isEmpty()) {
-                    /** @var DeferredFuture $deferred */
                     [$deferred] = $queue->shift();
                     $deferred->error($exception);
                 }

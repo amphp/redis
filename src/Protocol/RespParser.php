@@ -8,6 +8,8 @@ use Amp\Parser\Parser;
 
 /**
  * @psalm-type ParserGeneratorType = \Generator<int, int|string, string, RedisResponse>
+ *
+ * @psalm-suppress InvalidIterator
  */
 final class RespParser
 {
