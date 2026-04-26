@@ -218,7 +218,6 @@ final class RedisSortedSet
                 $query[] = $count;
             }
 
-            /** @var list<string> $keys */
             [$cursor, $keys] = $this->client->execute('ZSCAN', ...$query);
 
             $count = \count($keys);

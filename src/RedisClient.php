@@ -272,7 +272,11 @@ final class RedisClient
             $cmd[] = $start;
             $cmd[] = $end;
         } elseif (isset($start) || isset($end)) {
-            throw new \Error('Start and end must both be set or unset in countBits(), got start = ' . $start . ' and end = ' . $end);
+            throw new \Error(\sprintf(
+                'Start and end must both be set or unset in countBits(), got start = %s and end = %s',
+                $start ?? 'null',
+                $end ?? 'null',
+            ));
         }
 
         return $this->execute('bitcount', ...$cmd);

@@ -6,7 +6,7 @@ final class ScoreBoundary
 {
     public static function exclusive(float $value): self
     {
-        return new self('(' . $value);
+        return new self(\sprintf('(%.5f', $value));
     }
 
     public static function inclusive(float $value): self

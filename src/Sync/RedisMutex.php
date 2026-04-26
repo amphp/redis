@@ -165,7 +165,11 @@ RENEW;
             $result = $this->redis->eval(
                 self::LOCK,
                 ["{$prefix}lock:{$key}", "{$prefix}lock-queue:{$key}"],
-                [$token, $this->options->getLockExpiration() * 1000, ($this->options->getLockExpiration() + $this->options->getLockTimeout()) * 1000]
+                [
+                    $token,
+                    $this->options->getLockExpiration() * 1000.0,
+                    ($this->options->getLockExpiration() + $this->options->getLockTimeout()) * 1000.0,
+                ],
             );
 
             if ($result < 1) {
@@ -176,7 +180,11 @@ RENEW;
                     $this->redis->getList("{$prefix}lock-queue:{$key}")->remove($token);
                     $this->unlock($key, $token);
 
-                    throw new RedisMutexException('Failed to acquire lock for ' . $key . ' within ' . $this->options->getLockTimeout() * 1000 . ' ms');
+                    throw new RedisMutexException(\sprintf(
+                        'Failed to acquire lock for %s within %.5f ms',
+                        $key,
+                        $this->options->getLockTimeout() * 1000.0,
+                    ));
                 }
 
                 // A negative integer as reply means we're still in the queue and indicates the queue position.
@@ -265,7 +273,7 @@ RENEW;
                 \assert(!empty($locks));
 
                 $keys = [];
-                $arguments = [$options->getLockExpiration() * 1000];
+                $arguments = [$options->getLockExpiration() * 1000.0];
 
                 $prefix = $options->getKeyPrefix();
 

@@ -97,6 +97,7 @@ final class RedisConfig
         try {
             $uri = Uri::new($uri);
         } catch (\Exception) {
+            /** @psalm-suppress ImplicitToStringCast */
             throw new RedisException('Invalid redis configuration URI: ' . $uri);
         }
 
