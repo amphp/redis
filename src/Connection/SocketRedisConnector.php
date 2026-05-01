@@ -37,6 +37,9 @@ final class SocketRedisConnector implements RedisConnector
         try {
             $socketConnector = $this->socketConnector ?? Socket\socketConnector();
             $socket = $socketConnector->connect($this->uri, $this->connectContext, $cancellation);
+            if ($this->connectContext->getTlsContext()) {
+                $socket->setupTls($cancellation);
+            }
         } catch (Socket\SocketException $e) {
             throw new RedisConnectionException(
                 'Failed to connect to redis instance (' . $this->uri . ')',
