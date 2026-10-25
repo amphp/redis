@@ -46,6 +46,14 @@ final class SocketRedisConnection implements RedisConnection
                 $queue->complete();
             } catch (RedisException $e) {
                 $queue->error($e);
+            } catch (\Throwable $e) {
+                // Anything else escaping here (e.g. a StreamException from read()) would be thrown
+                // from the event loop and leave every pending receive() waiting forever.
+                $queue->error(new RedisConnectionException(
+                    'Redis connection failed: ' . $e->getMessage(),
+                    0,
+                    $e,
+                ));
             }
 
             $socket->close();
